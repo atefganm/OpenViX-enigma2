@@ -1,4 +1,4 @@
-from boxbranding import getBoxType, getBrandOEM, getDisplayType, getHaveAVJACK, getHaveHDMIinFHD, getHaveHDMIinHD, getHaveRCA, getHaveSCART, getHaveSCARTYUV, getHaveYUV, getImageType, getMachineBrand, getMachineBuild, getMachineMtdRoot, getMachineName
+from boxbranding import getBoxType, getBrandOEM, getDisplayType, getHaveAVJACK, getHaveDVI, getHaveHDMI, getHaveHDMIinFHD, getHaveHDMIinHD, getHaveRCA, getHaveSCART, getHaveSCARTYUV, getHaveYUV, getMachineBrand, getMachineBuild, getMachineMtdRoot, getMachineName
 from enigma import Misc_Options, eDVBCIInterfaces, eDVBResourceManager
 
 from Components.About import getChipSetString
@@ -145,3 +145,14 @@ SystemInfo["rc_model"] = rc_model.getRcFolder()
 SystemInfo["mapKeyInfoToEpgFunctions"] = SystemInfo["rc_model"] in ("vu", "vu2", "vu3", "vu4") # due to button limitations of the remote control
 SystemInfo["toggleTvRadioButtonEvents"] = SystemInfo["rc_model"] in ("ax4", "beyonwiz1", "beyonwiz2", "gb0", "gb1", "gb2", "gb3", "gb4", "sf8008", "sf8008m", "uniboxhde") # due to button limitations of the remote control
 
+SystemInfo["HaveTouchSensor"] = getBoxType() in ("dm520", "dm525", "dm900", "dm920")
+SystemInfo["DefaultDisplayBrightness"] = getBoxType() in ("dm900", "dm920") and 8 or 5
+SystemInfo["HDMIin"] = getMachineBuild() in ("dm7080", "dm820", "dm900", "dm920")
+SystemInfo["HaveRCA"] = getHaveRCA() == "True"
+SystemInfo["HaveDVI"] = getHaveDVI() == "True"
+SystemInfo["HAVEYUV"] = getHaveYUV() == "True"
+SystemInfo["HAVEHDMI"] = getHaveHDMI() == "True"
+SystemInfo["HAVESCART"] = getHaveSCART() == "True"
+SystemInfo["HAVESCARTYUV"] = getHaveSCARTYUV() == "True"
+ystemInfo["HaveAVJACK"] = getHaveAVJACK() == "True"
+SystemInfo["RecoveryMode"] = fileCheck("/proc/stb/fp/boot_mode")
