@@ -26,8 +26,8 @@ from Components.Slider import Slider
 ocram = ''
 
 class SoftwareUpdateChanges(CommitInfo):
-	def __init__(self, session, menu_path=""):
-		CommitInfo.__init__(self, session, menu_path=menu_path)
+	def __init__(self, session):
+		CommitInfo.__init__(self, session)
 
 		self["actions"] = ActionMap(["SetupActions", "DirectionActions"],
 		{
@@ -42,14 +42,14 @@ class SoftwareUpdateChanges(CommitInfo):
 		self["key_red"] = Button(_("Close"))
 
 	def readGithubCommitLogs(self):
-		self.updateScreenTitle(gitcommitinfo.getScreenTitle())
+		self.setTitle(gitcommitinfo.getScreenTitle())
 		self["AboutScrollLabel"].setText(gitcommitinfo.readGithubCommitLogsSoftwareUpdate())
 
 
 class UpdateChoices(ChoiceBox):
-	def __init__(self, session, title="", list=None, keys=None, selection=0, skin_name=None, text="", reorderConfig="", var="", menu_path=""):
+	def __init__(self, session, title="", list=None, keys=None, selection=0, skin_name=None, text="", reorderConfig="", var=""):
 		print 'title:',title
-		ChoiceBox.__init__(self, session, title, list, keys, selection, skin_name, text, reorderConfig, var, menu_path)
+		ChoiceBox.__init__(self, session, title, list, keys, selection, skin_name, text, reorderConfig, var)
 		print 'title:',title
 
 		if var and var in ('unstable', 'updating', 'stable', 'unknown'):
@@ -59,34 +59,11 @@ class UpdateChoices(ChoiceBox):
 			self['tl_red'] = Pixmap()
 			self['tl_yellow'] = Pixmap()
 			self['tl_green'] = Pixmap()
-		if skin_name and 'SoftwareUpdateChoices' in skin_name:
-			self["menu_path_compressed"] = StaticText(menu_path)
 
-		self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions", "MenuActions"],
+		self["menuActions"] = NumberActionMap(["MenuActions"],
 		{
-			"ok": self.go,
-			"1": self.keyNumberGlobal,
-			"2": self.keyNumberGlobal,
-			"3": self.keyNumberGlobal,
-			"4": self.keyNumberGlobal,
-			"5": self.keyNumberGlobal,
-			"6": self.keyNumberGlobal,
-			"7": self.keyNumberGlobal,
-			"8": self.keyNumberGlobal,
-			"9": self.keyNumberGlobal,
-			"0": self.keyNumberGlobal,
-			"red": self.keyRed,
-			"green": self.keyGreen,
-			"yellow": self.keyYellow,
-			"blue": self.keyBlue,
-			"up": self.up,
-			"down": self.down,
-			"left": self.left,
-			"right": self.right,
-			"shiftUp": self.additionalMoveUp,
-			"shiftDown": self.additionalMoveDown,
 			"menu": self.opensettings
-		}, prio=-2)
+		}, prio=-3) # Override ChoiceBox "menu" action
 		self.onShown.append(self.onshow)
 
 	def onshow(self):
@@ -118,30 +95,10 @@ class UpdateChoices(ChoiceBox):
 		self.close()
 
 class UpdatePlugin(Screen, ProtectedScreen):
-	def __init__(self, session, *args):
-		Screen.__init__(self, session)
+	def __init__(self, session, parent=None):
+		Screen.__init__(self, session, parent=parent)
 		ProtectedScreen.__init__(self)
-		screentitle = _("Software update")
-		self.menu_path = args[0]
-		if config.usage.show_menupath.value == 'large':
-			self.menu_path += screentitle
-			self.title = self.menu_path
-			self.menu_path_compressed = ""
-			self.menu_path += ' / '
-		elif config.usage.show_menupath.value == 'small':
-			self.title = screentitle
-			condtext = ""
-			if self.menu_path and not self.menu_path.endswith(' / '):
-				condtext = self.menu_path + " >"
-			elif self.menu_path:
-				condtext = self.menu_path[:-3] + " >"
-			self.menu_path_compressed = condtext
-			self.menu_path += screentitle + ' / '
-		else:
-			self.title = screentitle
-			self.menu_path_compressed = ""
-		self["menu_path_compressed"] = StaticText(self.menu_path_compressed)
-		Screen.setTitle(self, self.title)
+		self.setTitle(_("Software update"))
 
 		self["actions"] = ActionMap(["WizardActions"],
 		{
@@ -324,7 +281,7 @@ class UpdatePlugin(Screen, ProtectedScreen):
 					config.softwareupdate.updatefound.setValue(True)
 					choices = [(_("View the changes"), "changes"),
 						(_("Upgrade and reboot system"), "cold")]
-					if path.exists("/usr/lib/enigma2/python/Plugins/SystemPlugins/ViX/BackupManager.pyo"):
+					if path.exists("/usr/lib/enigma2/python/Plugins/SystemPlugins/OBH/BackupManager.pyo"):
 						if not config.softwareupdate.autosettingsbackup.value and config.backupmanager.backuplocation.value:
 							choices.append((_("Perform a settings backup,") + '\n\t' + _("making a backup before updating") + '\n\t' +_("is strongly advised."), "backup"))
 						if not config.softwareupdate.autoimagebackup.value and config.imagemanager.backuplocation.value:
@@ -332,14 +289,14 @@ class UpdatePlugin(Screen, ProtectedScreen):
 					choices.append((_("Update channel list only"), "channels"))
 					choices.append((_("Cancel"), ""))
 					self["actions"].setEnabled(True)
-					upgrademessage = self.session.openWithCallback(self.startActualUpgrade, UpdateChoices, text=message, list=choices, skin_name = "SoftwareUpdateChoices", var=self.trafficLight, menu_path=self.menu_path_compressed)
-					upgrademessage.setTitle(self.title)
+					upgrademessage = self.session.openWithCallback(self.startActualUpgrade, UpdateChoices, text=message, list=choices, skin_name = "SoftwareUpdateChoices", var=self.trafficLight)
+					upgrademessage.setTitle(self.getTitle())
 				else:
 					message = _("No updates found, Press OK to exit this screen.")
 					choices = [(_("Nothing to upgrade"), "")]
 					self["actions"].setEnabled(True)
-					upgrademessage = self.session.openWithCallback(self.startActualUpgrade, UpdateChoices, text=message, list=choices, skin_name = "SoftwareUpdateChoices", var=self.trafficLight, menu_path=self.menu_path_compressed)
-					upgrademessage.setTitle(self.title)
+					upgrademessage = self.session.openWithCallback(self.startActualUpgrade, UpdateChoices, text=message, list=choices, skin_name = "SoftwareUpdateChoices", var=self.trafficLight)
+					upgrademessage.setTitle(self.getTitle())
 			elif self.channellist_only > 0:
 				if self.channellist_only == 1:
 					self.setEndMessage(_("Could not find installed channel list."))
@@ -403,10 +360,10 @@ class UpdatePlugin(Screen, ProtectedScreen):
 			choices.append((_("Update channel list only"), "channels"))
 			choices.append((_("Cancel"), ""))
 			self["actions"].setEnabled(True)
-			upgrademessage = self.session.openWithCallback(self.startActualUpgrade, UpdateChoices, text=message, list=choices, skin_name="SoftwareUpdateChoices", var=self.trafficLight, menu_path=self.menu_path_compressed)
-			upgrademessage.setTitle(self.title)
+			upgrademessage = self.session.openWithCallback(self.startActualUpgrade, UpdateChoices, text=message, list=choices, skin_name="SoftwareUpdateChoices", var=self.trafficLight)
+			upgrademessage.setTitle(self.getTitle())
 		elif answer[1] == "changes":
-			self.session.openWithCallback(self.startActualUpgrade,SoftwareUpdateChanges, self.menu_path)
+			self.session.openWithCallback(self.startActualUpgrade,SoftwareUpdateChanges)
 		elif answer[1] == "backup":
 			self.doSettingsBackup()
 		elif answer[1] == "imagebackup":
@@ -427,23 +384,23 @@ class UpdatePlugin(Screen, ProtectedScreen):
 
 	def doSettingsBackup(self):
 		backup = None
-		from Plugins.SystemPlugins.ViX.BackupManager import BackupFiles
+		from Plugins.SystemPlugins.OBH.BackupManager import BackupFiles
 		self.BackupFiles = BackupFiles(self.session, True)
 		Components.Task.job_manager.AddJob(self.BackupFiles.createBackupJob())
 		Components.Task.job_manager.in_background = False
 		for job in Components.Task.job_manager.getPendingJobs():
-			if job.name == dgettext('vix', 'Backup manager'):
+			if job.name == dgettext('obh', 'Backup manager'):
 				break
 		self.showJobView(job)
 
 	def doImageBackup(self):
 		backup = None
-		from Plugins.SystemPlugins.ViX.ImageManager import ImageBackup
+		from Plugins.SystemPlugins.OBH.ImageManager import ImageBackup
 		self.ImageBackup = ImageBackup(self.session, True)
 		Components.Task.job_manager.AddJob(self.ImageBackup.createBackupJob())
 		Components.Task.job_manager.in_background = False
 		for job in Components.Task.job_manager.getPendingJobs():
-			if job.name == dgettext('vix', 'Image manager'):
+			if job.name == dgettext('obh', 'Image manager'):
 				break
 		self.showJobView(job)
 
@@ -458,9 +415,9 @@ class UpdatePlugin(Screen, ProtectedScreen):
 			self.close()
 
 	def showJobView(self, job):
-		if job.name == dgettext('vix', 'Image manager'):
+		if job.name == dgettext('OBH', 'Image manager'):
 			self.ImageBackupDone = True
-		elif job.name == dgettext('vix', 'Backup manager'):
+		elif job.name == dgettext('obh', 'Backup manager'):
 			self.SettingsBackupDone = True
 		from Screens.TaskView import JobView
 		Components.Task.job_manager.in_background = False

@@ -7,7 +7,7 @@
 #include <lib/gdi/esize.h>
 #include <lib/base/init.h>
 #include <lib/base/init_num.h>
-#ifdef HAVE_TEXTLCD
+#if defined(HAVE_TEXTLCD) || defined(HAVE_7SEGMENT)
 	#include <lib/base/estring.h>
 #endif
 #include <lib/gdi/glcddc.h>
@@ -57,14 +57,17 @@ void eLCD::unlock()
 	locked = 0;
 }
 
-#ifdef HAVE_TEXTLCD
+#if defined(HAVE_TEXTLCD) || defined(HAVE_7SEGMENT)
 void eLCD::renderText(ePoint start, const char *text)
 {
 	if (lcdfd >= 0 && start.y() < 5)
 	{
 		std::string message = text;
 		message = replace_all(message, "\n", " ");
-		::write(lcdfd, message.c_str(), message.size());
+		if (::write(lcdfd, message.c_str(), message.size()) == -1)
+		{
+			eDebug("[eLCD] renderText %s failed (%m)", text);
+		}
 	}
 }
 #endif
@@ -246,7 +249,7 @@ eDBoxLCD::~eDBoxLCD()
 
 void eDBoxLCD::update()
 {
-#ifndef HAVE_TEXTLCD
+#if !defined(HAVE_TEXTLCD) && !defined(HAVE_7SEGMENT)
 	if (lcdfd < 0)
 		return;
 
@@ -301,51 +304,24 @@ void eDBoxLCD::update()
 			write(lcdfd, raw, _stride * height);
 		}
 		else
+#if !defined(DREAMBOX_MOVE_LCD)
 		{
-			FILE *file;
-			FILE *boxtype_file;
-			char boxtype_name[20];
-			if((boxtype_file = fopen("/proc/stb/info/boxtype", "r")) != NULL)
-			{
-				fgets(boxtype_name, sizeof(boxtype_name), boxtype_file);
-				fclose(boxtype_file);
-			}
-			else if((boxtype_file = fopen("/proc/stb/info/model", "r")) != NULL)
-			{
-				fgets(boxtype_name, sizeof(boxtype_name), boxtype_file);
-				fclose(boxtype_file);
-			}
-			if (FILE * file = fopen("/proc/stb/info/gbmodel", "r"))
-			{
-				unsigned char gb_buffer[_stride * res.height()];
-				for (int offset = 0; offset < _stride * res.height(); offset += 2)
-				{
-					gb_buffer[offset] = (_buffer[offset] & 0x1F) | ((_buffer[offset + 1] << 3) & 0xE0);
-					gb_buffer[offset + 1] = ((_buffer[offset + 1] >> 5) & 0x03) | ((_buffer[offset] >> 3) & 0x1C) | ((_buffer[offset + 1] << 5) & 0x60);
-				}
-				write(lcdfd, gb_buffer, _stride * res.height());
-				fclose(file);
-			}
-			else if ((strcmp(boxtype_name, "dm900\n") == 0))
-			{
-				unsigned char gb_buffer[_stride * res.height()];
-				for (int offset = 0; offset < ((_stride * res.height())>>2); offset ++)
-				{
-					unsigned int src = ((unsigned int*)_buffer)[offset];
-					//                                             blue                         red                  green low                     green high
-					((unsigned int*)gb_buffer)[offset] = ((src >> 3) & 0x001F001F) | ((src << 3) & 0xF800F800) | ((src >> 8) & 0x00E000E0) | ((src << 8) & 0x07000700);
-				}
-				write(lcdfd, gb_buffer, _stride * res.height());
-				if (file != NULL)
-				{
-					fclose(file);
-				}
-			}
-			else
-			{
-				write(lcdfd, _buffer, _stride * res.height());
-			}
+			write(lcdfd, _buffer, _stride * res.height());
 		}
+#else
+		{
+			unsigned char gb_buffer[_stride * res.height()];
+			for (int offset = 0; offset < ((_stride * res.height())>>2); offset ++)
+			{
+				unsigned int src = 0;
+				if (offset%(_stride>>2) >= 4) // 4 is offset for dm9x0
+					src = ((unsigned int*)_buffer)[offset - 4];  
+			//                                             blue                         red                  green low                     green high
+			((unsigned int*)gb_buffer)[offset] = ((src >> 3) & 0x001F001F) | ((src << 3) & 0xF800F800) | ((src >> 8) & 0x00E000E0) | ((src << 8) & 0x07000700);
+			}
+			write(lcdfd, gb_buffer, _stride * res.height());
+		}
+#endif
 	}
 	else /* lcd_type == 1 */
 	{

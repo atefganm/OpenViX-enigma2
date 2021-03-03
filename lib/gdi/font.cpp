@@ -291,8 +291,10 @@ std::vector<std::string> fontRenderClass::getFontFaces()
 void addFont(const char *filename, const char *alias, int scale_factor, int is_replacement, int renderflags)
 {
 	fontRenderClass::getInstance()->AddFont(filename, alias, scale_factor, renderflags);
-	if (is_replacement)
+	if (is_replacement == 1)
 		eTextPara::setReplacementFont(alias);
+	else if (is_replacement == -1)
+		eTextPara::setFallbackFont(alias);
 }
 
 DEFINE_REF(Font);
@@ -568,23 +570,26 @@ eTextPara::~eTextPara()
 
 void eTextPara::setFont(const gFont *font)
 {
-	ePtr<Font> fnt, replacement;
+	ePtr<Font> fnt, replacement, fallback;
 	fontRenderClass::getInstance()->getFont(fnt, font->family.c_str(), font->pointSize);
 	if (!fnt)
 		eWarning("[eTextPara] Font '%s' is missing!", font->family.c_str());
 	fontRenderClass::getInstance()->getFont(replacement, replacement_facename.c_str(), font->pointSize);
-	setFont(fnt, replacement);
+	fontRenderClass::getInstance()->getFont(fallback, fallback_facename.c_str(), font->pointSize);
+	setFont(fnt, replacement, fallback);
 }
 
 std::string eTextPara::replacement_facename;
+std::string eTextPara::fallback_facename;
 std::set<int> eTextPara::forced_replaces;
 
-void eTextPara::setFont(Font *fnt, Font *replacement)
+void eTextPara::setFont(Font *fnt, Font *replacement, Font *fallback)
 {
 	if (!fnt)
 		return;
 	current_font=fnt;
 	replacement_font=replacement;
+	fallback_font=fallback;
 	singleLock s(ftlock);
 
 			// we ask for replacment_font first becauseof the cache
@@ -614,6 +619,19 @@ void eTextPara::setFont(Font *fnt, Font *replacement)
 			return;
 		}
 	}
+	if (fallback_font)
+	{
+		if ((FTC_Manager_LookupFace(fontRenderClass::instance->cacheManager,
+					    fallback_font->scaler.face_id,
+					    &fallback_face) < 0) ||
+		    (FTC_Manager_LookupSize(fontRenderClass::instance->cacheManager,
+					    &fallback_font->scaler,
+					    &fallback_font->size) < 0))
+		{
+			eDebug("[eTextPara] FTC_Manager_Lookup_Size failed!");
+			return;
+		}
+	}
 	previous=0;
 	use_kerning=FT_HAS_KERNING(current_face);
 }
@@ -626,20 +644,12 @@ int eTextPara::renderString(const char *string, int rflags, int border)
 	singleLock s(ftlock);
 
 	if (!current_font)
-	{
-		eWarning("[eTextPara] renderString: No current_font!");
 		return -1;
-	}
+
 	if (!current_face)
-	{
-		eWarning("[eTextPara] renderString: No current_face!");
-		return -1;
-	}
+		eFatal("[eTextPara] renderString: No current_face!");
 	if (!current_face->size)
-	{
-		eWarning("[eTextPara] renderString: No current_face->size!");
-		return -1;
-	}
+		eFatal("[eTextPara] renderString: No current_face->size!");
 
 	if (cursor.y()==-1)
 	{
@@ -858,7 +868,14 @@ nprint:				isprintable=0;
 					index=(rflags&RS_DIRECT)? chr : FT_Get_Char_Index(replacement_face, chr);
 
 				if (!index)
-					eDebug("[eTextPara] Unicode U+%4lx not present", chr);
+				{
+					if (fallback_face)
+						index=(rflags&RS_DIRECT)? chr : FT_Get_Char_Index(fallback_face, chr);
+					if (!index)
+						eDebug("[eTextPara] Unicode U+%4lx not present", chr);
+					else
+						appendGlyph(fallback_font, fallback_face, index, flags, rflags, border, i == uc_visual.end() - 1, activate_newcolor, newcolor);
+				}
 				else
 					appendGlyph(replacement_font, replacement_face, index, flags, rflags, border, i == uc_visual.end() - 1, activate_newcolor, newcolor);
 			} else
@@ -1216,7 +1233,7 @@ void eTextPara::realign(int dir)	// der code hier ist ein wenig merkwuerdig.
 			if (linelength > area.width())
 				return;
 			dir = dirCenter;
-			[[fallthrough]];
+			// fall-through on purpose
 		case dirRight:
 		case dirCenter:
 		case dirBidi:

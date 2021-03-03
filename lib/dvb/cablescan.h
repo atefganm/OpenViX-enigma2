@@ -24,7 +24,6 @@ class eCableScan: public sigc::trackable, public iObject
 	int initialModulation;
 	std::string providerName, bouquetFilename;
 	int networkId;
-	int tsId;
 	std::map<std::string, int> providerNames;
 
 	struct TransponderInfo
@@ -43,10 +42,6 @@ class eCableScan: public sigc::trackable, public iObject
 
 	ePtr<eTable<NetworkInformationSection> > m_NIT;
 	ePtr<eTable<ServiceDescriptionSection> > m_SDT;
-
-	int channelState;
-	ePtr<eConnection> stateChangedConnection;
-	void stateChanged(iDVBChannel *ch);
 
 	void NITReady(int error);
 	void SDTReady(int error);

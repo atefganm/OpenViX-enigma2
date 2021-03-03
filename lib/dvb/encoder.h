@@ -28,17 +28,19 @@ class eEncoder
 		{
 			public:
 
-				EncoderContext(eNavigation *navigation_instance_normal_in, eNavigation *navigation_instance_alternative_in)
+				EncoderContext(int encoder_index_in, int decoder_index_in, eNavigation *navigation_instance_in)
 				{
+					encoder_index = encoder_index_in;
+					decoder_index = decoder_index_in;
 					file_fd = -1;
 					encoder_fd = -1;
 					state = state_idle;
-					navigation_instance = nullptr;
-					navigation_instance_normal = navigation_instance_normal_in;
-					navigation_instance_alternative = navigation_instance_alternative_in;
+					navigation_instance = navigation_instance_in;
 					stream_thread = nullptr;
 				}
 
+				int encoder_index;
+				int decoder_index;
 				int encoder_fd;
 				int file_fd;
 				eDVBRecordStreamThread *stream_thread;
@@ -53,8 +55,6 @@ class eEncoder
 				} state;
 
 				eNavigation *navigation_instance;
-				eNavigation *navigation_instance_normal;
-				eNavigation *navigation_instance_alternative;
 
 				void thread(void);
 		};
@@ -77,7 +77,6 @@ class eEncoder
 
 		int allocateEncoder(const std::string &serviceref, int &buffersize, int bitrate, int width, int height, int framerate, int interlaced, int aspectratio,
 				const std::string &vcodec = "", const std::string &acodec = "");
-		int allocateHDMIEncoder(const std::string &serviceref, int &buffersize);
 		void freeEncoder(int encoderfd);
 		int getUsedEncoderCount();
 

@@ -11,17 +11,52 @@
 #define FP_IOCTL_SET_RTC         0x101
 #define FP_IOCTL_GET_RTC         0x102
 
-#define TIME_UPDATE_INTERVAL (30*60*1000)
+#define TIME_UPDATE_INTERVAL (15*60*1000)
+
+static char mybox[20];
+
+int fileExist(const char* filename){
+	struct stat buffer;
+	int exist = stat(filename,&buffer);
+	if(exist == 0)
+		return 1;
+	else // -1
+		return 0;
+}
+
+void noRTC()
+{
+	mybox[0] = NULL;
+	if(fileExist("/proc/stb/info/gbmodel"))
+	{
+		FILE *fb = fopen("/proc/stb/info/gbmodel","r");
+		if (fb)
+		{
+			char buf[20];
+			fgets(buf, 20, fb);
+			strncpy(mybox, buf, 20);
+			fclose(fb);
+			strtok(mybox, "\n");
+		}
+	}
+}
 
 static time_t prev_time;
 
 void setRTC(time_t time)
 {
+	eDebug("[eDVBLocalTimerHandler] set RTC Time");
+	noRTC();
 	FILE *f = fopen("/proc/stb/fp/rtc", "w");
 	if (f)
 	{
 		if (fprintf(f, "%u", (unsigned int)time))
-			prev_time = time;
+		{
+			if (strncmp(mybox,"gb800solo", sizeof(mybox)) == 0 || strncmp(mybox,"gb800se", sizeof(mybox)) == 0 || strncmp(mybox,"gb800ue", sizeof(mybox)) == 0)
+				prev_time = 0; //sorry no RTC
+			else
+				prev_time = time;
+		}
 		else
 			eDebug("[eDVBLocalTimeHandler] write /proc/stb/fp/rtc failed: %m");
 		fclose(f);
@@ -42,6 +77,7 @@ void setRTC(time_t time)
 
 time_t getRTC()
 {
+	noRTC();
 	time_t rtc_time=0;
 	FILE *f = fopen("/proc/stb/fp/rtc", "r");
 	if (f)
@@ -51,7 +87,10 @@ time_t getRTC()
 		if (fscanf(f, "%u", &tmp) != 1)
 			eDebug("[eDVBLocalTimeHandler] read /proc/stb/fp/rtc failed: %m");
 		else
-			rtc_time=tmp;
+			if (strncmp(mybox,"gb800solo", sizeof(mybox)) == 0 || strncmp(mybox,"gb800se", sizeof(mybox)) == 0 || strncmp(mybox,"gb800ue", sizeof(mybox)) == 0)
+				rtc_time=0; // sorry no RTC
+			else
+				rtc_time=tmp;
 		fclose(f);
 	}
 	else
@@ -102,7 +141,7 @@ static inline void parseDVBtime_impl(tm& t, const uint8_t *data)
 
 time_t parseDVBtime(uint16_t mjd, uint32_t stime_bcd)
 {
-	tm t{};
+	tm t = {0};
 	parseDVBdate(t, mjd);
 	t.tm_hour = fromBCD(stime_bcd >> 16);
 	t.tm_min = fromBCD((stime_bcd >> 8) & 0xFF);
@@ -112,14 +151,14 @@ time_t parseDVBtime(uint16_t mjd, uint32_t stime_bcd)
 
 time_t parseDVBtime(const uint8_t *data)
 {
-	tm t{};
+	tm t = {0};
 	parseDVBtime_impl(t, data);
 	return timegm(&t);
 }
 
 time_t parseDVBtime(const uint8_t *data, uint16_t *hash)
 {
-	tm t{};
+	tm t = {0};
 	parseDVBtime_impl(t, data);
 	*hash = t.tm_hour * 60 + t.tm_min;
 	*hash |= t.tm_mday << 11;
@@ -234,7 +273,10 @@ eDVBLocalTimeHandler::~eDVBLocalTimeHandler()
 	if (ready())
 	{
 		eDebug("[eDVBLocalTimeHandler] set RTC to previous valid time");
-		setRTC(::time(0));
+		if (strncmp(mybox,"gb800solo", sizeof(mybox)) == 0 || strncmp(mybox,"gb800se", sizeof(mybox)) == 0 || strncmp(mybox,"gb800ue", sizeof(mybox)) == 0)
+				eDebug("Dont set RTC to previous valid time, giga box");
+			else
+				setRTC(::time(0));
 	}
 }
 

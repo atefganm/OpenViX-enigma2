@@ -48,7 +48,6 @@ void eCableScan::start(int frontendid)
 		return;
 	}
 
-	m_channel->connectStateChange(sigc::mem_fun(*this, &eCableScan::stateChanged), stateChangedConnection);
 	m_channel->getFrontend(fe);
 	m_channel->getDemux(m_demux);
 
@@ -62,36 +61,11 @@ void eCableScan::start(int frontendid)
 	eDVBFrontendParameters parm;
 	parm.setDVBC(cable);
 
-	m_SDT = NULL;
+	fe->tune(parm);
+
 	m_NIT = new eTable<NetworkInformationSection>;
 	CONNECT(m_NIT->tableReady, eCableScan::NITReady);
-
-	channelState = iDVBChannel::state_idle;
-	fe->tune(parm);
-}
-
-void eCableScan::stateChanged(iDVBChannel *ch)
-{
-	int state;
-	if (ch->getState(state) || channelState == state)
-	{
-		return;
-	}
-
-	channelState = state;
-
-	if (state == iDVBChannel::state_ok)
-	{
-		if (m_SDT)
-		{
-			eDVBTableSpec spec = eDVBSDTSpec(tsId);
-			m_SDT->start(m_demux, spec);
-		}
-		else if (m_NIT)
-		{
-			m_NIT->start(m_demux, eDVBNITSpec(networkId));
-		}
-	}
+	m_NIT->start(m_demux, eDVBNITSpec(networkId));
 }
 
 void eCableScan::NITReady(int error)
@@ -126,6 +100,7 @@ void eCableScan::SDTReady(int error)
 int eCableScan::nextChannel()
 {
 	ePtr<iDVBFrontend> fe;
+	int tsid;
 
 	m_SDT = NULL;
 
@@ -139,7 +114,7 @@ int eCableScan::nextChannel()
 	scanProgress(100 - (scanChannels.size() * 90) / totalChannels);
 
 	currentScanChannel = scanChannels.front().feparm;
-	tsId = scanChannels.front().tsid;
+	tsid = scanChannels.front().tsid;
 	scanChannels.pop_front();
 
 	if (m_channel->getFrontend(fe))
@@ -149,13 +124,13 @@ int eCableScan::nextChannel()
 		return -1;
 	}
 
-	m_SDT = new eTable<ServiceDescriptionSection>;
-	CONNECT(m_SDT->tableReady, eCableScan::SDTReady);
-
-	channelState = iDVBChannel::state_idle;
 	if (fe->tune(*currentScanChannel))
 		return nextChannel();
 
+	m_SDT = new eTable<ServiceDescriptionSection>;
+	CONNECT(m_SDT->tableReady, eCableScan::SDTReady);
+	eDVBTableSpec spec = eDVBSDTSpec(tsid);
+	m_SDT->start(m_demux, spec);
 	return 0;
 }
 
