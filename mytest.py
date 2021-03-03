@@ -1,6 +1,9 @@
 import sys
 import os
 from time import time
+from boxbranding import getBoxType
+
+boxtype = getBoxType()
 
 if os.path.isfile("/usr/lib/enigma2/python/enigma.zip"):
 	sys.path.append("/usr/lib/enigma2/python/enigma.zip")
@@ -11,7 +14,7 @@ profile("PYTHON_START")
 # Don't remove this line. It may seem to do nothing, but if removed,
 # it will break output redirection for crash logs.
 import Tools.RedirectOutput
-from boxbranding import getBoxType, getBrandOEM, getImageVersion, getImageBuild, getImageDevBuild, getImageType
+from boxbranding import getImageVersion, getImageBuild, getImageDevBuild, getImageType, getImageArch
 print "[Image Type] %s" % getImageType()
 print "[Image Version] %s" % getImageVersion()
 print "[Image Build] %s" % getImageBuild()
@@ -25,15 +28,19 @@ enigma.eTimer = eBaseImpl.eTimer
 enigma.eSocketNotifier = eBaseImpl.eSocketNotifier
 enigma.eConsoleAppContainer = eConsoleImpl.eConsoleAppContainer
 
+if getImageArch() in ("aarch64"):
+	import usb.core
+	import usb.backend.libusb1
+	usb.backend.libusb1.get_backend(find_library=lambda x: "/lib64/libusb-1.0.so.0")
+
 from traceback import print_exc
 
 profile("ClientMode")
 import Components.ClientMode
 Components.ClientMode.InitClientMode()
 
-profile("SimpleSummary")
+profile("InfoBar")
 from Screens import InfoBar
-from Screens.SimpleSummary import SimpleSummary
 
 from sys import stdout, exc_info
 
@@ -108,7 +115,6 @@ def NTPserverChanged(configelement):
 	Console = Console()
 	Console.ePopen('/usr/bin/ntpdate-sync')
 config.misc.NTPserver.addNotifier(NTPserverChanged, immediate_feedback = False)
-config.misc.NTPserver.callNotifiersOnSaveAndCancel = True
 
 profile("Twisted")
 try:
@@ -162,10 +168,10 @@ def dump(dir, p = ""):
 profile("LOAD:ScreenGlobals")
 from Screens.Globals import Globals
 from Screens.SessionGlobals import SessionGlobals
-from Screens.Screen import Screen
+from Screens.Screen import Screen, ScreenSummary
 
 profile("Screen")
-Screen.global_screen = Globals()
+Screen.globalScreen = Globals()
 
 # Session.open:
 # * push current active dialog ('current_dialog') onto stack
@@ -279,7 +285,7 @@ class Session:
 	def instantiateSummaryDialog(self, screen, **kwargs):
 		if self.summary_desktop is not None:
 			self.pushSummary()
-			summary = screen.createSummary() or SimpleSummary
+			summary = screen.createSummary() or ScreenSummary
 			arguments = (screen,)
 			self.summary = self.doInstantiateDialog(summary, arguments, kwargs, self.summary_desktop)
 			self.summary.show()
@@ -366,6 +372,25 @@ class Session:
 			self.summary = self.summary_stack.pop()
 		if self.summary is not None:
 			self.summary.show()
+
+	def reloadSkin(self):
+		from Screens.MessageBox import MessageBox
+		reloadNotification = self.instantiateDialog(MessageBox, _("Loading skin"), MessageBox.TYPE_INFO, 
+			simple=True, picon=False, title=_("Please wait"))
+		reloadNotification.show()
+
+		# close all open dialogs by emptying the dialog stack
+		# remove any return values and callbacks for a swift exit
+		while self.current_dialog is not None and type(self.current_dialog) is not InfoBar.InfoBar:
+			print("[SkinReloader] closing %s" % type(self.current_dialog))
+			self.current_dialog.returnValue = None
+			self.current_dialog.callback = None
+			self.execEnd()
+			self.processDelay()
+		# need to close the infobar outside the loop as its exit causes a new infobar to be created
+		print("[SkinReloader] closing InfoBar")
+		InfoBar.InfoBar.instance.close("reloadskin", reloadNotification)
+
 
 profile("Standby,PowerKey")
 import Screens.Standby
@@ -504,15 +529,17 @@ def runScreenTest():
 
 	def runNextScreen(session, screensToRun, *result):
 		if result:
-			enigma.quitMainloop(*result)
-			return
-
-		screen = screensToRun[0][1]
-		args = screensToRun[0][2:]
-		if screensToRun:
-			session.openWithCallback(boundFunction(runNextScreen, session, screensToRun[1:]), screen, *args)
+			if result[0] == "reloadskin":
+				skin.InitSkins(False)
+				session.openWithCallback(boundFunction(runNextScreen, session, []), InfoBar.InfoBar)
+				if result[1]:
+					session.deleteDialog(result[1])
+			else:
+				enigma.quitMainloop(*result)
 		else:
-			session.open(screen, *args)
+			screen = screensToRun[0][1]
+			args = screensToRun[0][2:]
+			session.openWithCallback(boundFunction(runNextScreen, session, screensToRun[1:]), screen, *args)
 
 	runNextScreen(session, screensToRun)
 
@@ -554,11 +581,8 @@ def runScreenTest():
 		if (startTime[0] - nowTime) < 270: # no time to switch box back on
 			wptime = nowTime + 30  # so switch back on in 30 seconds
 		else:
-			if getBrandOEM() == 'gigablue':
-				wptime = startTime[0] - 120 # Gigaboxes already starts 2 min. before wakeup time
-			else:
-				wptime = startTime[0] - 240
-		if not config.misc.SyncTimeUsing.value == "0" or getBrandOEM() == 'gigablue':
+			wptime = startTime[0] - 240
+		if not config.misc.SyncTimeUsing.value == "0":
 			print "dvb time sync disabled... so set RTC now to current linux time!", strftime("%Y/%m/%d %H:%M", localtime(nowTime))
 			setRTCtime(nowTime)
 		print "set wakeup time to", strftime("%Y/%m/%d %H:%M", localtime(wptime))
@@ -575,11 +599,8 @@ def runScreenTest():
 		if (startTime[0] - nowTime) < 60: # no time to switch box back on
 			wptime = nowTime + 30  # so switch back on in 30 seconds
 		else:
-			if getBrandOEM() == 'gigablue':
-				wptime = startTime[0] + 120 # Gigaboxes already starts 2 min. before wakeup time
-			else:
-				wptime = startTime[0]
-		if not config.misc.SyncTimeUsing.value == "0" or getBrandOEM() == 'gigablue':
+			wptime = startTime[0]
+		if not config.misc.SyncTimeUsing.value == "0":
 			print "dvb time sync disabled... so set RTC now to current linux time!", strftime("%Y/%m/%d %H:%M", localtime(nowTime))
 			setRTCtime(nowTime)
 		print "set wakeup time to", strftime("%Y/%m/%d %H:%M", localtime(wptime+60))
@@ -602,17 +623,15 @@ def runScreenTest():
 	return 0
 
 profile("Init:skin")
+print "[Enigma2] Initialising Skins."
 import skin
-skin.loadSkinData(enigma.getDesktop(0))
+skin.InitSkins()
+print "[Enigma2] Initialisation of Skins complete."
 
 profile("InputDevice")
 import Components.InputDevice
 Components.InputDevice.InitInputDevices()
 import Components.InputHotplug
-
-profile("TimeZones")
-import Components.Timezones
-Components.Timezones.InitTimeZones()
 
 profile("SetupDevices")
 import Components.SetupDevices
@@ -627,6 +646,10 @@ import Components.AVSwitch
 Components.AVSwitch.InitAVSwitch()
 Components.AVSwitch.InitiVideomodeHotplug()
 
+profile("EpgConfig")
+import Components.EpgConfig
+Components.EpgConfig.InitEPGConfig()
+
 profile("RecordingConfig")
 import Components.RecordingConfig
 Components.RecordingConfig.InitRecordingConfig()
@@ -634,6 +657,10 @@ Components.RecordingConfig.InitRecordingConfig()
 profile("UsageConfig")
 import Components.UsageConfig
 Components.UsageConfig.InitUsageConfig()
+
+profile("TimeZones")
+import Components.Timezones
+Components.Timezones.InitTimeZones()
 
 profile("Init:DebugLogCheck")
 import Screens.LogManager
@@ -660,7 +687,7 @@ import Components.Lcd
 Components.Lcd.InitLcd()
 Components.Lcd.IconCheck()
 
-if getBoxType() in ('dm7080', 'dm820', 'dm900'):
+if boxtype in ('dm7080', 'dm820', 'dm900', 'dm920', 'gb7252'):
 	f=open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor","r")
 	check=f.read()
 	f.close()

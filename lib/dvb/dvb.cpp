@@ -3,6 +3,7 @@
 #include <linux/dvb/version.h>
 
 #include <lib/base/eerror.h>
+#include <lib/base/estring.h>
 #include <lib/base/wrappers.h>
 #include <lib/dvb/cahandler.h>
 #include <lib/dvb/idvb.h>
@@ -106,6 +107,46 @@ eDVBResourceManager::eDVBResourceManager()
 		eDVBAdapterLinux *adapter = new eDVBAdapterLinux(0);
 		adapter->scanDevices();
 		addAdapter(adapter, true);
+	}
+
+	int fd = open("/proc/stb/info/model", O_RDONLY);
+	char tmp[16];
+	int rd = fd >= 0 ? read(fd, tmp, sizeof(tmp)) : 0;
+	if (fd >= 0)
+		close(fd);
+
+	if (!strncmp(tmp, "dm7025\n", rd))
+		m_boxtype = DM7025;
+	else if (!strncmp(tmp, "dm8000\n", rd))
+		m_boxtype = DM8000;
+	else if (!strncmp(tmp, "dm800\n", rd))
+		m_boxtype = DM800;
+	else if (!strncmp(tmp, "dm500hd\n", rd))
+		m_boxtype = DM500HD;
+	else if (!strncmp(tmp, "dm800se\n", rd))
+		m_boxtype = DM800SE;
+	else if (!strncmp(tmp, "dm7020hd\n", rd))
+		m_boxtype = DM7020HD;
+	else if (!strncmp(tmp, "dm7080\n", rd))
+		m_boxtype = DM7080;
+	else if (!strncmp(tmp, "dm820\n", rd))
+		m_boxtype = DM820;
+	else if (!strncmp(tmp, "dm520\n", rd))
+		m_boxtype = DM520;
+	else if (!strncmp(tmp, "dm525\n", rd))
+		m_boxtype = DM525;
+	else if (!strncmp(tmp, "dm900\n", rd))
+		m_boxtype = DM900;
+	else if (!strncmp(tmp, "dm920\n", rd))
+		m_boxtype = DM920;
+	else {
+		eDebug("boxtype detection via /proc/stb/info not possible... use fallback via demux count!\n");
+		if (m_demux.size() == 3)
+			m_boxtype = DM800;
+		else if (m_demux.size() < 5)
+			m_boxtype = DM7025;
+		else
+			m_boxtype = DM8000;
 	}
 
 	eDebug("[eDVBResourceManager] found %zd adapter, %zd frontends(%zd sim) and %zd demux",
@@ -317,7 +358,6 @@ eDVBUsbAdapter::eDVBUsbAdapter(int nr)
 		goto error;
 	}
 
-#if defined DTV_ENUM_DELSYS
 	struct dtv_properties props;
 	struct dtv_property prop[1];
 
@@ -329,7 +369,6 @@ eDVBUsbAdapter::eDVBUsbAdapter(int nr)
 
 	if (ioctl(frontend, FE_GET_PROPERTY, &props) < 0)
 		eDebug("[eDVBUsbAdapter] FE_GET_PROPERTY DTV_ENUM_DELSYS failed %m");
-#endif
 
 	::close(frontend);
 	frontend = -1;
@@ -406,7 +445,7 @@ eDVBUsbAdapter::eDVBUsbAdapter(int nr)
 		goto error;
 	}
 
-#ifdef TUNER_FBC
+#ifdef VMSG_TYPE2
 #define VTUNER_GET_MESSAGE  11
 #define VTUNER_SET_RESPONSE 12
 #define VTUNER_SET_NAME     13
@@ -430,10 +469,8 @@ eDVBUsbAdapter::eDVBUsbAdapter(int nr)
 	ioctl(vtunerFd, VTUNER_SET_NAME, name);
 	ioctl(vtunerFd, VTUNER_SET_TYPE, type);
 	ioctl(vtunerFd, VTUNER_SET_FE_INFO, &fe_info);
-#if defined DTV_ENUM_DELSYS
 	if (prop[0].u.buffer.len > 0)
 		ioctl(vtunerFd, VTUNER_SET_DELSYS, prop[0].u.buffer.data);
-#endif
 	ioctl(vtunerFd, VTUNER_SET_HAS_OUTPUTS, "no");
 	ioctl(vtunerFd, VTUNER_SET_ADAPTER, nr);
 
@@ -804,24 +841,29 @@ std::string eDVBResourceManager::getFrontendCapabilities(int index)
 	return "";
 }
 
-void eDVBResourceManager::setFrontendType(int index, const char *type)
+void eDVBResourceManager::setFrontendType(int index, const char *types)
 {
 	for (eSmartPtrList<eDVBRegisteredFrontend>::iterator i(m_frontend.begin()); i != m_frontend.end(); ++i)
 	{
-		if (i->m_frontend->getSlotID() == index)
+		if (i->m_frontend->getSlotID() != index)
 		{
-			std::vector<fe_delivery_system_t> whitelist;
-			if (!strcmp(type, "DVB-S2") || !strcmp(type, "DVB-S"))
+			continue;
+		}
+
+		std::vector<fe_delivery_system_t> whitelist;
+		for (const auto& type : split(types, ","))
+		{
+			if (type == "DVB-S2" || type == "DVB-S")
 			{
 				whitelist.push_back(SYS_DVBS);
 				whitelist.push_back(SYS_DVBS2);
 			}
-			else if (!strcmp(type, "DVB-T2") || !strcmp(type, "DVB-T"))
+			else if (type == "DVB-T2" || type == "DVB-T")
 			{
 				whitelist.push_back(SYS_DVBT);
 				whitelist.push_back(SYS_DVBT2);
 			}
-			else if (!strcmp(type, "DVB-C"))
+			else if (type == "DVB-C")
 			{
 #if defined SYS_DVBC_ANNEX_A
 				whitelist.push_back(SYS_DVBC_ANNEX_A);
@@ -830,14 +872,18 @@ void eDVBResourceManager::setFrontendType(int index, const char *type)
 				whitelist.push_back(SYS_DVBC_ANNEX_AC);
 #endif
 			}
-			else if (!strcmp(type, "ATSC"))
+			else if (type == "ATSC")
 			{
 				whitelist.push_back(SYS_ATSC);
 				whitelist.push_back(SYS_DVBC_ANNEX_B);
 			}
-			i->m_frontend->setDeliverySystemWhitelist(whitelist);
-			break;
+			else if (type == "UNDEFINED")
+			{
+				whitelist.push_back(SYS_UNDEFINED);
+			}
 		}
+		i->m_frontend->setDeliverySystemWhitelist(whitelist);
+		break;
 	}
 }
 
@@ -845,8 +891,9 @@ RESULT eDVBResourceManager::allocateFrontend(ePtr<eDVBAllocatedFrontend> &fe, eP
 {
 	eSmartPtrList<eDVBRegisteredFrontend> &frontends = simulate ? m_simulate_frontend : m_frontend;
 	eDVBRegisteredFrontend *best, *fbc_fe, *best_fbc_fe;
-	int bestval, foundone, current_fbc_setid, fbc_setid, c;
-	bool check_fbc_leaf_linkable;
+	int bestval, foundone, current_fbc_setid, c;
+	bool check_fbc_leaf_linkable, is_configured_sat;
+	long link;
 
 	fbc_fe  = NULL;
 	best_fbc_fe = NULL;
@@ -855,15 +902,15 @@ RESULT eDVBResourceManager::allocateFrontend(ePtr<eDVBAllocatedFrontend> &fe, eP
 	foundone = 0;
 	check_fbc_leaf_linkable = false;
 	current_fbc_setid = -1;
-	c = 0;
 
 	for (eSmartPtrList<eDVBRegisteredFrontend>::iterator i(frontends.begin()); i != frontends.end(); ++i)
 	{
+		c = 0;
+		is_configured_sat = false;
 		fbc_fe = NULL;
-
 		if (i->m_frontend->is_FBCTuner() && m_fbcmng->CanLink(*i))
 		{
-			fbc_setid = m_fbcmng->GetFBCSetID(i->m_frontend->getSlotID());
+			int fbc_setid = m_fbcmng->GetFBCSetID(i->m_frontend->getSlotID());
 
 			if (fbc_setid != current_fbc_setid)
 			{
@@ -879,7 +926,27 @@ RESULT eDVBResourceManager::allocateFrontend(ePtr<eDVBAllocatedFrontend> &fe, eP
 			}
 		}
 		else
-			c = i->m_frontend->isCompatibleWith(feparm);
+		{
+			if (i->m_inuse)
+			{
+				i->m_frontend->getData(eDVBFrontend::SATPOS_DEPENDS_PTR, link);
+				if (link != -1)
+					is_configured_sat = true;
+				else
+				{
+					i->m_frontend->getData(eDVBFrontend::ADVANCED_SATPOSDEPENDS_ROOT, link);
+					if (link != -1)
+						is_configured_sat = true;
+					else
+					{
+						i->m_frontend->getData(eDVBFrontend::ADVANCED_SATPOSDEPENDS_LINK, link);
+						if (link != -1)
+							is_configured_sat = true;
+					}
+				}
+			}
+			c = i->m_frontend->isCompatibleWith(feparm, is_configured_sat);
+		}
 
 		if (c)	/* if we have at least one frontend which is compatible with the source, flag this. */
 		{
@@ -908,7 +975,6 @@ RESULT eDVBResourceManager::allocateFrontend(ePtr<eDVBAllocatedFrontend> &fe, eP
 	}
 
 	fe = 0;
-
 	if (foundone)
 		return errAllSourcesBusy;
 	else
@@ -921,6 +987,15 @@ RESULT eDVBResourceManager::allocateFrontendByIndex(ePtr<eDVBAllocatedFrontend> 
 	for (eSmartPtrList<eDVBRegisteredFrontend>::iterator i(m_frontend.begin()); i != m_frontend.end(); ++i)
 		if (!i->m_inuse && i->m_frontend->getSlotID() == slot_index)
 		{
+			// check if another slot advanced satpos to this is in use
+			long link;
+			i->m_frontend->getData(eDVBFrontend::ADVANCED_SATPOSDEPENDS_ROOT, link);
+			if ( link != -1 )
+				{
+					eDebug("[eDVBResourceManager] another advanced satpos depending is in use.. so allocateFrontendByIndex not possible!");
+					err = errAllSourcesBusy;
+					goto alloc_fe_by_id_not_possible;
+				}
 			// check if another slot linked to this is in use
 			long tmp;
 			i->m_frontend->getData(eDVBFrontend::SATPOS_DEPENDS_PTR, tmp);
@@ -1276,7 +1351,7 @@ int eDVBResourceManager::canAllocateFrontend(ePtr<iDVBFrontendParameters> &fepar
 {
 	eSmartPtrList<eDVBRegisteredFrontend> &frontends = simulate ? m_simulate_frontend : m_frontend;
 	ePtr<eDVBRegisteredFrontend> best;
-	int bestval, current_fbc_setid, fbc_setid, c;
+	int bestval, current_fbc_setid, c;
 	bool check_fbc_leaf_linkable;
 
 	bestval = 0;
@@ -1287,9 +1362,10 @@ int eDVBResourceManager::canAllocateFrontend(ePtr<iDVBFrontendParameters> &fepar
 	{
 		if (!i->m_inuse)
 		{
+			c = 0;
 			if(i->m_frontend->is_FBCTuner() && m_fbcmng->CanLink(*i))
 			{
-				fbc_setid = m_fbcmng->GetFBCSetID(i->m_frontend->getSlotID());
+				int fbc_setid = m_fbcmng->GetFBCSetID(i->m_frontend->getSlotID());
 
 				if (fbc_setid != current_fbc_setid)
 				{
@@ -1691,7 +1767,7 @@ void eDVBChannel::cueSheetEvent(int event)
 				eDebug("[eDVBChannel] span translation failed.\n");
 				continue;
 			}
-			eDebug("[eDVBChannel] source span: %lld .. %lld, translated to %lld..%lld", pts_in, pts_out, offset_in, offset_out);
+			eDebug("[eDVBChannel] source span: %lld .. %lld, translated to %jd..%jd", pts_in, pts_out, (intmax_t)offset_in, (intmax_t)offset_out);
 			m_source_span.push_back(std::pair<off_t, off_t>(offset_in, offset_out));
 		}
 		break;
@@ -1714,14 +1790,14 @@ static inline long long align(long long x, int align)
 
 static size_t diff_upto(off_t high, off_t low, size_t max)
 {
-	off_t diff = high - low;
+	size_t diff = static_cast<size_t>(high-low);
 	if (diff < max)
-		return (size_t)diff;
+		return diff;
 	return max;
 }
 
 	/* remember, this gets called from another thread. */
-void eDVBChannel::getNextSourceSpan(off_t current_offset, size_t bytes_read, off_t &start, size_t &size, int blocksize)
+void eDVBChannel::getNextSourceSpan(off_t current_offset, size_t bytes_read, off_t &start, size_t &size, int blocksize, int &sof)
 {
 	unsigned int max = align(1024*1024*1024, blocksize);
 	current_offset = align(current_offset, blocksize);
@@ -1772,7 +1848,7 @@ void eDVBChannel::getNextSourceSpan(off_t current_offset, size_t bytes_read, off
 
 		if (m_skipmode_m)
 		{
-			eDebug("[eDVBChannel] we are at %lld, and we try to find the iframe here:", current_offset);
+			eDebug("[eDVBChannel] we are at %jd, and we try to find the iframe here:", (intmax_t)current_offset);
 			size_t iframe_len;
 			off_t iframe_start = current_offset;
 
@@ -1878,7 +1954,7 @@ void eDVBChannel::getNextSourceSpan(off_t current_offset, size_t bytes_read, off
 			continue;
 		}
 
-		eDebug("[eDVBChannel] ok, resolved skip (rel: %d, diff %lld), now at %08llx", relative, pts, offset);
+		eDebug("[eDVBChannel] ok, resolved skip (rel: %d, diff %lld), now at %16jx", relative, pts, (intmax_t)offset);
 		current_offset = align(offset, blocksize); /* in case tstools return non-aligned offset */
 	}
 
@@ -1909,29 +1985,29 @@ void eDVBChannel::getNextSourceSpan(off_t current_offset, size_t bytes_read, off
 				{
 					eDebug("[eDVBChannel] reached SOF");
 					m_skipmode_m = 0;
-					m_pvr_thread->sendEvent(eFilePushThread::evtUser);
+					sof = 1;
 				}
 			} else
 			{
 					/* when skipping reverse, however, choose the zone before. */
 					/* This returns a size 0 block, in case you noticed... */
 				--i;
-				eDebug("[eDVBChannel] skip to previous block, which is %lld..%lld", i->first, i->second);
+				eDebug("[eDVBChannel] skip to previous block, which is %jd..%jd", (intmax_t)i->first, (intmax_t)i->second);
 				size_t len = diff_upto(i->second, i->first, max);
 				start = i->second - len;
-				eDebug("[eDVBChannel] skipping to %lld, %zd", start, len);
+				eDebug("[eDVBChannel] skipping to %jd, %zd", (intmax_t)start, len);
 			}
 
-			eDebug("[eDVBChannel] result: %lld, %zx (%lld %lld)", start, size, i->first, i->second);
+			eDebug("[eDVBChannel] result: %jd, %zx (%jd %jd)", (intmax_t)start, size, (intmax_t)i->first, (intmax_t)i->second);
 			return;
 		}
 	}
 
-	if ((current_offset < -m_skipmode_m) && (m_skipmode_m < 0))
+	if ((current_offset < 0) && (m_skipmode_m < 0))
 	{
 		eDebug("[eDVBChannel] reached SOF");
 		m_skipmode_m = 0;
-		m_pvr_thread->sendEvent(eFilePushThread::evtUser);
+		sof = 1;
 	}
 
 	start = current_offset;
