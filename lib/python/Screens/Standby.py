@@ -1,21 +1,19 @@
-from os import path
-from gettext import dgettext
-from time import localtime, time
-from enigma import eDVBVolumecontrol, eTimer, eDVBLocalTimeHandler, eServiceReference, eStreamServer
-from boxbranding import getMachineBrand, getMachineName, getBoxType, getBrandOEM, getMachineBuild
-from GlobalActions import globalActionMap
-
+from Screens.Screen import Screen
 from Components.ActionMap import ActionMap
-from Components.AVSwitch import AVSwitch
 from Components.config import config
+from Components.AVSwitch import AVSwitch
 from Components.Console import Console
 import Components.ParentalControl
 from Components.SystemInfo import SystemInfo
 from Components.Sources.StaticText import StaticText
-from Components.Sources.StreamService import StreamServiceList
-import Screens.InfoBar
-from Screens.Screen import Screen, ScreenSummary
+from GlobalActions import globalActionMap
+from enigma import eDVBVolumecontrol, eTimer, eDVBLocalTimeHandler, eServiceReference
+from boxbranding import getMachineBrand, getMachineName, getBoxType
 from Tools import Notifications
+from time import localtime, time
+import Screens.InfoBar
+from gettext import dgettext
+import os
 
 inStandby = None
 
@@ -25,8 +23,6 @@ QUIT_RESTART = 3
 QUIT_UPGRADE_FP = 4
 QUIT_ERROR_RESTART = 5
 QUIT_RECOVERY = 16
-QUIT_ANDROID = 12
-QUIT_MAINT = 16
 QUIT_UPGRADE_PROGRAM = 42
 QUIT_IMAGE_RESTORE = 43
 
@@ -40,11 +36,6 @@ def setLCDMiniTVMode(value):
 
 class Standby2(Screen):
 	def Power(self):
-		if getBrandOEM() in ('dinobot') or SystemInfo["HasHiSi"]:
-			try:
-				open("/proc/stb/hdmi/output", "w").write("on")
-			except:
-				pass
 		print "[Standby] leave standby"
 		self.close(True)
 
@@ -64,7 +55,7 @@ class Standby2(Screen):
 
 		print "[Standby] enter standby"
 
-		if path.exists("/usr/scripts/standby_enter.sh"):
+		if os.path.exists("/usr/scripts/standby_enter.sh"):
 			Console().ePopen("/usr/scripts/standby_enter.sh")
 
 		self["actions"] = ActionMap( [ "StandbyActions" ],
@@ -116,12 +107,6 @@ class Standby2(Screen):
 			self.avswitch.setInput("SCART")
 		else:
 			self.avswitch.setInput("AUX")
-		if getBrandOEM() in ('dinobot') or SystemInfo["HasHiSi"]:
-			try:
-				open("/proc/stb/hdmi/output", "w").write("off")
-			except:
-				pass
-
 		self.onFirstExecBegin.append(self.__onFirstExecBegin)
 		self.onClose.append(self.__onClose)
 
@@ -144,7 +129,7 @@ class Standby2(Screen):
 		globalActionMap.setEnabled(True)
 		self.avswitch.setInput("ENCODER")
 		self.leaveMute()
-		if path.exists("/usr/scripts/standby_leave.sh"):
+		if os.path.exists("/usr/scripts/standby_leave.sh"):
 			Console().ePopen("/usr/scripts/standby_leave.sh")
 
 	def __onFirstExecBegin(self):
@@ -163,7 +148,18 @@ class Standby2(Screen):
 		self.session.nav.stopService()
 
 class Standby(Standby2):
-	def __init__(self, session):
+	def __init__(self, session, menu_path=""):
+		screentitle = _("Standby")
+		if config.usage.show_menupath.value == 'large':
+			menu_path += screentitle
+			title = menu_path
+			self["menu_path_compressed"] = StaticText("")
+		elif config.usage.show_menupath.value == 'small':
+			title = screentitle
+			self["menu_path_compressed"] = StaticText(menu_path + " >" if not menu_path.endswith(' / ') else menu_path[:-3] + " >" or "")
+		else:
+			title = screentitle
+			self["menu_path_compressed"] = StaticText("")
 		if Screens.InfoBar.InfoBar and Screens.InfoBar.InfoBar.instance and Screens.InfoBar.InfoBar.ptsGetTimeshiftStatus(Screens.InfoBar.InfoBar.instance):
 			self.skin = """<screen position="0,0" size="0,0"/>"""
 			Screen.__init__(self, session)
@@ -171,7 +167,7 @@ class Standby(Standby2):
 			self.onHide.append(self.close)
 		else:
 			Standby2.__init__(self, session)
-		self.setTitle(_("Standby"))
+		Screen.setTitle(self, title)
 
 	def showMessageBox(self):
 		Screens.InfoBar.InfoBar.checkTimeshiftRunning(Screens.InfoBar.InfoBar.instance, self.showMessageBoxcallback)
@@ -183,7 +179,7 @@ class Standby(Standby2):
 	def doStandby(self):
 		Notifications.AddNotification(Screens.Standby.Standby2)
 
-class StandbySummary(ScreenSummary):
+class StandbySummary(Screen):
 	skin = """
 	<screen position="0,0" size="132,64">
 		<widget source="global.CurrentTime" render="Label" position="0,0" size="132,64" font="Regular;40" halign="center">
@@ -212,11 +208,9 @@ class QuitMainloopScreen(Screen):
 			QUIT_SHUTDOWN: _("Your %s %s is shutting down") % (getMachineBrand(), getMachineName()),
 			QUIT_REBOOT: _("Your %s %s is rebooting") % (getMachineBrand(), getMachineName()),
 			QUIT_RESTART: _("The user interface of your %s %s is restarting") % (getMachineBrand(), getMachineName()),
-			QUIT_RECOVERY: _("Your %s %s is rebooting into Recovery Mode") % (getMachineBrand(), getMachineName()),
-			QUIT_ANDROID: _("Your %s %s is rebooting into Android Mode") % (getMachineBrand(), getMachineName()),
-			QUIT_MAINT: _("Your %s %s is rebooting into Recovery Mode") % (getMachineBrand(), getMachineName()),
 			QUIT_UPGRADE_FP: _("Your frontprocessor will be upgraded\nPlease wait until your %s %s reboots\nThis may take a few minutes") % (getMachineBrand(), getMachineName()),
 			QUIT_ERROR_RESTART: _("The user interface of your %s %s is restarting\ndue to an error in mytest.py") % (getMachineBrand(), getMachineName()),
+			QUIT_RECOVERY: _("Your %s %s is rebooting into Recovery Mode") % (getMachineBrand(), getMachineName()),
 			QUIT_UPGRADE_PROGRAM: _("Upgrade in progress\nPlease wait until your %s %s reboots\nThis may take a few minutes") % (getMachineBrand(), getMachineName()),
 			QUIT_IMAGE_RESTORE: _("Reflash in progress\nPlease wait until your %s %s reboots\nThis may take a few minutes") % (getMachineBrand(), getMachineName())
 		}.get(retvalue)
@@ -252,8 +246,6 @@ class TryQuitMainloop(MessageBox):
 		if recordings or (next_rec_time > 0 and (next_rec_time - time()) < 360):
 			default_yes = False
 			reason = _("Recording(s) are in progress or coming up in few seconds!") + '\n'
-		if eStreamServer.getInstance().getConnectedClients() or StreamServiceList:
-			reason += _("A client is streaming from this box!") + '\n'
 
 		if reason and inStandby:
 			session.nav.record_event.append(self.getRecordEvent)
@@ -263,15 +255,13 @@ class TryQuitMainloop(MessageBox):
 				QUIT_SHUTDOWN: _("Really shutdown now?"),
 				QUIT_REBOOT: _("Really reboot now?"),
 				QUIT_RESTART: _("Really restart now?"),
-				QUIT_RECOVERY: _("Really reboot into Recovery Mode?"),
-				QUIT_ANDROID: _("Really reboot into Android Mode?"),
-				QUIT_MAINT: _("Really reboot into Recovery Mode?"),
 				QUIT_UPGRADE_FP: _("Really upgrade the frontprocessor and reboot now?"),
+				QUIT_RECOVERY: _("Really reboot into Recovery Mode?"),
 				QUIT_UPGRADE_PROGRAM: _("Really upgrade your %s %s and reboot now?") % (getMachineBrand(), getMachineName()),
 				QUIT_IMAGE_RESTORE: _("Really reflash your %s %s and reboot now?") % (getMachineBrand(), getMachineName())
 			}.get(retvalue)
 			if text:
-				MessageBox.__init__(self, session, "%s\n%s" % (reason, text), type = MessageBox.TYPE_YESNO, timeout = timeout, default = default_yes)
+				MessageBox.__init__(self, session, reason+text, type = MessageBox.TYPE_YESNO, timeout = timeout, default = default_yes)
 				self.skinName = "MessageBoxSimple"
 				session.nav.record_event.append(self.getRecordEvent)
 				self.connected = True
@@ -306,7 +296,7 @@ class TryQuitMainloop(MessageBox):
 			self.hide()
 			if self.retval == 1:
 				config.misc.DeepStandby.value = True
-				if path.exists("/usr/scripts/standby_enter.sh"):
+				if os.path.exists("/usr/scripts/standby_enter.sh"):
 					Console().ePopen("/usr/scripts/standby_enter.sh")
 			self.session.nav.stopService()
 			self.quitScreen = self.session.instantiateDialog(QuitMainloopScreen,retvalue=self.retval)

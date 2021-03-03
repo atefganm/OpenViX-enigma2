@@ -26,8 +26,8 @@ from Components.Slider import Slider
 ocram = ''
 
 class SoftwareUpdateChanges(CommitInfo):
-	def __init__(self, session):
-		CommitInfo.__init__(self, session)
+	def __init__(self, session, menu_path=""):
+		CommitInfo.__init__(self, session, menu_path=menu_path)
 
 		self["actions"] = ActionMap(["SetupActions", "DirectionActions"],
 		{
@@ -42,14 +42,14 @@ class SoftwareUpdateChanges(CommitInfo):
 		self["key_red"] = Button(_("Close"))
 
 	def readGithubCommitLogs(self):
-		self.setTitle(gitcommitinfo.getScreenTitle())
+		self.updateScreenTitle(gitcommitinfo.getScreenTitle())
 		self["AboutScrollLabel"].setText(gitcommitinfo.readGithubCommitLogsSoftwareUpdate())
 
 
 class UpdateChoices(ChoiceBox):
-	def __init__(self, session, title="", list=None, keys=None, selection=0, skin_name=None, text="", reorderConfig="", var=""):
+	def __init__(self, session, title="", list=None, keys=None, selection=0, skin_name=None, text="", reorderConfig="", var="", menu_path=""):
 		print 'title:',title
-		ChoiceBox.__init__(self, session, title, list, keys, selection, skin_name, text, reorderConfig, var)
+		ChoiceBox.__init__(self, session, title, list, keys, selection, skin_name, text, reorderConfig, var, menu_path)
 		print 'title:',title
 
 		if var and var in ('unstable', 'updating', 'stable', 'unknown'):
@@ -59,11 +59,34 @@ class UpdateChoices(ChoiceBox):
 			self['tl_red'] = Pixmap()
 			self['tl_yellow'] = Pixmap()
 			self['tl_green'] = Pixmap()
+		if skin_name and 'SoftwareUpdateChoices' in skin_name:
+			self["menu_path_compressed"] = StaticText(menu_path)
 
-		self["menuActions"] = NumberActionMap(["MenuActions"],
+		self["actions"] = NumberActionMap(["WizardActions", "InputActions", "ColorActions", "DirectionActions", "MenuActions"],
 		{
+			"ok": self.go,
+			"1": self.keyNumberGlobal,
+			"2": self.keyNumberGlobal,
+			"3": self.keyNumberGlobal,
+			"4": self.keyNumberGlobal,
+			"5": self.keyNumberGlobal,
+			"6": self.keyNumberGlobal,
+			"7": self.keyNumberGlobal,
+			"8": self.keyNumberGlobal,
+			"9": self.keyNumberGlobal,
+			"0": self.keyNumberGlobal,
+			"red": self.keyRed,
+			"green": self.keyGreen,
+			"yellow": self.keyYellow,
+			"blue": self.keyBlue,
+			"up": self.up,
+			"down": self.down,
+			"left": self.left,
+			"right": self.right,
+			"shiftUp": self.additionalMoveUp,
+			"shiftDown": self.additionalMoveDown,
 			"menu": self.opensettings
-		}, prio=-3) # Override ChoiceBox "menu" action
+		}, prio=-2)
 		self.onShown.append(self.onshow)
 
 	def onshow(self):
@@ -95,10 +118,30 @@ class UpdateChoices(ChoiceBox):
 		self.close()
 
 class UpdatePlugin(Screen, ProtectedScreen):
-	def __init__(self, session, parent=None):
-		Screen.__init__(self, session, parent=parent)
+	def __init__(self, session, *args):
+		Screen.__init__(self, session)
 		ProtectedScreen.__init__(self)
-		self.setTitle(_("Software update"))
+		screentitle = _("Software update")
+		self.menu_path = args[0]
+		if config.usage.show_menupath.value == 'large':
+			self.menu_path += screentitle
+			self.title = self.menu_path
+			self.menu_path_compressed = ""
+			self.menu_path += ' / '
+		elif config.usage.show_menupath.value == 'small':
+			self.title = screentitle
+			condtext = ""
+			if self.menu_path and not self.menu_path.endswith(' / '):
+				condtext = self.menu_path + " >"
+			elif self.menu_path:
+				condtext = self.menu_path[:-3] + " >"
+			self.menu_path_compressed = condtext
+			self.menu_path += screentitle + ' / '
+		else:
+			self.title = screentitle
+			self.menu_path_compressed = ""
+		self["menu_path_compressed"] = StaticText(self.menu_path_compressed)
+		Screen.setTitle(self, self.title)
 
 		self["actions"] = ActionMap(["WizardActions"],
 		{
@@ -221,8 +264,6 @@ class UpdatePlugin(Screen, ProtectedScreen):
 		if event == IpkgComponent.EVENT_DOWNLOAD:
 			self.status.setText(_("Downloading"))
 		elif event == IpkgComponent.EVENT_UPGRADE:
-			if self.sliderPackages.has_key(param):
-				self.slider.setValue(self.sliderPackages[param])
 			if param in self.sliderPackages:
 				self.slider.setValue(self.sliderPackages[param])
 			self.package.setText(param)
@@ -291,14 +332,14 @@ class UpdatePlugin(Screen, ProtectedScreen):
 					choices.append((_("Update channel list only"), "channels"))
 					choices.append((_("Cancel"), ""))
 					self["actions"].setEnabled(True)
-					upgrademessage = self.session.openWithCallback(self.startActualUpgrade, UpdateChoices, text=message, list=choices, skin_name = "SoftwareUpdateChoices", var=self.trafficLight)
-					upgrademessage.setTitle(self.getTitle())
+					upgrademessage = self.session.openWithCallback(self.startActualUpgrade, UpdateChoices, text=message, list=choices, skin_name = "SoftwareUpdateChoices", var=self.trafficLight, menu_path=self.menu_path_compressed)
+					upgrademessage.setTitle(self.title)
 				else:
 					message = _("No updates found, Press OK to exit this screen.")
 					choices = [(_("Nothing to upgrade"), "")]
 					self["actions"].setEnabled(True)
-					upgrademessage = self.session.openWithCallback(self.startActualUpgrade, UpdateChoices, text=message, list=choices, skin_name = "SoftwareUpdateChoices", var=self.trafficLight)
-					upgrademessage.setTitle(self.getTitle())
+					upgrademessage = self.session.openWithCallback(self.startActualUpgrade, UpdateChoices, text=message, list=choices, skin_name = "SoftwareUpdateChoices", var=self.trafficLight, menu_path=self.menu_path_compressed)
+					upgrademessage.setTitle(self.title)
 			elif self.channellist_only > 0:
 				if self.channellist_only == 1:
 					self.setEndMessage(_("Could not find installed channel list."))
@@ -362,10 +403,10 @@ class UpdatePlugin(Screen, ProtectedScreen):
 			choices.append((_("Update channel list only"), "channels"))
 			choices.append((_("Cancel"), ""))
 			self["actions"].setEnabled(True)
-			upgrademessage = self.session.openWithCallback(self.startActualUpgrade, UpdateChoices, text=message, list=choices, skin_name="SoftwareUpdateChoices", var=self.trafficLight)
-			upgrademessage.setTitle(self.getTitle())
+			upgrademessage = self.session.openWithCallback(self.startActualUpgrade, UpdateChoices, text=message, list=choices, skin_name="SoftwareUpdateChoices", var=self.trafficLight, menu_path=self.menu_path_compressed)
+			upgrademessage.setTitle(self.title)
 		elif answer[1] == "changes":
-			self.session.openWithCallback(self.startActualUpgrade,SoftwareUpdateChanges)
+			self.session.openWithCallback(self.startActualUpgrade,SoftwareUpdateChanges, self.menu_path)
 		elif answer[1] == "backup":
 			self.doSettingsBackup()
 		elif answer[1] == "imagebackup":
