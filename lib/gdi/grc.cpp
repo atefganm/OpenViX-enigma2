@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <fstream>
 #include <lib/gdi/grc.h>
 #include <lib/gdi/font.h>
 #include <lib/base/init.h>
@@ -22,6 +23,7 @@ gRC::gRC(): rp(0), wp(0)
 #else
 ,m_notify_pump(eApp, 1)
 #endif
+,m_spinner_enabled(0), m_spinneronoff(1), m_prev_idle_count(0)
 {
 	ASSERT(!instance);
 	instance=this;
@@ -40,9 +42,23 @@ gRC::gRC(): rp(0), wp(0)
 	else
 		eDebug("[gRC] thread created successfully");
 #endif
-	m_spinner_enabled = 0;
-	m_spinneronoff = 1;
 }
+
+#ifdef CONFIG_ION
+void gRC::lock()
+{
+#ifndef SYNC_PAINT
+	pthread_mutex_lock(&mutex);
+#endif
+}
+
+void gRC::unlock()
+{
+#ifndef SYNC_PAINT
+	pthread_mutex_unlock(&mutex);
+#endif
+}
+#endif
 
 DEFINE_REF(gRC);
 
@@ -121,7 +137,7 @@ void *gRC::thread()
 #endif
 		if ( rp != wp )
 		{
-				/* make sure the spinner is not displayed when something is painted */
+				/* make sure the spinner is not displayed when we something is painted */
 			disableSpinner();
 
 			gOpcode o(queue[rp++]);
@@ -191,7 +207,11 @@ void *gRC::thread()
 				if (!idle)
 				{
 					if (!m_spinner_enabled)
+					{
 						eDebug("[gRC] main thread is non-idle! display spinner!");
+							std::ofstream dummy("/tmp/doPythonStackTrace");
+							dummy.close();
+					}
 					enableSpinner();
 				} else
 					disableSpinner();
@@ -444,8 +464,6 @@ void gPainter::setPalette(gRGB *colors, int start, int len)
 {
 	if ( m_dc->islocked() )
 		return;
-	if (len <= 0)
-		return;
 	ASSERT(colors);
 	gOpcode o;
 	o.opcode=gOpcode::setPalette;
@@ -453,7 +471,7 @@ void gPainter::setPalette(gRGB *colors, int start, int len)
 	gPalette *p=new gPalette;
 
 	o.parm.setPalette = new gOpcode::para::psetPalette;
-	p->data=new gRGB[static_cast<size_t>(len)];
+	p->data=new gRGB[len];
 
 	memcpy(static_cast<void*>(p->data), colors, len*sizeof(gRGB));
 	p->start=start;
@@ -651,6 +669,30 @@ void gPainter::sendHide(ePoint point, eSize size)
 }
 
 #ifdef USE_LIBVUGLES2
+void gPainter::sendShowItem(long dir, ePoint point, eSize size)
+{
+       if ( m_dc->islocked() )
+               return;
+       gOpcode o;
+       o.opcode=gOpcode::sendShowItem;
+       o.dc = m_dc.grabRef();
+       o.parm.setShowItemInfo = new gOpcode::para::psetShowItemInfo;
+       o.parm.setShowItemInfo->dir = dir;
+       o.parm.setShowItemInfo->point = point;
+       o.parm.setShowItemInfo->size = size;
+       m_rc->submit(o);
+}
+void gPainter::setFlush(bool val)
+{
+       if ( m_dc->islocked() )
+               return;
+       gOpcode o;
+       o.opcode=gOpcode::setFlush;
+       o.dc = m_dc.grabRef();
+       o.parm.setFlush = new gOpcode::para::psetFlush;
+       o.parm.setFlush->enable = val;
+       m_rc->submit(o);
+}
 void gPainter::setView(eSize size)
 {
 	if ( m_dc->islocked() )
@@ -738,7 +780,7 @@ void gDC::exec(const gOpcode *o)
 			int vcentered_top = o->parm.renderText->area.top() + ((o->parm.renderText->area.height() - bbox.height()) / 2);
 			int correction = vcentered_top - bbox.top();
 			// Only center if it fits, don't push text out the top
-			if (correction > 0)
+			if ((correction > 0) || (para->getLineCount() == 1))
 			{
 				offset += ePoint(0, correction);
 			}
@@ -880,6 +922,10 @@ void gDC::exec(const gOpcode *o)
 	case gOpcode::sendHide:
 		break;
 #ifdef USE_LIBVUGLES2
+	case gOpcode::sendShowItem:
+		break;
+	case gOpcode::setFlush:
+		break;
 	case gOpcode::setView:
 		break;
 #endif
