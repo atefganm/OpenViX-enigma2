@@ -34,9 +34,6 @@ class HardwareInfo:
 				elif "Brcm7401 V0.0" in rd:
 					HardwareInfo.device_name = "dm800"
 					print "dm800 detected!"
-				elif "MIPS 4KEc V4.8" in rd:
-					HardwareInfo.device_name = "dm7025"
-					print "dm7025 detected!"
 			except:
 				pass
 
@@ -53,6 +50,6 @@ class HardwareInfo:
 		return getBoxType() != 'dm800'
 
 	def is_nextgen(self):
-		if about.getCpuCoresInt() in ('BCM7346B2', 'BCM7425B2', 'BCM7429B0', 'ARMv7'):
-			return True
-		return False
+		if about.getCpuCoresInt() < 2 or about.getCPUSpeedMHzInt() < 750:
+			return False
+		return True

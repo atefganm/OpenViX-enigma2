@@ -6,21 +6,12 @@ from Components.AVSwitch import iAVSwitch
 
 from Components.Pixmap import Pixmap
 from Components.config import config, ConfigBoolean, configfile
+from Components.SystemInfo import SystemInfo
 
 from Tools.Directories import resolveFilename, SCOPE_SKIN, SCOPE_ACTIVE_SKIN
 from Tools.HardwareInfo import HardwareInfo
 
 config.misc.showtestcard = ConfigBoolean(default = False)
-
-boxtype = getBoxType()
-
-has_rca = getHaveRCA() in ('True',)
-has_dvi = getHaveDVI() in ('True',)
-has_jack = getHaveAVJACK() in ('True',)
-has_scart = getHaveSCART() in ('True',)
-
-if boxtype == 'dm8000' or boxtype == 'dm800':
-	has_dvi = True
 
 class VideoWizardSummary(WizardSummary):
 	def __init__(self, session, parent):
@@ -88,14 +79,8 @@ class VideoWizard(WizardLanguage, Rc):
 		for port in self.hw.getPortList():
 			if self.hw.isPortUsed(port):
 				descr = port
-				if descr == 'HDMI' and has_dvi:
-					descr = 'DVI'
-				if descr == 'RCA' and has_rca:
-					descr = 'RCA'
-				if descr == 'RCA' and has_jack:
-					descr = 'JACK'
-				if descr == 'Scart' and has_rca:
-					descr = 'RCA'
+				if descr == "Scart" and not SystemInfo["hasScart"]:
+					continue
 				if port != "DVI-PC":
 					list.append((descr,port))
 		list.sort(key = lambda x: x[0])
@@ -114,15 +99,11 @@ class VideoWizard(WizardLanguage, Rc):
 		self.inputSelect(self.selection)
 		if self["portpic"].instance is not None:
 			picname = self.selection
-			if picname == 'HDMI' and has_dvi:
-				picname = "DVI"
-			if picname == 'RCA' and has_rca:
-				picname = "RCA"
-			if picname == 'RCA' and has_jack:
+			if picname == "Jack":
 				picname = "JACK"
-			if picname == 'Scart' and has_rca:
-				picname = "RCA"	
-			self["portpic"].instance.setPixmapFromFile(resolveFilename(SCOPE_ACTIVE_SKIN, "icons/" + picname + ".png"))
+			if picname == "Scart-YPbPr":
+				picname = "Scart"
+			self["portpic"].instance.setPixmapFromFile(resolveFilename(SCOPE_ACTIVE_SKIN, "icons/%s.png" % picname))
 
 	def inputSelect(self, port):
 		print "[VideoWizard] inputSelect:", port

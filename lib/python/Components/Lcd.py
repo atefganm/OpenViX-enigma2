@@ -1,3 +1,4 @@
+from __future__ import print_function
 from boxbranding import getBoxType, getDisplayType
 from sys import maxint
 
@@ -190,13 +191,13 @@ class LCD:
 		return eDBoxLCD.getInstance().isOled()
 
 	def setMode(self, value):
-		print 'setLCDMode',value
+		print("[LCD] setLCDMode", value)
 		f = open("/proc/stb/lcd/show_symbols", "w")
 		f.write(value)
 		f.close()
 
 	def setPower(self, value):
-		print 'setLCDPower',value
+		print("[LCD] setLCDPower", value)
 		f = open("/proc/stb/power/vfd", "w")
 		f.write(value)
 		f.close()
@@ -211,16 +212,16 @@ class LCD:
 		eDBoxLCD.getInstance().setLED(value, 2)
 
 	def setLCDMiniTVMode(self, value):
-		print 'setLCDMiniTVMode',value
+		print("[LCD] setLCDMiniTVMode", value)
 		f = open('/proc/stb/lcd/mode', "w")
 		f.write(value)
 		f.close()
 
 	def setLCDMiniTVPIPMode(self, value):
-		print 'setLCDMiniTVPIPMode',value
+		print("[LCD] setLCDMiniTVPIPMode", value)
 
 	def setLCDMiniTVFPS(self, value):
-		print 'setLCDMiniTVFPS',value
+		print("[LCD] setLCDMiniTVFPS", value)
 		f = open('/proc/stb/lcd/fps', "w")
 		f.write("%d \n" % value)
 		f.close()
@@ -240,8 +241,10 @@ def standbyCounterChanged(dummy):
 		config.lcd.ledbrightnessdeepstandby.apply()
 
 def InitLcd():
-	if getBoxType() in ('vusolo'):
+	if getBoxType() in ('et4x00', 'et5x00', 'et6x00', 'gb800se', 'gb800solo', 'iqonios300hd', 'mbmicro', 'sf128', 'sf138', 'tmsingle', 'tmnano2super', 'tmnanose', 'tmnanoseplus', 'tmnanosem2', 'tmnanosem2plus', 'tmnanosecombo', 'vusolo'):
 		detected = False
+	elif getBoxType() in ('gbtrio4k',):
+		detected = True
 	else:
 		detected = eDBoxLCD.getInstance().detected()
 
@@ -253,14 +256,14 @@ def InitLcd():
 	if fileExists("/proc/stb/lcd/mode"):
 		f = open("/proc/stb/lcd/mode", "r")
 		can_lcdmodechecking = f.read().strip().split(" ")
-		print 'LCDMiniTV',can_lcdmodechecking
+		print("[LCD] LCDMiniTV", can_lcdmodechecking)
 		f.close()
 	else:
 		can_lcdmodechecking = False
 
 	if SystemInfo["PowerLED"]:
 		def setPowerLEDstate(configElement):
-			print "[LCD]PowerLED = %s" %SystemInfo["PowerLED"]
+			print("[LCD] PowerLED = %s" % SystemInfo["PowerLED"])
 			f = open("/proc/stb/power/powerled", "w")
 			f.write(configElement.value)
 			f.close()
@@ -269,7 +272,7 @@ def InitLcd():
 
 	if SystemInfo["PowerLED2"]:
 		def setPowerLEDstate2(configElement):
-			print "[LCD]PowerLED2 = %s" %SystemInfo["PowerLED2"]
+			print("[LCD] PowerLED2 = %s" % SystemInfo["PowerLED2"])
 			f = open("/proc/stb/power/powerled2", "w")
 			f.write(configElement.value)
 			f.close()
@@ -278,7 +281,7 @@ def InitLcd():
 
  	if SystemInfo["StandbyLED"]:
 		def setPowerLEDstanbystate(configElement):
-			print "[LCD]StandbyLED = %s configElement = %s" % (SystemInfo["StandbyLED"], configElement.value)
+			print("[LCD] StandbyLED = %s configElement = %s" % (SystemInfo["StandbyLED"], configElement.value))
 			f = open("/proc/stb/power/standbyled", "w")
 			f.write(configElement.value)
 			f.close()
@@ -287,7 +290,7 @@ def InitLcd():
 
  	if SystemInfo["SuspendLED"]:
 		def setPowerLEDdeepstanbystate(configElement):
-			print "[LCD]SuspendLED = %s configElement = %s" % (SystemInfo["SuspendLED"], configElement.value)
+			print("[LCD] SuspendLED = %s configElement = %s" % (SystemInfo["SuspendLED"], configElement.value))
 			f = open("/proc/stb/power/suspendled", "w")
 			f.write(configElement.value)
 			f.close()
@@ -364,7 +367,6 @@ def InitLcd():
 		config.lcd.ledbrightness = ConfigSlider(default = 3, increment = 1, limits = (0,15))
 		config.lcd.ledbrightness.addNotifier(setLEDnormalstate)
 		config.lcd.ledbrightness.apply = lambda : setLEDnormalstate(config.lcd.ledbrightness)
-		config.lcd.ledbrightness.callNotifiersOnSaveAndCancel = True
 
 	if detected:
 		config.lcd.scroll_speed = ConfigSelection(default = "300", choices = [
@@ -422,11 +424,7 @@ def InitLcd():
 			config.lcd.contrast.addNotifier(setLCDcontrast)
 		else:
 			config.lcd.contrast = ConfigNothing()
-			if getBoxType() in ('dm900','dm920'):			
-				standby_default = 4              			
-			else:                              			
-				standby_default = 1              			
-			
+			standby_default = 1
 
 		config.lcd.standby = ConfigSlider(default=standby_default, limits=(0, 10))
 		config.lcd.standby.addNotifier(setLCDbright)
@@ -435,8 +433,6 @@ def InitLcd():
 		config.lcd.bright = ConfigSlider(default=5, limits=(0, 10))
 		config.lcd.bright.addNotifier(setLCDbright)
 		config.lcd.bright.apply = lambda : setLCDbright(config.lcd.bright)
-		config.lcd.bright.callNotifiersOnSaveAndCancel = True
-
 		config.lcd.dimbright = ConfigSlider(default=standby_default, limits=(0, 10))
 		config.lcd.dimbright.addNotifier(setLCDdimbright);
 		config.lcd.dimbright.apply = lambda : setLCDdimbright(config.lcd.dimbright)

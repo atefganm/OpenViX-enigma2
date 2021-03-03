@@ -24,8 +24,6 @@ import eBaseImpl
 enigma.eTimer = eBaseImpl.eTimer
 enigma.eSocketNotifier = eBaseImpl.eSocketNotifier
 enigma.eConsoleAppContainer = eConsoleImpl.eConsoleAppContainer
-from boxbranding import getBoxType
-boxtype = getBoxType()
 
 if getImageArch() in ("aarch64"):
 	import usb.core
@@ -68,7 +66,6 @@ from Components.config import config, configfile, ConfigText, ConfigYesNo, Confi
 InitFallbackFiles()
 
 profile("config.misc")
-config.misc.boxtype = ConfigText(default = boxtype)
 config.misc.blackradiopic = ConfigText(default = resolveFilename(SCOPE_ACTIVE_SKIN, "black.mvi"))
 radiopic = resolveFilename(SCOPE_ACTIVE_SKIN, "radio.mvi")
 if os.path.exists(resolveFilename(SCOPE_CONFIG, "radio.mvi")):
@@ -115,7 +112,6 @@ def NTPserverChanged(configelement):
 	Console = Console()
 	Console.ePopen('/usr/bin/ntpdate-sync')
 config.misc.NTPserver.addNotifier(NTPserverChanged, immediate_feedback = False)
-config.misc.NTPserver.callNotifiersOnSaveAndCancel = True
 
 profile("Twisted")
 try:
@@ -374,6 +370,25 @@ class Session:
 		if self.summary is not None:
 			self.summary.show()
 
+	def reloadSkin(self):
+		from Screens.MessageBox import MessageBox
+		reloadNotification = self.instantiateDialog(MessageBox, _("Loading skin"), MessageBox.TYPE_INFO, 
+			simple=True, picon=False, title=_("Please wait"))
+		reloadNotification.show()
+
+		# close all open dialogs by emptying the dialog stack
+		# remove any return values and callbacks for a swift exit
+		while self.current_dialog is not None and type(self.current_dialog) is not InfoBar.InfoBar:
+			print("[SkinReloader] closing %s" % type(self.current_dialog))
+			self.current_dialog.returnValue = None
+			self.current_dialog.callback = None
+			self.execEnd()
+			self.processDelay()
+		# need to close the infobar outside the loop as its exit causes a new infobar to be created
+		print("[SkinReloader] closing InfoBar")
+		InfoBar.InfoBar.instance.close("reloadskin", reloadNotification)
+
+
 profile("Standby,PowerKey")
 import Screens.Standby
 from Screens.Menu import MainMenu, mdom
@@ -511,15 +526,17 @@ def runScreenTest():
 
 	def runNextScreen(session, screensToRun, *result):
 		if result:
-			enigma.quitMainloop(*result)
-			return
-
-		screen = screensToRun[0][1]
-		args = screensToRun[0][2:]
-		if screensToRun:
-			session.openWithCallback(boundFunction(runNextScreen, session, screensToRun[1:]), screen, *args)
+			if result[0] == "reloadskin":
+				skin.InitSkins(False)
+				session.openWithCallback(boundFunction(runNextScreen, session, []), InfoBar.InfoBar)
+				if result[1]:
+					session.deleteDialog(result[1])
+			else:
+				enigma.quitMainloop(*result)
 		else:
-			session.open(screen, *args)
+			screen = screensToRun[0][1]
+			args = screensToRun[0][2:]
+			session.openWithCallback(boundFunction(runNextScreen, session, screensToRun[1:]), screen, *args)
 
 	runNextScreen(session, screensToRun)
 
@@ -666,22 +683,6 @@ profile("LCD")
 import Components.Lcd
 Components.Lcd.InitLcd()
 Components.Lcd.IconCheck()
-
-if boxtype in ('dm7080', 'dm820', 'dm900', 'dm920', 'gb7252'):
-	f=open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor","r")
-	check=f.read()
-	f.close()
-	if check.startswith("on"):
-		f=open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor","w")
-		f.write("off")
-		f.close()
-	f=open("/proc/stb/audio/hdmi_rx_monitor","r")
-	check=f.read()
-	f.close()
-	if check.startswith("on"):
-		f=open("/proc/stb/audio/hdmi_rx_monitor","w")
-		f.write("off")
-		f.close()
 
 profile("UserInterface")
 import Screens.UserInterfacePositioner
