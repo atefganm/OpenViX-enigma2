@@ -15,19 +15,27 @@ struct gRGB
 	union {
 #if BYTE_ORDER == LITTLE_ENDIAN
 		struct {
-			uint8_t b, g, r, a;
+			unsigned char b, g, r, a;
 		};
 #else
 		struct {
-			uint8_t a, r, g, b;
+			unsigned char a, r, g, b;
 		};
 #endif
-		uint32_t value;
+#if defined (__aarch64__)
+		unsigned int value;
+#else
+		unsigned long value;
+#endif
 	};
 	gRGB(int r, int g, int b, int a=0): b(b), g(g), r(r), a(a)
 	{
 	}
+#if defined (__aarch64__)
 	gRGB(unsigned int val): value(val)
+#else
+	gRGB(unsigned long val): value(val)
+#endif
 	{
 	}
 	gRGB(const gRGB& other): value(other.value)
@@ -35,7 +43,11 @@ struct gRGB
 	}
 	gRGB(const char *colorstring)
 	{
+#if defined (__aarch64__)
 		unsigned int val = 0;
+#else
+		unsigned long val = 0;
+#endif
 		if (colorstring)
 		{
 			for (int i = 0; i < 8; i++)
@@ -51,21 +63,32 @@ struct gRGB
 	{
 	}
 
+#if defined (__aarch64__)
 	unsigned int argb() const
+#else
+	unsigned long argb() const
+#endif
 	{
 		return value;
 	}
 
+#if defined (__aarch64__)
 	void set(unsigned int val)
+#else
+	void set(unsigned long val)
+#endif
 	{
 		value = val;
 	}
 
+#if defined (__aarch64__)
 	void operator=(unsigned int val)
+#else
+	void operator=(unsigned long val)
+#endif
 	{
 		value = val;
 	}
-	gRGB& operator=(const gRGB&) = default;
 	bool operator < (const gRGB &c) const
 	{
 		if (b < c.b)
@@ -92,9 +115,13 @@ struct gRGB
 	{
 		return c.value != value;
 	}
-	operator std::string () const
+	operator const std::string () const
 	{
+#if defined (__aarch64__)
 		unsigned int val = value;
+#else
+		unsigned long val = value;
+#endif
 		std::string escapecolor = "\\c";
 		escapecolor.resize(10);
 		for (int i = 9; i >= 2; i--)
@@ -133,7 +160,11 @@ struct gPalette
 {
 	int start, colors;
 	gRGB *data;
+#if defined (__aarch64__)
+	unsigned int data_phys;
+#else
 	unsigned long data_phys;
+#endif
 	gColor findColor(const gRGB rgb) const;
 	gPalette():	start(0), colors(0), data(0), data_phys(0) {}
 };
@@ -198,11 +229,8 @@ public:
 		accelAlways = 1,
 	};
 
-	typedef void (*gPixmapDisposeCallback)(gPixmap* pixmap);
-
 	gPixmap(gUnmanagedSurface *surface);
 	gPixmap(eSize, int bpp, int accel = 0);
-	gPixmap(int width, int height, int bpp, gPixmapDisposeCallback on_dispose, int accel = accelAuto);
 
 	gUnmanagedSurface *surface;
 
@@ -212,7 +240,7 @@ public:
 	eSize size() const { return eSize(surface->x, surface->y); }
 
 private:
-	gPixmapDisposeCallback on_dispose;
+	bool must_delete_surface;
 
 	friend class gDC;
 	void fill(const gRegion &clip, const gColor &color);
