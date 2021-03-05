@@ -38,34 +38,24 @@ class AVSwitch:
 	rates["PAL"] =		{	"50Hz":		{ 50: "pal" },
 							"60Hz":		{ 60: "pal60" },
 							"multi":	{ 50: "pal", 60: "pal60" } }
-
 	rates["NTSC"] =		{	"60Hz":		{ 60: "ntsc" } }
-
 	rates["Multi"] =	{	"multi":	{ 50: "pal", 60: "ntsc" } }
-
 	rates["480i"] =		{	"60Hz":		{ 60: "480i" } }
-
 	rates["576i"] =		{	"50Hz":		{ 50: "576i" } }
-
 	rates["480p"] =		{	"60Hz":		{ 60: "480p" } }
-
 	rates["576p"] =		{	"50Hz":		{ 50: "576p" } }
-
 	rates["720p"] =		{	"50Hz":		{ 50: "720p50" },
 							"60Hz":		{ 60: "720p" },
 							"multi":	{ 50: "720p50", 60: "720p" },
 							"auto":		{ 50: "720p50", 60: "720p", 24: "720p24" } }
-
 	rates["1080i"] =	{	"50Hz":		{ 50: "1080i50" },
 							"60Hz":		{ 60: "1080i" },
 							"multi":	{ 50: "1080i50", 60: "1080i" },
 							"auto":		{ 50: "1080i50", 60: "1080i", 24: "1080p24" } }
-
 	rates["1080p"] =	{ 	"50Hz":		{ 50: "1080p50" },
 							"60Hz":		{ 60: "1080p" },
 							"multi":	{ 50: "1080p50", 60: "1080p" },
 							"auto":		{ 50: "1080p50", 60: "1080p", 24: "1080p24" } }
-
 	if getBoxType().startswith('dm9'):
 		rates["2160p"] =	{ 	"50Hz":		{ 50: "2160p50" },
 								"60Hz":		{ 60: "2160p60" },
@@ -76,12 +66,10 @@ class AVSwitch:
 								"60Hz":		{ 60: "2160p" },
 								"multi":	{ 50: "2160p50", 60: "2160p" },
 								"auto":		{ 50: "2160p50", 60: "2160p", 24: "2160p24" } }
-
 	rates["2160p30"] =	{ 	"25Hz":		{ 50: "2160p25" },
 							"30Hz":		{ 60: "2160p30"} ,
 							"multi":	{ 50: "2160p25", 60: "2160p30" },
 							"auto":		{ 50: "2160p25", 60: "2160p30", 24: "2160p24" } }
-
 	rates["PC"] = {
 		"1024x768":						{ 60: "1024x768" }, # not possible on DM7025
 		"800x600" :						{ 60: "800x600" },  # also not possible
@@ -116,7 +104,6 @@ class AVSwitch:
 	else:
 		modes["HDMI"] = ["720p", "1080i", "576p", "576i", "480p", "480i"]
 		widescreen_modes = {"720p", "1080i"}
-
 	modes['YPbPr'] = modes['HDMI']
 	if getBrandOEM() == 'vuplus' and getBoxType() not in ('vusolo4k', 'vuuno4k', 'vuuno4kse', 'vuzero4k', 'vuultimo4k'):
 		modes['Scart-YPbPr'] = modes['HDMI']
