@@ -1,9 +1,6 @@
 import sys
 import os
 from time import time
-from boxbranding import getBoxType
-
-boxtype = getBoxType()
 
 if os.path.isfile("/usr/lib/enigma2/python/enigma.zip"):
 	sys.path.append("/usr/lib/enigma2/python/enigma.zip")
@@ -27,6 +24,13 @@ import eBaseImpl
 enigma.eTimer = eBaseImpl.eTimer
 enigma.eSocketNotifier = eBaseImpl.eSocketNotifier
 enigma.eConsoleAppContainer = eConsoleImpl.eConsoleAppContainer
+
+# This includes initializing the translation engine.
+# Moving this further down will break translation.
+# Moving further up will break imports in config.py
+profile("SetupDevices")
+import Components.SetupDevices
+Components.SetupDevices.InitSetupDevices()
 
 if getImageArch() in ("aarch64"):
 	import usb.core
@@ -633,10 +637,6 @@ import Components.InputDevice
 Components.InputDevice.InitInputDevices()
 import Components.InputHotplug
 
-profile("SetupDevices")
-import Components.SetupDevices
-Components.SetupDevices.InitSetupDevices()
-
 profile("UserInterface")
 import Screens.UserInterfacePositioner
 Screens.UserInterfacePositioner.InitOsd()
@@ -686,22 +686,6 @@ profile("LCD")
 import Components.Lcd
 Components.Lcd.InitLcd()
 Components.Lcd.IconCheck()
-
-if boxtype in ('dm7080', 'dm820', 'dm900', 'dm920', 'gb7252'):
-	f=open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor","r")
-	check=f.read()
-	f.close()
-	if check.startswith("on"):
-		f=open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor","w")
-		f.write("off")
-		f.close()
-	f=open("/proc/stb/audio/hdmi_rx_monitor","r")
-	check=f.read()
-	f.close()
-	if check.startswith("on"):
-		f=open("/proc/stb/audio/hdmi_rx_monitor","w")
-		f.write("off")
-		f.close()
 
 profile("UserInterface")
 import Screens.UserInterfacePositioner

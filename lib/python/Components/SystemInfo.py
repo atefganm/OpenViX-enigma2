@@ -1,4 +1,4 @@
-from boxbranding import getBoxType, getBrandOEM, getDisplayType, getHaveAVJACK, getHaveDVI, getHaveHDMI, getHaveHDMIinFHD, getHaveHDMIinHD, getHaveRCA, getHaveSCART, getHaveSCARTYUV, getHaveYUV, getMachineBrand, getMachineBuild, getMachineMtdRoot, getMachineName
+from boxbranding import getBoxType, getBrandOEM, getDisplayType, getHaveAVJACK, getHaveHDMIinFHD, getHaveHDMIinHD, getHaveRCA, getHaveSCART, getHaveSCARTYUV, getHaveYUV, getImageType, getMachineBrand, getMachineBuild, getMachineMtdRoot, getMachineName
 from enigma import Misc_Options, eDVBCIInterfaces, eDVBResourceManager
 
 from Components.About import getChipSetString
@@ -88,7 +88,7 @@ SystemInfo["Has24hz"] = fileCheck("/proc/stb/video/videomode_24hz")
 SystemInfo["AndroidMode"] = SystemInfo["RecoveryMode"] and getMachineBuild() in ("multibox",)
 SystemInfo["MBbootdevice"] = getMBbootdevice()
 SystemInfo["canMultiBoot"] = getMultibootslots()
-SystemInfo["HasHiSi"] = pathExists("/proc/hisi")
+SystemInfo["HasHiSi"] = pathExists("/proc/hisi") and getBoxType() not in ("viper4kv20",)
 SystemInfo["canBackupEMC"] = getMachineBuild() in ("hd51", "h7") and ("disk.img", "%s" % SystemInfo["MBbootdevice"]) or getMachineBuild() in ("osmio4k", "osmio4kplus", "osmini4k") and ("emmc.img", "%s" % SystemInfo["MBbootdevice"]) or SystemInfo["HasHiSi"] and ("usb_update.bin", "none")
 SystemInfo["canMode12"] = getMachineBuild() in ("hd51", "h7") and ("brcm_cma=440M@328M brcm_cma=192M@768M", "brcm_cma=520M@248M brcm_cma=200M@768M")
 SystemInfo["HasMMC"] = fileHas("/proc/cmdline", "root=/dev/mmcblk") or "mmcblk" in getMachineMtdRoot()
@@ -139,15 +139,9 @@ SystemInfo["VideoModes"] = getChipSetString() in (  # 2160p and 1080p capable ha
 	{"720p", "1080i"}  # Widescreen modes.
 )
 
-SystemInfo["HaveTouchSensor"] = getBoxType() in ("dm520", "dm525", "dm900", "dm920")
-SystemInfo["DefaultDisplayBrightness"] = getBoxType() in ("dm900", "dm920") and 8 or 5
-SystemInfo["HDMIin"] = getMachineBuild() in ("dm7080", "dm820", "dm900", "dm920")
-SystemInfo["HaveRCA"] = getHaveRCA() == "True"
-SystemInfo["HaveDVI"] = getHaveDVI() == "True"
-SystemInfo["HAVEYUV"] = getHaveYUV() == "True"
-SystemInfo["HAVEHDMI"] = getHaveHDMI() == "True"
-SystemInfo["HAVESCART"] = getHaveSCART() == "True"
-SystemInfo["HAVESCARTYUV"] = getHaveSCARTYUV() == "True"
-SystemInfo["HaveAVJACK"] = getHaveAVJACK() == "True"
-SystemInfo["RecoveryMode"] = fileCheck("/proc/stb/fp/boot_mode")
+SystemInfo["FbcTunerPowerAlwaysOn"] = getBoxType() in ("vusolo4k", "vuduo4k", "vuduo4kse", "vuultimo4k", "vuuno4k", "vuuno4kse", "gbquad4k", "gbue4k")
+
+SystemInfo["rc_model"] = rc_model.getRcFolder()
+SystemInfo["mapKeyInfoToEpgFunctions"] = SystemInfo["rc_model"] in ("vu", "vu2", "vu3", "vu4") # due to button limitations of the remote control
+SystemInfo["toggleTvRadioButtonEvents"] = SystemInfo["rc_model"] in ("ax4", "beyonwiz1", "beyonwiz2", "gb0", "gb1", "gb2", "gb3", "gb4", "sf8008", "sf8008m", "uniboxhde") # due to button limitations of the remote control
 
