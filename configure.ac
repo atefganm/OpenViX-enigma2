@@ -58,6 +58,12 @@ AC_ARG_WITH(boxtype,
 AC_SUBST(BOXTYPE)
 AC_DEFINE_UNQUOTED(BOXTYPE,"$BOXTYPE",[box type])
 
+AC_ARG_WITH(boxbrand,
+	AS_HELP_STRING([--with-boxbrand],[build for BOXBRAND, $withval]),
+	[BOXBRAND="$withval"],[BOXBRAND=""])
+AC_SUBST(BOXBRAND)
+AC_DEFINE_UNQUOTED(BOXBRAND,"$BOXBRAND",[box brand])
+
 AM_CONDITIONAL(AZBOX, test `echo "$BOXTYPE" | cut -b 1-5` == "azbox")
 AM_CONDITIONAL(CUBE, test `echo "$BOXTYPE" | cut -b 1-4` == "cube")
 AM_CONDITIONAL(DAGS, test `echo "$BOXTYPE" | cut -b 1-4` == "dags")
@@ -83,14 +89,24 @@ AM_CONDITIONAL(DAGS3, test "$BOXTYPE" == "dags3")
 AM_CONDITIONAL(DAGS4, test "$BOXTYPE" == "dags4")
 AM_CONDITIONAL(DAGS5, test "$BOXTYPE" == "dags5")
 AM_CONDITIONAL(DAGS6, test "$BOXTYPE" == "dags6")
-AM_CONDITIONAL(DM500HD, test "$BOXTYPE" == "dm500hd")
-AM_CONDITIONAL(DM500HDV2, test "$BOXTYPE" == "dm500hdv2")
-AM_CONDITIONAL(DM7020HD, test "$BOXTYPE" == "dm7020hd")
-AM_CONDITIONAL(DM7020HDV2, test "$BOXTYPE" == "dm7020hdv2")
-AM_CONDITIONAL(DM800, test "$BOXTYPE" == "dm800")
-AM_CONDITIONAL(DM8000, test "$BOXTYPE" == "dm8000")
-AM_CONDITIONAL(DM800SE, test "$BOXTYPE" == "dm800se")
-AM_CONDITIONAL(DM800SEV2, test "$BOXTYPE" == "dm800sev2")
+AM_CONDITIONAL(DM900, test "$BOXTYPE" == dm900)
+AM_CONDITIONAL(DM920, test "$BOXTYPE" == dm920)
+AM_CONDITIONAL(DM8000, test "$BOXTYPE" == dm8000)
+AM_CONDITIONAL(DM7080, test "$BOXTYPE" == dm7080)
+AM_CONDITIONAL(DM820, test "$BOXTYPE" == dm820)
+AM_CONDITIONAL(DM520, test "$BOXTYPE" == dm520)
+AM_CONDITIONAL(DM7020HD, test "$BOXTYPE" == dm7020hd)
+AM_CONDITIONAL(DM7020HDV2, test "$BOXTYPE" == dm7020hdv2)
+AM_CONDITIONAL(DM800, test "$BOXTYPE" == dm800)
+AM_CONDITIONAL(DM800SE, test "$BOXTYPE" == dm800se)
+AM_CONDITIONAL(DM800SEV2, test "$BOXTYPE" == dm800sev2)
+AM_CONDITIONAL(DM500HD, test "$BOXTYPE" == dm500hd)
+AM_CONDITIONAL(DM500HDV2, test "$BOXTYPE" == dm500hdv2)
+AM_CONDITIONAL(HAVE_COLORLCD3, test "$BOXTYPE" == dm7080)
+AM_CONDITIONAL(HAVE_COLORLCD2, test "$BOXTYPE" == dm800se -o "$BOXTYPE" == dm800sev2 -o "$BOXTYPE" == dm820)
+AM_CONDITIONAL(HAVE_COLORLCD1, test "$BOXTYPE" == dm8000 -o "$BOXTYPE" == dm800 -o "$BOXTYPE" == dm7020hd -o "$BOXTYPE" == dm7020hdv2)
+AM_CONDITIONAL(HAVE_GRAUTEC8000, test "$BOXTYPE" == dm8000)
+AM_CONDITIONAL(HAVE_GRAUTEC70X0, test "$BOXTYPE" == dm7020hd -o "$BOXTYPE" == dm7020hdv2 -o "$BOXTYPE" == dm7080)
 AM_CONDITIONAL(E3HD, test "$BOXTYPE" == "e3hd")
 AM_CONDITIONAL(EBOX5000, test "$BOXTYPE" == "ebox5000")
 AM_CONDITIONAL(EBOX5100, test "$BOXTYPE" == "ebox5100")
@@ -276,6 +292,16 @@ if test x"$with7segment" != xno ; then
 fi
 AM_CONDITIONAL(HAVE_7SEGMENT, test x"$with7segment" != xno)
 
+AC_ARG_WITH(bwlcd96,
+	AC_HELP_STRING([--with-bwlcd96], [use 96x64 1bpp black and white display, yes or no]),
+	[[withbwlcd96=$withval]],
+	[[withbwlcd96=no]]
+)
+if test x"$withbwlcd96" != xno ; then
+	AC_DEFINE(HAVE_BWLCD96, 1,[Define when using a 96x64 black and white display device])
+fi
+AM_CONDITIONAL(HAVE_BWLCD96, test x"$withbwlcd96" != xno)
+
 AC_ARG_WITH(colorlcd,
 	AC_HELP_STRING([--with-colorlcd], [use 96x64 16bpp color display, yes or no]),
 	[[withcolorlcd=$withval]],
@@ -296,6 +322,16 @@ if test x"$withcolorlcd128" != xno ; then
 fi
 AM_CONDITIONAL(HAVE_COLORLCD128, test x"$withcolorlcd" != xno)
 
+AC_ARG_WITH(colorlcd128dm,
+	AC_HELP_STRING([--with-colorlcd128dm], [use 128x64 16bpp color display, yes or no]),
+	[[withcolorlcd128dm=$withval]],
+	[[withcolorlcd128dm=no]]
+)
+if test x"$withcolorlcd128dm" != xno ; then
+	AC_DEFINE(HAVE_COLORLCD128DM, 1,[Define when using a 128x64 color display device])
+fi
+AM_CONDITIONAL(HAVE_COLORLCD128DM, test x"$withcolorlcd" != xno)
+
 AC_ARG_WITH(colorlcd220,
 	AC_HELP_STRING([--with-colorlcd220], [use 220x176 16bpp color display, yes or no]),
 	[[withcolorlcd220=$withval]],
@@ -306,6 +342,16 @@ if test x"$withcolorlcd220" != xno ; then
 fi
 AM_CONDITIONAL(HAVE_COLORLCD220, test x"$withcolorlcd220" != xno)
 
+AC_ARG_WITH(colorlcd390,
+	AC_HELP_STRING([--with-colorlcd390], [use 390x240 16bpp color display, yes or no]),
+	[[withcolorlcd390=$withval]],
+	[[withcolorlcd390=no]]
+)
+if test x"$withcolorlcd390" != xno ; then
+	AC_DEFINE(HAVE_COLORLCD390, 1,[Define when using a 390x240 color display device])
+fi
+AM_CONDITIONAL(HAVE_COLORLCD390, test x"$withcolorlcd390" != xno)
+
 AC_ARG_WITH(colorlcd400,
 	AC_HELP_STRING([--with-colorlcd400], [use 400x176 16bpp color display, yes or no]),
 	[[withcolorlcd400=$withval]],
@@ -315,6 +361,16 @@ if test x"$withcolorlcd400" != xno ; then
 	AC_DEFINE(HAVE_COLORLCD400, 1,[Define when using a 400x176 color display device])
 fi
 AM_CONDITIONAL(HAVE_COLORLCD400, test x"$withcolorlcd400" != xno)
+
+AC_ARG_WITH(colorlcd400dm,
+	AC_HELP_STRING([--with-colorlcd400dm], [use 400x176 16bpp color display, yes or no]),
+	[[withcolorlcd400dm=$withval]],
+	[[withcolorlcd400dm=no]]
+)
+if test x"$withcolorlcd400dm" != xno ; then
+	AC_DEFINE(HAVE_COLORLCD400DM, 1,[Define when using a 400x176 color display device])
+fi
+AM_CONDITIONAL(HAVE_COLORLCD400DM, test x"$withcolorlcd400" != xno)
 
 AC_ARG_WITH(colorlcd480,
 	AC_HELP_STRING([--with-colorlcd480], [use 480x320 16bpp color display, yes or no]),
@@ -388,6 +444,8 @@ if test x"$witholdpvr" != xno ; then
 fi
 AM_CONDITIONAL(HAVE_OLDPVR, test x"$witholdpvr" != xno)
 
+AC_DEFINE_UNQUOTED(SUBT_TXT_ABNORMAL_PTS_DIFFS, $with_subttxtabnormalptsdiffs,[Configure abnormal pts for subtitle and teletext])
+
 if test `echo "$BOXTYPE" | cut -b 1-2` == "et" ; then
 	AC_DEFINE(KEY_PLAY_ACTUALLY_IS_KEY_PLAYPAUSE, 1,[define when rc sends a KEY_PLAY event for its KEY_PLAYPAUSE key])
 fi
@@ -400,6 +458,34 @@ fi
 if test `echo "$BOXTYPE" | cut -b 1-2` == "vu"; then
 	AC_DEFINE(FORCE_NO_BLENDING_ACCELERATION, 1,[define when the framebuffer acceleration does not have alphablending support, though the autodetection might indicate that it does])
 	AC_DEFINE(FORCE_ADVANCED_REMOTE, 1,[define to fixup the input device identification when the remote control is actually an 'advanced' remote (with play/forward/rewind keys)])
+fi
+
+if test "$BOXBRAND" == "dreambox"; then
+	AC_DEFINE(DREAMBOX, 1, [Dreambox hardware])
+	AC_DEFINE(KEY_PLAY_ACTUALLY_IS_KEY_PLAYPAUSE, 1,[define when rc sends a KEY_PLAY event for its KEY_PLAYPAUSE key])
+fi
+
+if test "$BOXTYPE" == "dm7080"; then
+	AC_DEFINE(DREAMBOX_DUAL_TUNER, 1,[define dreambox dual tuner])
+	AC_DEFINE(CONFIG_ION, 1,[define when we need to use ION allocator])
+fi
+
+if test "$BOXTYPE" == "dm7020hd" -o "$BOXTYPE" == "dm7020hdv2" -o "$BOXTYPE" == "dm820" -o "$BOXTYPE" == "dm800se" -o "$BOXTYPE" == "dm800sev2"; then
+	AC_DEFINE(DREAMBOX_DUAL_TUNER, 1,[define dreambox dual tuner])
+fi
+
+if test "$BOXTYPE" == "dm820" -o "$BOXTYPE" == "dm520"; then
+	AC_DEFINE(CONFIG_ION, 1,[define when we need to use ION allocator])
+fi
+
+if test "$BOXTYPE" == "dm900" -o "$BOXTYPE" == "dm920"; then
+	AC_DEFINE(DREAMBOX_DUAL_TUNER, 1,[define dreambox dual tuner])
+	AC_DEFINE(CONFIG_ION, 1,[define when we need to use ION allocator])
+	AC_DEFINE(DREAMBOX_MOVE_LCD, 1,[define when we need to move lcd text a bit to the right])
+fi
+
+if test "$BOXTYPE" == "dm7080" -o "$BOXTYPE" == "dm820" -o "$BOXTYPE" == "dm800se" -o "$BOXTYPE" == "dm800sev2" -o "$BOXTYPE" == "dm7020hd" -o "$BOXTYPE" == "dm7020hdv2" -o "$BOXTYPE" == "dm900" -o "$BOXTYPE" == "dm920"; then
+	AC_DEFINE(DREAMBOX_DUAL_TUNER, 1,[define BOXTYPE DM7080])
 fi
 
 if test `echo "$BOXTYPE" | cut -b 1-2` == "gb"; then
