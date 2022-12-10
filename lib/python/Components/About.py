@@ -1,13 +1,36 @@
-from sys import modules, version_info
-import socket
-import fcntl
-import struct
+from array import array
+from binascii import hexlify
+from fcntl import ioctl
+from glob import glob
+from locale import format_string
+from os import popen, stat
+from os.path import isfile
+from re import search
+from struct import pack, unpack
+from subprocess import PIPE, Popen
+from sys import maxsize, modules, version as pyversion
+from time import localtime, strftime
 
-from boxbranding import getImageVersion, getMachineBuild, getBoxType
+from Components.SystemInfo import BoxInfo
+from Tools.Directories import fileReadLine, fileReadLines
+
+MODULE_NAME = __name__.split(".")[-1]
+
+socfamily = BoxInfo.getItem("socfamily")
+MODEL = BoxInfo.getItem("model")
 
 
-def getVersionString():
-	return getImageVersion()
+def getModelString():
+	model = BoxInfo.getItem("machinebuild")
+	return model
+
+
+def getEnigmaVersionString():
+	return str(BoxInfo.getItem("imageversion"))
+
+
+def getImageVersionString():
+	return str(BoxInfo.getItem("imageversion"))
 
 
 def getFlashDateString():
@@ -20,7 +43,7 @@ def getFlashDateString():
 
 
 def getEnigmaVersionString():
-	return getImageVersion()
+	return BoxInfo.getItem("imageversion")
 
 
 def getGStreamerVersionString():
@@ -63,55 +86,48 @@ def getIsBroadcom():
 
 
 def getChipSetString():
-	try:
-		with open("/proc/stb/info/chipset", "r") as f:
-			return str(f.read().lower().replace("\n", "").replace("brcm", "").replace("bcm", ""))
-	except IOError:
-		return _("unavailable")
+	if MODEL in ('dm7080', 'dm820'):
+		return "7435"
+	elif MODEL in ('dm520', 'dm525'):
+		return "73625"
+	elif MODEL in ('dm900', 'dm920', 'et13000', 'sf5008'):
+		return "7252S"
+	elif MODEL in ('hd51', 'vs1500', 'h7'):
+		return "7251S"
+	elif MODEL in ('alien5',):
+		return "S905D"
+	else:
+		chipset = fileReadLine("/proc/stb/info/chipset", source=MODULE_NAME)
+		if chipset is None:
+			return _("Undefined")
+		return str(chipset.lower().replace('\n', '').replace('bcm', '').replace('brcm', '').replace('sti', ''))
 
 
-def getCPUSpeedMHzInt():
-	cpu_speed = 0
-	try:
-		with open("/proc/cpuinfo", "r") as file:
-			lines = file.readlines()
-			for x in lines:
-				splitted = x.split(": ")
-				if len(splitted) > 1:
-					splitted[1] = splitted[1].replace("\n", "")
-					if splitted[0].startswith("cpu MHz"):
-						cpu_speed = float(splitted[1].split(" ")[0])
-						break
-	except IOError:
-		print("[About] getCPUSpeedMHzInt, /proc/cpuinfo not available")
-
-	if cpu_speed == 0:
-		if getMachineBuild() in ("h7", "hd51", "sf4008"):
-			try:
-				import binascii
-				with open("/sys/firmware/devicetree/base/cpus/cpu@0/clock-frequency", "rb") as f:
-					clockfrequency = f.read()
-					cpu_speed = round(int(binascii.hexlify(clockfrequency), 16) // 1000000, 1)
-			except IOError:
-				cpu_speed = 1700
-		else:
-			try: # Solo4K sf8008
-				with open("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq", "r") as file:
-					cpu_speed = float(file.read()) // 1000
-			except IOError:
-				print("[About] getCPUSpeedMHzInt, /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq not available")
-	return int(cpu_speed)
-
-
-def getCPUSpeedString():
-	cpu_speed = float(getCPUSpeedMHzInt())
-	if cpu_speed > 0:
-		if cpu_speed >= 1000:
-			cpu_speed = "%s GHz" % str(round(cpu_speed / 1000, 1))
-		else:
-			cpu_speed = "%s MHz" % str(int(cpu_speed))
-		return cpu_speed
-	return _("unavailable")
+def _getCPUSpeedMhz():
+	if MODEL in ('u41', 'u42', 'u43', 'u45'):
+		return 1000
+	elif MODEL in ('hzero', 'h8', 'sfx6008', 'sfx6018', 'sx88v2'):
+		return 1200
+	elif MODEL in ('dags72604', 'vusolo4k', 'vuultimo4k', 'vuzero4k', 'gb72604', 'vuduo4kse'):
+		return 1500
+	elif MODEL in ('formuler1tc', 'formuler1', 'triplex', 'tiviaraplus'):
+		return 1300
+	elif MODEL in ('dagsmv200', 'gbmv200', 'u51', 'u52', 'u53', 'u532', 'u533', 'u54', 'u55', 'u56', 'u57', 'u571', 'u5', 'u5pvr', 'h9', 'i55se', 'h9se', 'h9combose', 'h9combo', 'h10', 'h11', 'cc1', 'sf8008', 'sf8008m', 'sf8008opt', 'sx988', 'ip8', 'hd60', 'hd61', 'i55plus', 'ustym4kpro', 'ustym4kottpremium', 'beyonwizv2', 'viper4k', 'multibox', 'multiboxse'):
+		return 1600
+	elif MODEL in ('vuuno4kse', 'vuuno4k', 'dm900', 'dm920', 'gb7252', 'dags7252', 'xc7439', '8100s'):
+		return 1700
+	elif MODEL in ('alien5',):
+		return 2000
+	elif MODEL in ('vuduo4k',):
+		return 2100
+	elif MODEL in ('hd51', 'hd52', 'sf4008', 'vs1500', 'et1x000', 'h7', 'et13000', 'sf5008', 'osmio4k', 'osmio4kplus', 'osmini4k'):
+		try:
+			return round(int(hexlify(open("/sys/firmware/devicetree/base/cpus/cpu@0/clock-frequency", "rb").read()), 16) / 1000000, 1)
+		except:
+			print("[About] Read /sys/firmware/devicetree/base/cpus/cpu@0/clock-frequency failed.")
+			return 1700
+	else:
+		return 0
 
 
 def getCPUArch():

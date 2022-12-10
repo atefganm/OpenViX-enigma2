@@ -5,7 +5,7 @@ from enigma import eServiceCenter, eServiceReference, eTimer, pNavigation, getBe
 
 from Components.ParentalControl import parentalControl
 from Components.config import config
-from Components.SystemInfo import SystemInfo
+from Components.SystemInfo import BoxInfo
 from Tools.BoundFunction import boundFunction
 from Tools.StbHardware import getFPWasTimerWakeup
 import RecordTimer
@@ -54,6 +54,15 @@ class Navigation:
 			print("[Navigation] RECTIMER: wakeup to standby but system time not set.")
 			if self._processTimerWakeup not in timeHandlerCallbacks:
 				timeHandlerCallbacks.append(self._processTimerWakeup)
+
+		thisBox = BoxInfo.getItem("machinebuild")
+		if not config.workaround.deeprecord.value and (wasTimerWakeup_failure or thisBox in ('ixussone', 'uniboxhd1', 'uniboxhd2', 'uniboxhd3', 'sezam5000hd', 'mbtwin', 'beyonwizt3', 'et8000') or BoxInfo.getItem("brand") in ('ebox', 'azbox', 'xp', 'ini', 'fulan', 'entwopia') or BoxInfo.getItem("model") in ('dags7335', 'dags7356', 'dags7362')):
+			print("[NAVIGATION] FORCED DEEPSTANDBY-WORKAROUND FOR THIS BOXTYPE (%s)" % thisBox)
+			print("-" * 100)
+			config.workaround.deeprecord.setValue(True)
+			config.workaround.deeprecord.save()
+			config.save()
+
 			return
 		if self._processTimerWakeup in timeHandlerCallbacks:
 			timeHandlerCallbacks.remove(self._processTimerWakeup)

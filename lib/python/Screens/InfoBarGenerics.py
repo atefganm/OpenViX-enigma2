@@ -9,7 +9,7 @@ from Components.ServiceEventTracker import ServiceEventTracker
 from Components.Sources.ServiceEvent import ServiceEvent
 from Components.Sources.Boolean import Boolean
 from Components.config import config, configfile, ConfigBoolean, ConfigClock, ConfigSelection, ACTIONKEY_RIGHT
-from Components.SystemInfo import SystemInfo
+from Components.SystemInfo import BoxInfo, getBoxDisplayName
 from Components.UsageConfig import preferredInstantRecordPath, defaultMoviePath
 from Components.VolumeControl import VolumeControl
 from Components.Pixmap import MovingPixmap, MultiPixmap
@@ -3006,19 +3006,23 @@ class InfoBarPiP:
 				self.session.pip.servicePath = currentServicePath
 
 	def showPiP(self):
+		self.lastPiPServiceTimeoutTimer.stop()
+		slist = self.servicelist
 		if self.session.pipshown:
-			slist = self.servicelist
 			if slist and slist.dopipzap:
 				self.togglePipzap()
 			if self.session.pipshown:
-				self.lastPiPService = self.session.pip.getCurrentServiceReference()
-				self.lastPiPServiceTimeout.startLongTimer(60)
+				lastPiPServiceTimeout = int(config.usage.pip_last_service_timeout.value)
+				if lastPiPServiceTimeout >= 0:
+					self.lastPiPService = self.session.pip.getCurrentServiceReference()
+					if lastPiPServiceTimeout:
+						self.lastPiPServiceTimeoutTimer.startLongTimer(lastPiPServiceTimeout)
 				del self.session.pip
-				if SystemInfo["LCDMiniTVPiP"] and int(config.lcd.minitvpipmode.value) >= 1:
-						print("[InfoBarGenerics] [LCDMiniTV] disable PIP")
-						f = open("/proc/stb/lcd/mode", "w")
-						f.write(config.lcd.minitvmode.value)
-						f.close()
+				if BoxInfo.getItem("LCDMiniTV") and int(config.lcd.modepip.value) >= 1:
+					print('[InfoBarGenerics] [LCDMiniTV] disable PiP')
+					f = open("/proc/stb/lcd/mode", "w")
+					f.write(config.lcd.modeminitv.value)
+					f.close()
 				self.session.pipshown = False
 			if hasattr(self, "ScreenSaverTimerStart"):
 				self.ScreenSaverTimerStart()
@@ -3026,6 +3030,8 @@ class InfoBarPiP:
 			service = self.session.nav.getCurrentService()
 			info = service and service.info()
 			if info:
+				xres = str(info.getInfo(iServiceInformation.sVideoWidth))
+			if info and int(xres) <= 720 or BoxInfo.getItem("model") != 'blackbox7405':
 				self.session.pip = self.session.instantiateDialog(PictureInPicture)
 				self.session.pip.setAnimationMode(0)
 				self.session.pip.show()
@@ -3033,10 +3039,10 @@ class InfoBarPiP:
 				if self.session.pip.playService(newservice):
 					self.session.pipshown = True
 					self.session.pip.servicePath = self.servicelist.getCurrentServicePath()
-					if SystemInfo["LCDMiniTVPiP"] and int(config.lcd.minitvpipmode.value) >= 1:
-						print("[InfoBarGenerics][LCDMiniTV] enable PIP")
+					if BoxInfo.getItem("LCDMiniTVPiP") and int(config.lcd.modepip.value) >= 1:
+						print('[InfoBarGenerics] [LCDMiniTV] enable PiP')
 						f = open("/proc/stb/lcd/mode", "w")
-						f.write(config.lcd.minitvpipmode.value)
+						f.write(config.lcd.modepip.value)
 						f.close()
 						f = open("/proc/stb/vmpeg/1/dst_width", "w")
 						f.write("0")
@@ -3052,10 +3058,10 @@ class InfoBarPiP:
 					if self.session.pip.playService(newservice):
 						self.session.pipshown = True
 						self.session.pip.servicePath = self.servicelist.getCurrentServicePath()
-						if SystemInfo["LCDMiniTVPiP"] and int(config.lcd.minitvpipmode.value) >= 1:
-							print("[InfoBarGenerics][LCDMiniTV] enable PIP")
+						if BoxInfo.getItem("LCDMiniTVPiP") and int(config.lcd.modepip.value) >= 1:
+							print('[InfoBarGenerics] [LCDMiniTV] enable PiP')
 							f = open("/proc/stb/lcd/mode", "w")
-							f.write(config.lcd.minitvpipmode.value)
+							f.write(config.lcd.modepip.value)
 							f.close()
 							f = open("/proc/stb/vmpeg/1/dst_width", "w")
 							f.write("0")
@@ -3070,8 +3076,10 @@ class InfoBarPiP:
 						self.lastPiPService = None
 						self.session.pipshown = False
 						del self.session.pip
+			elif info:
+				self.session.open(MessageBox, _("Your %s %s does not support PiP HD") % getBoxDisplayName(), type=MessageBox.TYPE_INFO, timeout=5)
 			else:
-				self.session.open(MessageBox, _("No active channel found."), type=MessageBox.TYPE_INFO, timeout=5, simple=True)
+				self.session.open(MessageBox, _("No active channel found."), type=MessageBox.TYPE_INFO, timeout=5)
 		if self.session.pipshown and hasattr(self, "screenSaverTimer"):
 			self.screenSaverTimer.stop()
 
@@ -4450,29 +4458,92 @@ class InfoBarHdmi:
 			return _("Turn off HDMI-IN PiP mode")
 
 	def HDMIInPiP(self):
-		if not hasattr(self.session, 'pip') and not self.session.pipshown:
-			self.hdmi_enabled_pip = True
-			self.session.pip = self.session.instantiateDialog(PictureInPicture)
-			self.session.pip.playService(eServiceReference('8192:0:1:0:0:0:0:0:0:0:'))
-			self.session.pip.show()
-			self.session.pipshown = True
-			self.session.pip.servicePath = self.servicelist.getCurrentServicePath()
-		else:
-			curref = self.session.pip.getCurrentService()
-			if curref and curref.type != 8192:
-				self.hdmi_enabled_pip = True
-				self.session.pip.playService(eServiceReference('8192:0:1:0:0:0:0:0:0:0:'))
+		if BoxInfo.getItem("model") in ('dm7080', 'dm820', 'dm900', 'dm920'):
+			f = open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor", "r")
+			check = f.read()
+			f.close()
+			if check.startswith("off"):
+				f = open("/proc/stb/audio/hdmi_rx_monitor", "w")
+				f.write("on")
+				f.close()
+				f = open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor", "w")
+				f.write("on")
+				f.close()
 			else:
-				self.hdmi_enabled_pip = False
-				self.session.pipshown = False
-				del self.session.pip
+				f = open("/proc/stb/audio/hdmi_rx_monitor", "w")
+				f.write("off")
+				f.close()
+				f = open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor", "w")
+				f.write("off")
+				f.close()
+		else:
+			if not hasattr(self.session, 'pip') and not self.session.pipshown:
+				self.hdmi_enabled_pip = True
+				self.session.pip = self.session.instantiateDialog(PictureInPicture)
+				self.session.pip.playService(hdmiInServiceRef())
+				self.session.pip.show()
+				self.session.pipshown = True
+				self.session.pip.servicePath = self.servicelist.getCurrentServicePath()
+			else:
+				curref = self.session.pip.getCurrentService()
+				if curref and curref.type != eServiceReference.idServiceHDMIIn:
+					self.hdmi_enabled_pip = True
+					self.session.pip.playService(hdmiInServiceRef())
+					self.session.pip.servicePath = self.servicelist.getCurrentServicePath()
+				else:
+					self.hdmi_enabled_pip = False
+					self.session.pipshown = False
+					del self.session.pip
 
 	def HDMIInFull(self):
-		slist = self.servicelist
-		curref = self.session.nav.getCurrentlyPlayingServiceOrGroup()
-		if curref and curref.type != 8192:
-			self.hdmi_enabled_full = True
-			self.session.nav.playService(eServiceReference('8192:0:1:0:0:0:0:0:0:0:'))
+		if BoxInfo.getItem("model") in ('dm7080', 'dm820', 'dm900', 'dm920'):
+			f = open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor", "r")
+			check = f.read()
+			f.close()
+			if check.startswith("off"):
+				f = open("/proc/stb/video/videomode", "r")
+				self.oldvideomode = f.read()
+				f.close()
+				f = open("/proc/stb/video/videomode_50hz", "r")
+				self.oldvideomode_50hz = f.read()
+				f.close()
+				f = open("/proc/stb/video/videomode_60hz", "r")
+				self.oldvideomode_60hz = f.read()
+				f.close()
+				f = open("/proc/stb/video/videomode", "w")
+				if BoxInfo.getItem("model") in ('dm900', 'dm920'):
+					f.write("1080p")
+				else:
+					f.write("720p")
+				f.close()
+				f = open("/proc/stb/audio/hdmi_rx_monitor", "w")
+				f.write("on")
+				f.close()
+				f = open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor", "w")
+				f.write("on")
+				f.close()
+			else:
+				f = open("/proc/stb/audio/hdmi_rx_monitor", "w")
+				f.write("off")
+				f.close()
+				f = open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor", "w")
+				f.write("off")
+				f.close()
+				f = open("/proc/stb/video/videomode", "w")
+				f.write(self.oldvideomode)
+				f.close()
+				f = open("/proc/stb/video/videomode_50hz", "w")
+				f.write(self.oldvideomode_50hz)
+				f.close()
+				f = open("/proc/stb/video/videomode_60hz", "w")
+				f.write(self.oldvideomode_60hz)
+				f.close()
 		else:
-			self.hdmi_enabled_full = False
-			self.session.nav.playService(slist.servicelist.getCurrent())
+			slist = self.servicelist
+			curref = self.session.nav.getCurrentlyPlayingServiceOrGroup()
+			if curref and curref.type != eServiceReference.idServiceHDMIIn:
+				self.hdmi_enabled_full = True
+				self.session.nav.playService(hdmiInServiceRef())
+			else:
+				self.hdmi_enabled_full = False
+				self.session.nav.playService(slist.servicelist.getCurrent())

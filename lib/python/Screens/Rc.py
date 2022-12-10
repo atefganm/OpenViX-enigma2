@@ -2,7 +2,7 @@ from xml.etree.ElementTree import ElementTree
 from os import path
 from Components.config import config, ConfigInteger
 from Components.Pixmap import MovingPixmap, MultiPixmap
-from Components.SystemInfo import SystemInfo
+from Components.SystemInfo import BoxInfo
 from Tools.Directories import resolveFilename, SCOPE_SKIN
 
 config.misc.rcused = ConfigInteger(default=1)
@@ -28,7 +28,7 @@ class Rc:
 		self.onShown.append(self.initRc)
 
 	def initRc(self):
-		if SystemInfo["rc_default"]:
+		if BoxInfo.getItem("machinebuild") in ('uniboxhd1', 'uniboxhd2', 'uniboxhd3', 'sezam5000hd', 'mbtwin', 'beyonwizt3'):
 			self["rc"].setPixmapNum(config.misc.rcused.value)
 		else:
 			self["rc"].setPixmapNum(0)

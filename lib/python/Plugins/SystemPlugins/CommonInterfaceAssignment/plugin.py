@@ -12,7 +12,7 @@ from Components.ConfigList import ConfigList
 from Components.Label import Label
 from Components.MenuList import MenuList
 from Components.SelectionList import SelectionList
-from Components.SystemInfo import SystemInfo
+from Components.SystemInfo import BoxInfo, getBoxDisplayName
 from ServiceReference import ServiceReference
 from Plugins.Plugin import PluginDescriptor
 from Screens.ChannelSelection import *
@@ -49,7 +49,10 @@ class CIselectMainMenu(Screen):
 				"cancel": self.close
 			}, -1)
 
-		NUM_CI = SystemInfo["CommonInterface"]
+		if BoxInfo.getItem("machinebuild") in ('zgemmah9combo',):
+			NUM_CI = 1
+		else:
+			NUM_CI = eDVBCIInterfaces.getInstance() and eDVBCIInterfaces.getInstance().getNumOfSlots()
 
 		print("[CI_Wizzard] FOUND %d CI Slots " % NUM_CI)
 
@@ -87,7 +90,7 @@ class CIselectMainMenu(Screen):
 			action = cur[2]
 			slot = cur[3]
 			if action == 1:
-				print("[CI_Wizzard] there is no CI Slot in your receiver")
+				print("[CI_Wizzard] there is no CI Slot in your %s %s" % getBoxDisplayName())
 			else:
 				print("[CI_Wizzard] selected CI Slot : %d" % slot)
 				if config.usage.setup_level.index > 1: # advanced

@@ -1,11 +1,12 @@
+from __future__ import absolute_import
 import xml.sax
-from Tools.Directories import crawlDirectory, resolveFilename, SCOPE_CONFIG, SCOPE_SKIN, copyfile, copytree
+from Tools.Directories import crawlDirectory, resolveFilename, SCOPE_CONFIG, SCOPE_SKINS, copyfile, copytree
 from Components.NimManager import nimmanager
-from Components.Ipkg import IpkgComponent
+from Components.Opkg import OpkgComponent
 from Components.config import config, configfile
-from boxbranding import getBoxType
+from Components.SystemInfo import BoxInfo
 from enigma import eConsoleAppContainer, eDVBDB
-from os import listdir, path, system
+import os
 
 
 class InfoHandlerParseError(Exception):
@@ -208,7 +209,7 @@ class PackageInfoHandler:
 		if not isinstance(self.directory, list):
 			self.directory = [self.directory]
 
-		for indexfile in listdir(self.directory[0]):
+		for indexfile in os.listdir(self.directory[0]):
 			if indexfile.startswith("index-"):
 				if indexfile.endswith(".xml"):
 					if indexfile[-7:-6] == "_":
@@ -217,7 +218,7 @@ class PackageInfoHandler:
 		if len(indexfileList):
 			for file in indexfileList:
 				neededFile = self.directory[0] + "/" + file
-				if path.isfile(neededFile):
+				if os.path.isfile(neededFile):
 					self.readIndex(self.directory[0] + "/", neededFile)
 
 		if prerequisites:
@@ -272,7 +273,7 @@ class PackageInfoHandler:
 		if "hardware" in prerequisites:
 			hardware_found = False
 			for hardware in prerequisites["hardware"]:
-				if hardware == getBoxType():
+				if hardware == BoxInfo.getItem("machinebuild"):
 					hardware_found = True
 			if not hardware_found:
 				return False
@@ -340,7 +341,6 @@ class PackageInfoHandler:
 			self.installSkin(skin["directory"], skin["name"])
 		elif currentAttribute == "config":
 			if self.currentIndex == 0:
-				from Components.config import configfile
 				configfile.save()
 			config = attributes["config"][self.currentIndex]
 			self.mergeConfig(config["directory"], config["name"])
@@ -355,7 +355,7 @@ class PackageInfoHandler:
 			self.mergeServices(service["directory"], service["name"])
 
 	def readfile(self, filename):
-		if not path.isfile(filename):
+		if not os.path.isfile(filename):
 			return []
 		fd = open(filename)
 		lines = fd.readlines()
@@ -363,36 +363,36 @@ class PackageInfoHandler:
 		return lines
 
 	def mergeConfig(self, directory, name, merge=True):
-		if path.isfile(directory + name):
+		if os.path.isfile(directory + name):
 			config.loadFromFile(directory + name, base_file=False)
 			configfile.save()
 		self.installNext()
 
 	def installIPK(self, directory, name):
 		if self.blocking:
-			system("opkg install " + directory + name)
+			os.system("opkg install " + directory + name)
 			self.installNext()
 		else:
-			self.ipkg = IpkgComponent()
-			self.ipkg.addCallback(self.ipkgCallback)
-			self.ipkg.startCmd(IpkgComponent.CMD_INSTALL, {'package': directory + name})
+			self.opkg = OpkgComponent()
+			self.opkg.addCallback(self.opkgCallback)
+			self.opkg.startCmd(OpkgComponent.CMD_INSTALL, {'package': directory + name})
 
-	def ipkgCallback(self, event, param):
-		if event == IpkgComponent.EVENT_DONE:
+	def opkgCallback(self, event, param):
+		if event == OpkgComponent.EVENT_DONE:
 			self.installNext()
-		elif event == IpkgComponent.EVENT_ERROR:
+		elif event == OpkgComponent.EVENT_ERROR:
 			self.installNext()
 
 	def installSkin(self, directory, name):
 		if self.blocking:
-			copytree(directory, resolveFilename(SCOPE_SKIN))
+			copytree(directory, resolveFilename(SCOPE_SKINS))
 			self.installNext()
 		else:
-			if self.console.execute("cp -a %s %s" % (directory, resolveFilename(SCOPE_SKIN))):
+			if self.console.execute("cp -a %s %s" % (directory, resolveFilename(SCOPE_SKINS))):
 				self.installNext()
 
 	def mergeServices(self, directory, name, merge=False):
-		if path.isfile(directory + name):
+		if os.path.isfile(directory + name):
 			db = eDVBDB.getInstance()
 			db.reloadServicelist()
 			db.loadServicelist(directory + name)

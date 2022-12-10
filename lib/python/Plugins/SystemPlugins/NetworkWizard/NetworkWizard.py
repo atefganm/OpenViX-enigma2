@@ -1,7 +1,6 @@
 from os import system
 
 from enigma import eTimer
-from boxbranding import getMachineBrand, getMachineName
 from Components.config import config
 from Components.Label import Label
 from Components.Network import iNetwork
@@ -10,6 +9,7 @@ from Components.Sources.Boolean import Boolean
 from Screens.MessageBox import MessageBox
 from Screens.Rc import Rc
 from Screens.WizardLanguage import WizardLanguage
+from Components.SystemInfo import BoxInfo, getBoxDisplayName
 from Tools.Directories import resolveFilename, SCOPE_PLUGINS
 
 
@@ -151,7 +151,7 @@ class NetworkWizard(WizardLanguage, Rc):
 			self.NextStep = 'end'
 		elif index == 'eth0':
 			self.NextStep = 'nwconfig'
-		elif index == 'eth1':
+		elif index == 'eth1' and BoxInfo.getItem("machinebuild") == "et10000":
 			self.NextStep = 'nwconfig'
 		else:
 			self.NextStep = 'asknetworktype'
@@ -245,7 +245,7 @@ class NetworkWizard(WizardLanguage, Rc):
 		if data is not None:
 			if data is True:
 				if status is not None:
-					text1 = _("Your %s %s is now ready to be used.\n\nYour internet connection is working now.\n\n") % (getMachineBrand(), getMachineName())
+					text1 = _("Your %s %s is now ready to be used.\n\nYour Internet connection is working now.\n\n") % getBoxDisplayName()
 					text2 = _('Accesspoint:') + "\t" + str(status[self.selectedInterface]["accesspoint"]) + "\n"
 					text3 = _('SSID:') + "\t" + str(status[self.selectedInterface]["essid"]) + "\n"
 					text4 = _('Link quality:') + "\t" + str(status[self.selectedInterface]["quality"]) + "\n"
