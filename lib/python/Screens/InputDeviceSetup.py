@@ -7,9 +7,9 @@ from Components.Sources.List import List
 from Components.config import config, ConfigYesNo, getConfigListEntry, ConfigSelection
 from Components.ConfigList import ConfigListScreen
 from Components.ActionMap import ActionMap, HelpableActionMap
-from Components.SystemInfo import BoxInfo, getBoxDisplayName
 from Tools.Directories import resolveFilename, SCOPE_CURRENT_SKIN
 from Tools.LoadPixmap import LoadPixmap
+from boxbranding import getBoxType, getMachineBrand, getMachineName, getMachineBuild
 
 
 class InputDeviceSelection(Screen, HelpableScreen):
@@ -25,7 +25,7 @@ class InputDeviceSelection(Screen, HelpableScreen):
 		self["introduction"] = StaticText(self.edittext)
 
 		self.devices = [(iInputDevices.getDeviceName(x), x) for x in iInputDevices.getDeviceList()]
-		print("[InputDeviceSelection] found devices :-> %s %s" % (len(self.devices), str(self.devices)))
+		print(("[InputDeviceSetup] found devices :->", len(self.devices), self.devices))
 
 		self["OkCancelActions"] = HelpableActionMap(self, "OkCancelActions",
 			{
@@ -129,7 +129,7 @@ class InputDeviceSetup(ConfigListScreen, Screen):
 		self["introduction"] = StaticText()
 
 		# for generating strings into .po only
-		devicenames = [_("%s %s front panel") % getBoxDisplayName(), _("%s %s front panel") % getBoxDisplayName(), _("%s %s remote control (native)") % getBoxDisplayName(), _("%s %s advanced remote control (native)") % getBoxDisplayName(), _("%s %s ir keyboard") % getBoxDisplayName(), _("%s %s ir mouse") % getBoxDisplayName()]
+		devicenames = [_("%s %s front panel") % (getMachineBrand(), getMachineName()), _("%s %s front panel") % (getMachineBrand(), getMachineName()), _("%s %s remote control (native)") % (getMachineBrand(), getMachineName()), _("%s %s advanced remote control (native)") % (getMachineBrand(), getMachineName()), _("%s %s ir keyboard") % (getMachineBrand(), getMachineName()), _("%s %s ir mouse") % (getMachineBrand(), getMachineName())]
 
 		self.createSetup()
 		self.onLayoutFinish.append(self.layoutFinished)
@@ -212,172 +212,79 @@ class InputDeviceSetup(ConfigListScreen, Screen):
 		return str(self["config"].getCurrent()[1].value)
 
 
-class RemoteControlType(Setup):
-	if BoxInfo.getItem("brand") in ('broadmedia', 'octagon', 'odin', 'protek', 'ultramini') or BoxInfo.getItem("machinebuild") in ('et7000', 'et7100', 'et7200', 'et7500', 'et7x00', 'et8500', 'et1x000', 'et13000'):
-		rcList = [
-				("0", _("Default")),
-				("3", "MaraM9"),
-				("4", _("DMM normal")),
-				("5", "et9000/et9100"),
-				("6", _("DMM advanced")),
-				("7", "et5000/6000"),
-				("8", "VU+"),
-				("9", "et8000/et10000/et13000/SF5008"),
-				("11", "et9200/9500/6500"),
-				("13", "et4000"),
-				("14", "XP1000"),
-				("16", "HD11/HD51/HD1100/HD1200/HD1265/HD1500/HD500C/HD530C/et7x00/et8500/VS1000/VS1500"),
-				("17", "XP3000"),
-				("18", "F1/F3/F4/F4-TURBO/TRIPLEX"),
-				("19", "HD2400"),
-				("20", "Zgemma Star S/2S/H1/H2"),
-				("21", "Zgemma H.S/H.2S/H.2H/H5/H7"),
-				("500", "WWIO_BRE2ZE_TC"),
-				("501", "OCTAGON_SF4008"),
-				("502", "GIGABLUE Black"),
-				("503", "MIRACLEBOX_TWINPLUS"),
-				("504", "E3HD/XPEEDLX/GI"),
-				("505", "ODIN_M7"),
-				("507", "Beyonwiz U4"),
-				("511", "OCTAGON SF5008")
-				]
-		defaultRcList = [
-				("default", 0),
-				("et4000", 13),
-				("et5000", 7),
-				("et6000", 7),
-				("et6500", 11),
-				("et7x00", 16),
-				("et7100", 16),
-				("et7000", 16),
-				("et7500", 16),
-				("et7000mini", 16),
-				("et8000", 9),
-				("et13000", 9),
-				("et8500", 16),
-				("et9000", 5),
-				("et9100", 5),
-				("et9200", 11),
-				("et9500", 11),
-				("et10000", 9),
-				("formuler1", 18),
-				("formuler3", 18),
-				("formuler4", 18),
-				("formuler4turbo", 18),
-				("hd11", 16),
-				("hd51", 16),
-				("hd1100", 16),
-				("hd1200", 16),
-				("hd1265", 16),
-				("hd500c", 16),
-				("hd530c", 16),
-				("vs1000", 16),
-				("vs1500", 16),
-				("hd2400", 19),
-				("triplex", 18),
-				("xp1000", 14),
-				("xp3000", 17),
-				("sh1", 20),
-				("h3", 21),
-				("h5", 21),
-				("h7", 21),
-				("bre2ze_tc", 500),
-				("sf4008", 501),
-				("g100", 501),
-				("sf4018", 501),
-				("gbquadplus", 502),
-				("g300", 503),
-				("e3hd", 504),
-				("et7000mini", 504),
-				("et1x000", 504),
-				("xpeedc.", 504),
-				("odinm7", 505),
-				("beyonwizu4", 507),
-				("sf5008", 511)
-				]
-	else:
-		rcList = [
-				("0", _("Default")),
-				("3", "MaraM9"),
-				("4", _("DMM normal")),
-				("5", "et9000/et9100"),
-				("6", _("DMM advanced")),
-				("7", "et5000/6000"),
-				("8", "VU+"),
-				("9", "et8000/et10000/et13000"),
-				("11", "et9200/9500/6500"),
-				("13", "et4000"),
-				("14", "XP1000"),
-				("16", "HD11/HD51/HD1100/HD1200/HD1265/HD1500/HD500C/HD530C/VS1000/VS1500"),
-				("17", "XP3000"),
-				("18", "F1/F3/F4/F4-TURBO/TRIPLEX"),
-				("19", "HD2400"),
-				("20", "Zgemma Star S/2S/H1/H2"),
-				("21", _("Zgemma H.S/H.2S/H.2H/H5/H7 old Model")),
-				("22", "Zgemma i55"),
-				("23", "WWIO 4K"),
-				("24", "Axas E4HD Ultra"),
-				("25", "Zgemma H8/H0/H9/I55Plus old Model"),
-				("26", "Protek 4K UHD/HD61"),
-				("27", "HD60/HD66SE/Multibox/Multiboxse"),
-				("28", _("I55SE/H7/H9/H9SE/H9COMBO/H9COMBOSE/H10/H11 new Model"))
-				]
-		defaultRcList = [
-				("default", 0),
-				("et4000", 13),
-				("et5000", 7),
-				("et6000", 7),
-				("et6500", 11),
-				("et8000", 9),
-				("et13000", 9),
-				("et9000", 5),
-				("et9100", 5),
-				("et9200", 11),
-				("et9500", 11),
-				("et10000", 9),
-				("formuler1", 18),
-				("formuler3", 18),
-				("formuler4", 18),
-				("formuler4turbo", 18),
-				("hd11", 16),
-				("hd51", 16),
-				("hd1100", 16),
-				("hd1200", 16),
-				("hd1265", 16),
-				("hd500c", 16),
-				("hd530c", 16),
-				("vs1000", 16),
-				("vs1500", 16),
-				("hd2400", 19),
-				("triplex", 18),
-				("xp1000", 14),
-				("xp3000", 17),
-				("sh1", 20),
-				("h3", 21),
-				("h5", 21),
-				#("h7", 21),# old model
-				("i55", 22),
-				("bre2ze4k", 23),
-				("e4hd", 24),
-				#("h9", 25),# old model
-				("i55plus", 25),
-				("hzero", 25),
-				("h8", 25),
-				("protek4k", 26),
-				("hd61", 26),
-				("hd60", 27),
-				("hd66se", 27),
-				("multibox", 27),
-				("multiboxse", 27),
-				("h7", 28),  # new model
-				("h9", 28),  # new model
-				("h9se", 28),  # new model
-				("h9combo", 28),
-				("h9combose", 28),
-				("i55se", 28),
-				("h10", 28),
-				("h11", 28)
-				]
+class RemoteControlType(ConfigListScreen, Screen):
+	odinRemote = "OdinM9"
+	if getBoxType() == "maram9":
+		odinRemote = "MaraM9"
+
+	rcList = [
+			("0", _("Default")),
+			("3", _(odinRemote)),
+			("4", _("DMM normal")),
+			("5", _("et9000/et9100")),
+			("6", _("DMM advanced")),
+			("7", _("et5000/6000")),
+			("8", _("VU+")),
+			("9", _("et8000/et10000")),
+			("11", _("et9200/9500/6500")),
+			("13", _("et4000")),
+			("14", _("XP1000")),
+			("16", _("HD11/HD51/HD1100/HD1200/HD1265/HD1500/HD500C/HD530C/et7x00/et8500")),
+			("17", _("XP3000")),
+			("18", _("F1/F3/F4/F4-TURBO/TRIPLEX")),
+			("19", _("HD2400")),
+			("20", _("Zgemma Star S/2S/H1/H2")),
+			("21", _("Zgemma H.S/H.2S/H.2H/H5")),
+			("22", _("Zgemma i55")),
+			("23", _("WWIO 4K")),
+			("24", _("Axas E4HD Ultra")),
+			("25", _("Zgemma H9/I55Plus old Model")),
+			("26", _("Protek 4K UHD/HD61")),
+			("27", _("HD60")),
+			("28", _("H7/H9/H9COMBO/H10 new Model"))
+			]
+
+	defaultRcList = [
+			("default", 0),
+			("et4000", 13),
+			("et5000", 7),
+			("et6000", 7),
+			("et6500", 11),
+			("et7x00", 16),
+			("et8000", 9),
+			("et8500", 16),
+			("et9000", 5),
+			("et9100", 5),
+			("et9200", 11),
+			("et9500", 11),
+			("et10000", 9),
+			("formuler1", 18),
+			("formuler3", 18),
+			("hd11", 16),
+			("hd51", 16),
+			("hd52", 16),
+			("hd1100", 16),
+			("hd1200", 16),
+			("hd1265", 16),
+			("hd500c", 16),
+			("hd530c", 16),
+			("hd2400", 19),
+			("h3", 21),
+			("h5", 21),
+			#("h7", 21),# old model
+			("i55", 22),
+			("bre2ze4k", 23),
+			("e4hd", 24),
+			#("h9", 25),# old model
+			("i55plus", 25),
+			("protek4k", 26),
+			("hd61", 26),
+			("hd60", 27),
+			("h7", 28), # new model
+			("h9", 28), # new model
+			("h9combo", 28),
+			("h10", 28)
+		]
 
 	def __init__(self, session):
 		Screen.__init__(self, session)
@@ -404,23 +311,19 @@ class RemoteControlType(Setup):
 		self.getDefaultRcType()
 
 	def getDefaultRcType(self):
-		boxtype = BoxInfo.getItem("machinebuild")
-		boxtypecompat = self.getBoxTypeCompatible()
-		self.defaultRcType = 0
-		#print "Boxtype is %s" % boxtype
+		boxtype = getMachineBuild()
+		procBoxtype = iRcTypeControl.getBoxType()
+		print("[InputDevice] procBoxtype = %s, self.boxType = %s" % (procBoxtype, boxtype))
 		for x in self.defaultRcList:
-			if x[0] in boxtype:
+			if x[0] in boxtype or x[0] in procBoxtype:
 				self.defaultRcType = x[1]
-				#print "Selecting %d as defaultRcType" % self.defaultRcType
 				break
-
-		# boxtypecompat should be removed in the future
-		if (self.defaultRcType == 0):
-			for x in self.defaultRcList:
-				if x[0] in boxtypecompat:
-					self.defaultRcType = x[1]
-					#print "Selecting %d as defaultRcType" % self.defaultRcType
-					break
+# If there is none in the list, use the current value...
+#
+#		print("[InputDevice] self.defaultRcType 1 = {}".format(self.defaultRcType))
+		if self.defaultRcType == 0:
+			self.defaultRcType = iRcTypeControl.readRcType()
+#		print("[InputDevice] self.defaultRcType 2 = {}".format(self.defaultRcType))
 
 	def setDefaultRcType(self):
 		iRcTypeControl.writeRcType(self.defaultRcType)

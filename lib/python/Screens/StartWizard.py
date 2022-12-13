@@ -3,10 +3,10 @@ from Screens.WizardLanguage import WizardLanguage
 from Screens.WizardUserInterfacePositioner import UserInterfacePositionerWizard
 from Screens.VideoWizard import VideoWizard
 from Screens.Rc import Rc
+from boxbranding import getBoxType
 
 from Components.Pixmap import Pixmap
 from Components.config import config, ConfigBoolean, configfile
-from Components.SystemInfo import BoxInfo
 
 from Screens.LanguageSelection import LanguageWizard
 
@@ -25,7 +25,7 @@ class StartWizard(WizardLanguage, Rc):
 
 	def markDone(self):
 		# setup remote control, all stb have same settings except dm8000 which uses a different settings
-		if BoxInfo.getItem("machinebuild") == 'dm8000':
+		if getBoxType() == 'dm8000':
 			config.misc.rcused.value = 0
 		else:
 			config.misc.rcused.value = 1

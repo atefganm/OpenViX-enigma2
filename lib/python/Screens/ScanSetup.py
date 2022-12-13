@@ -5,7 +5,7 @@ from Screens.ServiceScan import ServiceScan
 from Components.config import config, ConfigSubsection, ConfigSelection, ConfigYesNo, ConfigInteger, getConfigListEntry, ConfigSlider, ConfigEnableDisable
 from Components.ActionMap import NumberActionMap, ActionMap
 from Components.Sources.StaticText import StaticText
-from Components.SystemInfo import BoxInfo
+from Components.SystemInfo import SystemInfo
 from Components.ConfigList import ConfigListScreen
 from Components.NimManager import nimmanager, getConfigSatlist
 from Components.Label import Label
@@ -63,7 +63,7 @@ def getInitialTransponderList(tlist, pos, feid=None):
 def getInitialCableTransponderList(tlist, nim):
 	list = nimmanager.getTranspondersCable(nim)
 	for x in list:
-		if x[0] == 1:  # CABLE
+		if x[0] == 1: #CABLE
 			parm = eDVBFrontendParametersCable()
 			parm.frequency = x[1]
 			parm.symbol_rate = x[2]
@@ -77,7 +77,7 @@ def getInitialCableTransponderList(tlist, nim):
 def getInitialTerrestrialTransponderList(tlist, region, tsystem=eDVBFrontendParametersTerrestrial.System_DVB_T_T2):
 	list = nimmanager.getTranspondersTerrestrial(region)
 	for x in list:
-		if x[0] == 2:  # TERRESTRIAL
+		if x[0] == 2: #TERRESTRIAL
 			if tsystem == eDVBFrontendParametersTerrestrial.System_DVB_T_T2:
 				parm = buildTerTransponder(x[1], x[9], x[2], x[4], x[5], x[3], x[7], x[6], x[8], x[10], x[11])
 			elif x[10] == eDVBFrontendParametersTerrestrial.System_DVB_T_T2 or x[10] == tsystem:
@@ -90,7 +90,7 @@ def getInitialTerrestrialTransponderList(tlist, region, tsystem=eDVBFrontendPara
 def getInitialATSCTransponderList(tlist, nim):
 	list = nimmanager.getTranspondersATSC(nim)
 	for x in list:
-		if x[0] == 3:  # ATSC
+		if x[0] == 3: #ATSC
 			parm = eDVBFrontendParametersATSC()
 			parm.frequency = x[1]
 			parm.modulation = x[2]
@@ -297,9 +297,9 @@ class CableTransponderSearchSupport:
 					bus = nim_idx
 			else:
 				if nim_idx == 2:
-					bus = 2  # DM8000 first nim is /dev/i2c/2
+					bus = 2 # DM8000 first nim is /dev/i2c/2
 				else:
-					bus = 4  # DM8000 second num is /dev/i2c/4
+					bus = 4 # DM8000 second num is /dev/i2c/4
 
 		if tunername == "CXD1981":
 			exe_path = "/usr/bin/cxd1978"
@@ -503,9 +503,9 @@ class TerrestrialTransponderSearchSupport:
 	def terrestrialTransponderInitSearchList(self, searchList, region):
 		tpList = nimmanager.getTranspondersTerrestrial(region)
 		for x in tpList:
-			if x[0] == 2:  # TERRESTRIAL
-				freq = x[1]  # frequency
-				bandWidth = self.terrestrialTransponderConvBandwidth_I(x[2])  # bandWidth
+			if x[0] == 2: #TERRESTRIAL
+				freq = x[1] # frequency
+				bandWidth = self.terrestrialTransponderConvBandwidth_I(x[2]) # bandWidth
 				parm = (freq, bandWidth)
 				searchList.append(parm)
 

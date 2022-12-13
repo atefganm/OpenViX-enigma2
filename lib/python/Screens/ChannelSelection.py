@@ -24,7 +24,7 @@ from Components.Sources.List import List
 from Components.Sources.RdsDecoder import RdsDecoder
 from Components.Sources.ServiceEvent import ServiceEvent
 from Components.Sources.StaticText import StaticText
-from Components.SystemInfo import BoxInfo, getBoxDisplayName
+from Components.SystemInfo import SystemInfo
 from Plugins.Plugin import PluginDescriptor
 from RecordTimer import AFTEREVENT
 from Screens.Screen import Screen
@@ -527,53 +527,47 @@ class ChannelContextMenu(Screen):
 	def showServiceInPiP(self):
 		if self.csel.dopipzap or (self.parentalControlEnabled and not self.parentalControl.getProtectionLevel(self.csel.getCurrentSelection().toCompareString()) == -1):
 			return 0
-		service = self.session.nav.getCurrentService()
-		info = service and service.info()
-		xres = str(info.getInfo(iServiceInformation.sVideoWidth))
-		if int(xres) <= 720 or BoxInfo.getItem("model") != 'blackbox7405':
-			if self.session.pipshown:
-				del self.session.pip
-				if BoxInfo.getItem("LCDMiniTVPiP") and int(config.lcd.modepip.value) >= 1:
-					print('[LCDMiniTV] disable PiP')
+		if self.session.pipshown:
+			del self.session.pip
+			if SystemInfo["LCDMiniTVPiP"] and int(config.lcd.minitvpipmode.value) >= 1:
+				print("[LCDMiniTV] disable PIP")
+				f = open("/proc/stb/lcd/mode", "w")
+				f.write(config.lcd.minitvmode.value)
+				f.close()
+		self.session.pip = self.session.instantiateDialog(PictureInPicture)
+		self.session.pip.setAnimationMode(0)
+		self.session.pip.show()
+		newservice = self.csel.servicelist.getCurrent()
+		currentBouquet = self.csel.servicelist and self.csel.servicelist.getRoot()
+		if newservice and newservice.valid():
+			if self.session.pip.playService(newservice):
+				self.session.pipshown = True
+				self.session.pip.servicePath = self.csel.getCurrentServicePath()
+				self.session.pip.servicePath[1] = currentBouquet
+				if SystemInfo["LCDMiniTVPiP"] and int(config.lcd.minitvpipmode.value) >= 1:
+					print("[LCDMiniTV] enable PIP")
 					f = open("/proc/stb/lcd/mode", "w")
-					f.write(config.lcd.modeminitv.value)
+					f.write(config.lcd.minitvpipmode.value)
 					f.close()
-			self.session.pip = self.session.instantiateDialog(PictureInPicture)
-			self.session.pip.setAnimationMode(0)
-			self.session.pip.show()
-			newservice = self.csel.servicelist.getCurrent()
-			currentBouquet = self.csel.servicelist and self.csel.servicelist.getRoot()
-			if newservice and newservice.valid():
-				if self.session.pip.playService(newservice):
-					self.session.pipshown = True
-					self.session.pip.servicePath = self.csel.getCurrentServicePath()
-					self.session.pip.servicePath[1] = currentBouquet
-					if BoxInfo.getItem("LCDMiniTVPiP") and int(config.lcd.modepip.value) >= 1:
-						print('[LCDMiniTV] enable PiP')
+					f = open("/proc/stb/vmpeg/1/dst_width", "w")
+					f.write("0")
+					f.close()
+					f = open("/proc/stb/vmpeg/1/dst_height", "w")
+					f.write("0")
+					f.close()
+					f = open("/proc/stb/vmpeg/1/dst_apply", "w")
+					f.write("1")
+					f.close()
+				self.close(True)
+			else:
+				self.session.pipshown = False
+				del self.session.pip
+				if SystemInfo["LCDMiniTVPiP"] and int(config.lcd.minitvpipmode.value) >= 1:
+						print("[LCDMiniTV] disable PIP")
 						f = open("/proc/stb/lcd/mode", "w")
-						f.write(config.lcd.modepip.value)
+						f.write(config.lcd.minitvmode.value)
 						f.close()
-						f = open("/proc/stb/vmpeg/1/dst_width", "w")
-						f.write("0")
-						f.close()
-						f = open("/proc/stb/vmpeg/1/dst_height", "w")
-						f.write("0")
-						f.close()
-						f = open("/proc/stb/vmpeg/1/dst_apply", "w")
-						f.write("1")
-						f.close()
-					self.close(True)
-				else:
-					self.session.pipshown = False
-					del self.session.pip
-					if BoxInfo.getItem("LCDMiniTV") and int(config.lcd.modepip.value) >= 1:
-						print('[LCDMiniTV] disable PiP')
-						f = open("/proc/stb/lcd/mode", "w")
-						f.write(config.lcd.modeminitv.value)
-						f.close()
-					self.session.openWithCallback(self.close, MessageBox, _("Could not open Picture in Picture"), MessageBox.TYPE_ERROR)
-		else:
-			self.session.open(MessageBox, _("Your %s %s does not support PiP HD") % getBoxDisplayName(), type=MessageBox.TYPE_INFO, timeout=5)
+				self.session.openWithCallback(self.close, MessageBox, _("Could not open picture in picture"), MessageBox.TYPE_ERROR)
 
 	def addServiceToBouquetSelected(self):
 		bouquets = self.csel.getBouquetList()

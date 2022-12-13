@@ -8,6 +8,7 @@ import string
 import time
 
 from enigma import eTimer, eConsoleAppContainer
+from boxbranding import getBoxType, getMachineBrand, getMachineName, getImageType, getImageVersion
 
 from Components.ActionMap import ActionMap, NumberActionMap, HelpableActionMap
 from Components.config import config, ConfigSubsection, ConfigYesNo, ConfigIP, ConfigText, ConfigPassword, ConfigSelection, getConfigListEntry, ConfigNumber, ConfigLocations, NoSave, ConfigMacText
@@ -24,7 +25,7 @@ from Components.ScrollLabel import ScrollLabel
 from Components.Sources.StaticText import StaticText
 from Components.Sources.Boolean import Boolean
 from Components.Sources.List import List
-from Components.SystemInfo import BoxInfo, getBoxDisplayName
+from Components.SystemInfo import SystemInfo
 from Plugins.Plugin import PluginDescriptor
 from Screens.HelpMenu import HelpableScreen
 from Screens.MessageBox import MessageBox
@@ -34,8 +35,6 @@ from Screens.Standby import TryQuitMainloop
 from Screens.VirtualKeyBoard import VirtualKeyBoard
 from Tools.Directories import fileExists, resolveFilename, SCOPE_PLUGINS, SCOPE_CURRENT_SKIN
 from Tools.LoadPixmap import LoadPixmap
-
-MODULE_NAME = __name__.split(".")[-1]
 
 
 # Define a function to determine whether a service is configured to
@@ -663,16 +662,11 @@ class AdapterSetup(ConfigListScreen, HelpableScreen, Screen):
 		self.secondaryDNS = NoSave(ConfigIP(default=nameserver[1]))
 
 	def createSetup(self):
-		if BoxInfo.getItem("WakeOnLAN"):
-			self.wolstartvalue = config.network.wol.value
 		self.list = []
 		self.InterfaceEntry = getConfigListEntry(_("Use interface"), self.activateInterfaceEntry)
 
 		self.list.append(self.InterfaceEntry)
-		if self.onlyWakeOnWiFi:
-			self.WakeOnWiFiEntry = getConfigListEntry(_("Use only for Wake on WLan (WoW)"), self.onlyWakeOnWiFi)
-			self.list.append(self.WakeOnWiFiEntry)
-		if self.activateInterfaceEntry.value or (self.onlyWakeOnWiFi and self.onlyWakeOnWiFi.value):
+		if self.activateInterfaceEntry.value:
 			self.dhcpEntry = getConfigListEntry(_("Use DHCP"), self.dhcpConfigEntry)
 			self.list.append(self.dhcpEntry)
 			if not self.dhcpConfigEntry.value:
@@ -683,25 +677,17 @@ class AdapterSetup(ConfigListScreen, HelpableScreen, Screen):
 				if self.hasGatewayConfigEntry.value:
 					self.list.append(getConfigListEntry(_("Gateway"), self.gatewayConfigEntry))
 
-			havewol = False
-			if BoxInfo.getItem("WakeOnLAN") and not BoxInfo.getItem("machinebuild") in ("et10000", "gb800seplus", "gb800ueplus", "gbultrase", "gbultraue", "gbultraueh", "gbipbox", "gbquad", "gbx1", "gbx2", "gbx3", "gbx3h"):
-				havewol = True
-			if BoxInfo.getItem("machinebuild") in ("et10000", "vuultimo4k", "vuduo4kse") and self.iface == "eth0":
-				havewol = False
-			if havewol and self.onlyWakeOnWiFi != True:
-				self.list.append(getConfigListEntry(_("Enable Wake On LAN"), config.network.wol))
-
 			self.extended = None
 			self.configStrings = None
 			for p in plugins.getPlugins(PluginDescriptor.WHERE_NETWORKSETUP):
-				callFnc = p.__call__["ifaceSupported"](self.iface)
-				if callFnc != None:
-					if "WlanPluginEntry" in p.__call__:  # Internally used only for WLAN Plugin.
+				callFnc = p.fnc["ifaceSupported"](self.iface)
+				if callFnc is not None:
+					if "WlanPluginEntry" in p.fnc: # internally used only for WLAN Plugin
 						self.extended = callFnc
-						if "configStrings" in p.__call__:
-							self.configStrings = p.__call__["configStrings"]
+						if "configStrings" in p.fnc:
+							self.configStrings = p.fnc["configStrings"]
 
-						isExistBcmWifi = exists("/tmp/bcm/%s" % self.iface)
+						isExistBcmWifi = os_path.exists("/tmp/bcm/" + self.iface)
 						if not isExistBcmWifi:
 							self.hiddenSSID = getConfigListEntry(_("Hidden network"), config.plugins.wlan.hiddenessid)
 							self.list.append(self.hiddenSSID)
@@ -709,7 +695,6 @@ class AdapterSetup(ConfigListScreen, HelpableScreen, Screen):
 						self.list.append(self.wlanSSID)
 						self.encryption = getConfigListEntry(_("Encryption"), config.plugins.wlan.encryption)
 						self.list.append(self.encryption)
-
 						if not isExistBcmWifi:
 							self.encryptionType = getConfigListEntry(_("Encryption key type"), config.plugins.wlan.wepkeytype)
 						self.encryptionKey = getConfigListEntry(_("Encryption key"), config.plugins.wlan.psk)
@@ -1089,36 +1074,35 @@ class AdapterSetupConfiguration(Screen, HelpableScreen):
 		pass
 
 	def genMainMenu(self):
-		menu = [(_("Adapter Settings"), "edit"), (_("Nameserver settings"), "dns"), (_("Network test"), "test"), (_("Restart Network"), "lanrestart")]
+		menu = [(_("Adapter settings"), "edit"), (_("Nameserver settings"), "dns"), (_("Network test"), "test"), (_("Restart network"), "lanrestart")]
 
 		self.extended = None
 		self.extendedSetup = None
 		for p in plugins.getPlugins(PluginDescriptor.WHERE_NETWORKSETUP):
-			callFnc = p.__call__["ifaceSupported"](self.iface)
-			if callFnc != None:
+			callFnc = p.fnc["ifaceSupported"](self.iface)
+			if callFnc is not None:
 				self.extended = callFnc
-				if "WlanPluginEntry" in p.__call__:  # Internally used only for WLAN Plugin.
+				if "WlanPluginEntry" in p.fnc: # internally used only for WLAN Plugin
 					menu.append((_("Scan wireless networks"), "scanwlan"))
 					if iNetwork.getAdapterAttribute(self.iface, "up"):
 						menu.append((_("Show WLAN status"), "wlanstatus"))
 				else:
-					if "menuEntryName" in p.__call__:
-						menuEntryName = p.__call__["menuEntryName"](self.iface)
+					if "menuEntryName" in p.fnc:
+						menuEntryName = p.fnc["menuEntryName"](self.iface)
 					else:
-						menuEntryName = _("Extended Setup...")
-					if "menuEntryDescription" in p.__call__:
-						menuEntryDescription = p.__call__["menuEntryDescription"](self.iface)
+						menuEntryName = _("Extended setup...")
+					if "menuEntryDescription" in p.fnc:
+						menuEntryDescription = p.fnc["menuEntryDescription"](self.iface)
 					else:
-						menuEntryDescription = _("Extended Networksetup Plugin...")
+						menuEntryDescription = _("Extended network setup plugin...")
 					self.extendedSetup = ("extendedSetup", menuEntryDescription, self.extended)
 					menu.append((menuEntryName, self.extendedSetup))
 
-		if exists(resolveFilename(SCOPE_PLUGINS, "SystemPlugins/NetworkWizard/networkwizard.xml")):
-			menu.append((_("Network Wizard"), "openwizard"))
-		# Check which boxes support MAC change via the GUI.
-		if BoxInfo.getItem("machinebuild") not in ("DUMMY",) and self.iface == "eth0":
-			menu.append((_("Network MAC settings"), "mac"))
-
+		if os_path.exists(resolveFilename(SCOPE_PLUGINS, "SystemPlugins/NetworkWizard/networkwizard.xml")):
+			menu.append((_("Network wizard"), "openwizard"))
+#		kernel_ver = about.getKernelVersionString()
+#		if kernel_ver <= "3.5.0":
+		menu.append((_("Network MAC settings"), "mac"))
 		return menu
 
 	def AdapterSetupClosed(self, *ret):
@@ -2784,15 +2768,16 @@ class NetworkuShareSetup(ConfigListScreen, Screen):
 
 	def updateList(self, ret=None):
 		self.list = []
-		self.ushare_user = NoSave(ConfigText(default=BoxInfo.getItem("machinebuild"), fixed_size=False))
+		self.ushare_user = NoSave(ConfigText(default=getBoxType(), fixed_size=False))
 		self.ushare_iface = NoSave(ConfigText(fixed_size=False))
 		self.ushare_port = NoSave(ConfigNumber())
 		self.ushare_telnetport = NoSave(ConfigNumber())
-		self.ushare_web = NoSave(ConfigYesNo(default=True))
-		self.ushare_telnet = NoSave(ConfigYesNo(default=True))
-		self.ushare_xbox = NoSave(ConfigYesNo(default=True))
-		self.ushare_ps3 = NoSave(ConfigYesNo(default=True))
-		self.ushare_system = NoSave(ConfigSelection(default="dyndns@dyndns.org", choices=[("dyndns@dyndns.org", "dyndns@dyndns.org"), ("statdns@dyndns.org", "statdns@dyndns.org"), ("custom@dyndns.org", "custom@dyndns.org")]))
+		self.ushare_web = NoSave(ConfigYesNo(default="True"))
+		self.ushare_telnet = NoSave(ConfigYesNo(default="True"))
+		self.ushare_xbox = NoSave(ConfigYesNo(default="True"))
+		self.ushare_ps3 = NoSave(ConfigYesNo(default="True"))
+		# looks like dead code
+		#self.ushare_system = NoSave(ConfigSelection(default = "dyndns@dyndns.org", choices = [("dyndns@dyndns.org", "dyndns@dyndns.org"), ("statdns@dyndns.org", "statdns@dyndns.org"), ("custom@dyndns.org", "custom@dyndns.org")]))
 
 		if fileExists("/etc/ushare.conf"):
 			f = open("/etc/ushare.conf", "r")
@@ -3205,7 +3190,7 @@ class NetworkMiniDLNASetup(ConfigListScreen, Screen):
 
 	def updateList(self, ret=None):
 		self.list = []
-		self.minidlna_name = NoSave(ConfigText(default=BoxInfo.getItem("machinebuild"), fixed_size=False))
+		self.minidlna_name = NoSave(ConfigText(default=getBoxType(), fixed_size=False))
 		self.minidlna_iface = NoSave(ConfigText(fixed_size=False))
 		self.minidlna_port = NoSave(ConfigNumber())
 		self.minidlna_serialno = NoSave(ConfigNumber())

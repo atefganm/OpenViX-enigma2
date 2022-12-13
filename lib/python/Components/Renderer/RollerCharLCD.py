@@ -1,8 +1,9 @@
+from enigma import eLabel, eTimer
+from boxbranding import getBoxType
+
 from Components.config import config
 from Components.Renderer.Renderer import Renderer
-from enigma import eLabel, eTimer
 from Components.VariableText import VariableText
-from Components.SystemInfo import BoxInfo
 
 
 class RollerCharLCD(VariableText, Renderer):
@@ -10,9 +11,7 @@ class RollerCharLCD(VariableText, Renderer):
 	def __init__(self):
 		Renderer.__init__(self)
 		VariableText.__init__(self)
-		self.moveTimerText = None
-		self.delayTimer = None
-		if BoxInfo.getItem("machinebuild") in ("vuduo", "sf4008", "beyonwizu4"):
+		if getBoxType() in ('vuduo', 'sf4008'):
 			self.stringlength = 16
 		else:
 			self.stringlength = 12
@@ -25,10 +24,6 @@ class RollerCharLCD(VariableText, Renderer):
 
 	def changed(self, what):
 		if what[0] == self.CHANGED_CLEAR:
-			if self.moveTimerText:
-				self.moveTimerText.stop()
-			if self.delayTimer:
-				self.delayTimer.stop()
 			self.text = ''
 		else:
 			self.text = self.source.text
@@ -52,12 +47,8 @@ class RollerCharLCD(VariableText, Renderer):
 		if self.x > 0:
 			txttmp = self.backtext[self.idx:]
 			self.text = txttmp[:self.stringlength]
-			str_length = 1
-			accents = self.text[:2]
-			if accents in ('\xc3\xbc', '\xc3\xa4', '\xc3\xb6', '\xc3\x84', '\xc3\x9c', '\xc3\x96', '\xc3\x9f'):
-				str_length = 2
-			self.idx = self.idx + str_length
-			self.x = self.x - str_length
+			self.idx += 1
+			self.x -= 1
 		if self.x == 0:
 			self.status = 'end'
 			self.text = self.backtext

@@ -1,6 +1,7 @@
 from os import system, listdir, rename, path, mkdir
 from time import sleep
 
+from boxbranding import getMachineBrand, getMachineName, getImageType
 from Components.ActionMap import ActionMap
 from Components.config import getConfigListEntry, config, ConfigSubsection, ConfigText, ConfigSelection, ConfigInteger, ConfigClock, NoSave
 from Components.ConfigList import ConfigListScreen
@@ -11,7 +12,6 @@ from Components.Pixmap import Pixmap
 from Components.OnlineUpdateCheck import feedsstatuscheck
 from Components.Sources.Boolean import Boolean
 from Components.Sources.StaticText import StaticText
-from Components.SystemInfo import getBoxDisplayName
 from Screens.Screen import Screen
 from Screens.MessageBox import MessageBox
 from Tools.Directories import fileExists

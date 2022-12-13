@@ -8,12 +8,10 @@ from Screens.Screen import Screen
 from Screens.MessageBox import MessageBox
 from Components.Label import Label
 from Components.Pixmap import MultiPixmap
-from Components.SystemInfo import BoxInfo, getBoxDisplayName
+from Components.SystemInfo import SystemInfo
 
 profile("LOAD:enigma")
 import enigma
-
-boxtype = BoxInfo.getItem("machinebuild")
 
 profile("LOAD:InfoBarGenerics")
 from Screens.InfoBarGenerics import InfoBarShowHide, \
@@ -53,9 +51,9 @@ class InfoBar(InfoBarBase, InfoBarShowHide,
 		Screen.__init__(self, session)
 		self["actions"] = HelpableActionMap(self, "InfobarActions",
 			{
-				"showMovies": (self.showMovies, _("Play recorded movies...")),
-				"showRadio": (self.keyRadio, _("Show the radio player...")),
-				"showTv": (self.keyTV, _("Show the tv player...")),
+				"showMovies": (self.showMovies, _("Play recorded movies")),
+				"showRadio": (self.keyRadio, _("Show the radio player")),
+				"showTv": (self.keyTV, _("Show the tv player")),
 				"openBouquetList": (self.openBouquetList, _("Open bouquet list")),
 			}, prio=2, description=_("Basic functions"))
 
@@ -77,8 +75,8 @@ class InfoBar(InfoBarBase, InfoBarShowHide,
 				InfoBarHdmi, InfoBarPlugins, InfoBarServiceErrorPopupSupport, InfoBarButtonSetup:
 			x.__init__(self)
 
-		self.helpList.append((self["actions"], "InfobarActions", [("showMovies", _("Watch recordings..."))]))
-		self.helpList.append((self["actions"], "InfobarActions", [("showRadio", _("Listen to the radio..."))]))
+		self.helpList.append((self["actions"], "InfobarActions", [("showMovies", _("Watch recordings"))]))
+		self.helpList.append((self["actions"], "InfobarActions", [("showRadio", _("Listen to the radio"))]))
 
 		self.__event_tracker = ServiceEventTracker(screen=self, eventmap={
 				enigma.iPlayableService.evUpdatedEventInfo: self.__eventInfoChanged
@@ -208,21 +206,10 @@ class InfoBar(InfoBarBase, InfoBarShowHide,
 					self.openMoviePlayer(service)
 
 	def showMovies(self, defaultRef=None):
-		if BoxInfo.getItem("displaybrand") == 'GI' or boxtype.startswith('azbox') or boxtype.startswith('ini') or boxtype.startswith('venton'):
-			from Screens.BoxPortal import BoxPortal
-			self.session.open(BoxPortal)
-		else:
-		#	self.lastservice = self.session.nav.getCurrentlyPlayingServiceOrGroup()
-		#	if self.lastservice and ':0:/' in self.lastservice.toString():
-		#		self.lastservice = enigma.eServiceReference(config.movielist.curentlyplayingservice.value)
-		#	self.session.openWithCallback(self.movieSelected, Screens.MovieSelection.MovieSelection, defaultRef, timeshiftEnabled = self.timeshiftEnabled())
-			self.showMoviePlayer(defaultRef)
-
-	def showMoviePlayer(self, defaultRef=None):  # for using with hotkeys (ButtonSetup.py) regardless of plugins which overwrite the showMovies function
 		self.lastservice = self.session.nav.getCurrentlyPlayingServiceOrGroup()
 		if self.lastservice and ':0:/' in self.lastservice.toString():
 			self.lastservice = enigma.eServiceReference(config.movielist.curentlyplayingservice.value)
-		self.session.openWithCallback(self.movieSelected, Screens.MovieSelection.MovieSelection, defaultRef, timeshiftEnabled=self.timeshiftEnabled())
+		self.session.openWithCallback(self.movieSelected, Screens.MovieSelection.MovieSelection, defaultRef or enigma.eServiceReference(config.usage.last_movie_played.value), timeshiftEnabled=self.timeshiftEnabled())
 
 	def movieSelected(self, service):
 		ref = self.lastservice
@@ -239,13 +226,6 @@ class InfoBar(InfoBarBase, InfoBarShowHide,
 		if not LastService:
 			LastService = self.session.nav.getCurrentlyPlayingServiceOrGroup()
 		self.session.open(MoviePlayer, ref, slist=self.servicelist, lastservice=LastService)
-
-	def showBoxPortal(self):
-		if BoxInfo.getItem("displaybrand") == 'GI' or boxtype.startswith('azbox') or boxtype.startswith('ini') or boxtype.startswith('venton') or boxtype.startswith('wetek'):
-			from Screens.BoxPortal import BoxPortal
-			self.session.open(BoxPortal)
-		else:
-			self.showMovies()
 
 
 class MoviePlayer(InfoBarBase, InfoBarShowHide, InfoBarLongKeyDetection, InfoBarMenu, InfoBarEPG,
@@ -288,8 +268,8 @@ class MoviePlayer(InfoBarBase, InfoBarShowHide, InfoBarLongKeyDetection, InfoBar
 
 		self["actions"] = HelpableActionMap(self, "MoviePlayerActions",
 			{
-				"leavePlayer": (self.leavePlayer, _("Exit movie player...")),
-				"leavePlayerOnExit": (self.leavePlayerOnExit, _("Exit movie player..."))
+				"leavePlayer": (self.leavePlayer, _("Exit movie player")),
+				"leavePlayerOnExit": (self.leavePlayerOnExit, _("Exit movie player"))
 			}, description=_("Movie player"))
 
 		self.allowPiP = True
@@ -560,21 +540,15 @@ class MoviePlayer(InfoBarBase, InfoBarShowHide, InfoBarLongKeyDetection, InfoBar
 				del self.session.pip
 				self.session.pipshown = False
 		else:
-			service = self.session.nav.getCurrentService()
-			info = service and service.info()
-			xres = str(info.getInfo(enigma.iServiceInformation.sVideoWidth))
-			if int(xres) <= 720 or BoxInfo.getItem("model") != 'blackbox7405':
-				from Screens.PictureInPicture import PictureInPicture
-				self.session.pip = self.session.instantiateDialog(PictureInPicture)
-				self.session.pip.show()
-				if self.session.pip.playService(slist.getCurrentSelection()):
-					self.session.pipshown = True
-					self.session.pip.servicePath = slist.getCurrentServicePath()
-				else:
-					self.session.pipshown = False
-					del self.session.pip
+			from Screens.PictureInPicture import PictureInPicture
+			self.session.pip = self.session.instantiateDialog(PictureInPicture)
+			self.session.pip.show()
+			if self.session.pip.playService(slist.getCurrentSelection()):
+				self.session.pipshown = True
+				self.session.pip.servicePath = slist.getCurrentServicePath()
 			else:
-				self.session.open(MessageBox, _("Your %s %s does not support PiP HD") % getBoxDisplayName(), type=MessageBox.TYPE_INFO, timeout=5)
+				self.session.pipshown = False
+				del self.session.pip
 
 	def movePiP(self):
 		if self.session.pipshown:
