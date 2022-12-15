@@ -181,8 +181,10 @@ class AVSwitch:
                                                return False
                        if port != "HDMI":
                                if mode not in self.readAvailableModes():
-                                       return False
-               return True
+                                        return False
+                        elif mode not in self.modes_preferred:
+                                return False
+                return True
 
         def isWidescreenMode(self, port, mode):
                 return mode in self.widescreen_modes
