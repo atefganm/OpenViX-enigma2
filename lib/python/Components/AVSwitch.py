@@ -27,7 +27,6 @@ has_avjack = SystemInfo["HaveAVJACK"]
 
 config.av = ConfigSubsection()
 
-
 config.av.edid_override = ConfigYesNo(default = False)
 
 class AVSwitch:
@@ -368,7 +367,7 @@ class AVSwitch:
                 else:
                         wss = "auto"
                 if os.path.exists("/proc/stb/denc/0/wss"):
-                        print("[AVSwitch] setting wss: %s" % wss)
+                        print("[VideoHardware] setting wss: %s" % wss)
                         f = open("/proc/stb/denc/0/wss", "w")
                         f.write(wss)
                         f.close()
