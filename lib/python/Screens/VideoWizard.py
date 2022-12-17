@@ -1,27 +1,23 @@
-from Screens.Wizard import WizardSummary
-from Screens.WizardLanguage import WizardLanguage
 from Screens.Rc import Rc
 from Components.AVSwitch import iAVSwitch as iAV
-from Screens.Screen import Screen
 
-from Components.Pixmap import Pixmap
 from Components.config import config, ConfigBoolean, configfile
-from Components.SystemInfo import SystemInfo
-
+from Components.Pixmap import Pixmap
+from Components.SystemInfo import BoxInfo
+from Screens.HelpMenu import ShowRemoteControl
+from Screens.Screen import Screen
+from Screens.Wizard import WizardSummary
+from Screens.WizardLanguage import WizardLanguage
 from Tools.Directories import resolveFilename, SCOPE_SKIN, SCOPE_CURRENT_SKIN
 from Tools.HardwareInfo import HardwareInfo
 
 config.misc.showtestcard = ConfigBoolean(default=False)
 
 
-has_rca = False
-has_dvi = False
-has_jack = False
-has_scart = False
-has_rca = SystemInfo["HaveRCA"]
-has_dvi = SystemInfo["HaveDVI"]
-has_jack = SystemInfo["HaveAVJACK"]
-has_scart = SystemInfo["HAVESCART"]
+has_scart = BoxInfo.getItem("scart", False)
+has_rca = BoxInfo.getItem("rca", False)
+has_jack = BoxInfo.getItem("avjack", False)
+has_dvi = BoxInfo.getItem("dvi", False)
 
 class VideoWizardSummary(WizardSummary):
 	skin = (
