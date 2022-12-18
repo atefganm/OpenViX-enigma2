@@ -51,6 +51,7 @@ from RecordTimer import RecordTimerEntry, parseEvent, AFTEREVENT, findSafeRecord
 from Tools import Notifications
 from Tools.Directories import pathExists, fileExists
 from Tools.KeyBindings import getKeyDescription, getKeyBindingKeys
+from Tools.ServiceReference import hdmiInServiceRef
 
 import NavigationInstance
 
@@ -4418,13 +4419,13 @@ class InfoBarHdmi:
 	def HDMIInLong(self):
 		if not hasattr(self.session, 'pip') and not self.session.pipshown:
 			self.session.pip = self.session.instantiateDialog(PictureInPicture)
-			self.session.pip.playService(eServiceReference('8192:0:1:0:0:0:0:0:0:0:'))
+				self.session.pip.playService(hdmiInServiceRef())
 			self.session.pip.show()
 			self.session.pipshown = True
 		else:
 			curref = self.session.pip.getCurrentService()
-			if curref and curref.type != 8192:
-				self.session.pip.playService(eServiceReference('8192:0:1:0:0:0:0:0:0:0:'))
+			if curref and curref.type != eServiceReference.idServiceHDMIIn:
+				self.session.pip.playService(hdmiInServiceRef())
 			else:
 				self.session.pipshown = False
 				del self.session.pip
@@ -4432,8 +4433,8 @@ class InfoBarHdmi:
 	def HDMIIn(self):
 		slist = self.servicelist
 		curref = self.session.nav.getCurrentlyPlayingServiceOrGroup()
-		if curref and curref.type != 8192:
-			self.session.nav.playService(eServiceReference('8192:0:1:0:0:0:0:0:0:0:'))
+		if curref and curref.type != eServiceReference.idServiceHDMIIn:
+			self.session.nav.playService(hdmiInServiceRef())
 		else:
 			self.session.nav.playService(slist.servicelist.getCurrent())
 
