@@ -1,5 +1,6 @@
 #ifndef __lib_dvb_iservice_h
 #define __lib_dvb_iservice_h
+#define HAVE_ITAPSERVICE
 
 #include <lib/python/swig.h>
 #include <lib/python/python.h>
@@ -16,26 +17,17 @@ class eServiceReference
 public:
 	enum
 	{
-		idServiceIsScrambled  = 0x0100,				//  256  Added to normal id to indicate scrambling
-		idInvalid             = -1,
-		idStructure           = 0x0000,				//    0 service_id == 0 is root
-		idDVB                 = 0x0001,				//    1
-		idFile                = 0x0002,				//    2
-		idServiceM2TS         = 0x0003,				//    3
-		idDVBScrambled        = idDVB + idServiceIsScrambled,	//  257/0x0101
-		idUser                = 0x1000,				// 4096
-		idServiceMP3          = 0x1001,				// 4097
-		idServiceAirPlay      = 0x1009,				// 4105
-		idServiceXINE         = 0x1010,				// 4112
-		idServiceDVD          = 0x1111,				// 4369
-		idServiceAzBox        = 0x1112,                         // 4370
-		idServiceHDMIIn       = 0x2000,				// 8192
+		idInvalid=-1,
+		idStructure,	// service_id == 0 is root
+		idDVB,
+		idFile,
+		idUser=0x1000,
+		idServiceMP3=0x1001
 	};
 	int type;
 
 	enum
 	{
-		noFlags=0,
 		isDirectory=1,		// SHOULD enter  (implies mustDescent)
 		mustDescent=2,		// cannot be played directly - often used with "isDirectory" (implies canDescent)
 		/*
@@ -53,7 +45,7 @@ public:
 		isMarker=64,			// Marker
 		isGroup=128,			// is a group of services
 		isNumberedMarker=256, //use together with isMarker, to force the marker to be numbered
-		isInvisible=512 // use to make services or markers in a list invisable
+		isInvisible=512 // use together with isMarker and isNumberedMarker, to force an empty number
 	};
 	int flags; // flags will NOT be compared.
 
@@ -109,6 +101,7 @@ public:
 		memset(data, 0, sizeof(data));
 		number = 0;
 	}
+#ifndef SWIG
 	eServiceReference(int type, int flags)
 		: type(type), flags(flags)
 	{
@@ -160,24 +153,35 @@ public:
 		data[4]=data4;
 		number = 0;
 	}
+	operator bool() const
+	{
+		return valid();
+	}
+#endif
+#ifdef SWIG
+public:
+%typemap(in) (const char* string2) {
+	if (PyBytes_Check($input)) {
+		$1 = PyBytes_AsString($input);
+	} else {
+		$1 = PyBytes_AsString(PyUnicode_AsEncodedString($input, "utf-8", "surrogateescape"));
+	}
+}
+#endif
 	eServiceReference(int type, int flags, const std::string &path)
 		: type(type), flags(flags), path(path)
 	{
 		memset(data, 0, sizeof(data));
 		number = 0;
 	}
+	void eServiceReferenceBase(const std::string &string);
 #ifdef SWIG
 	eServiceReference(const eServiceReference &ref);
 #endif
 	eServiceReference(const std::string &string);
+	eServiceReference(const char* string2);
 	std::string toString() const;
 	std::string toCompareString() const;
-#ifndef SWIG
-	operator bool() const
-	{
-		return valid();
-	}
-#endif
 	bool operator==(const eServiceReference &c) const
 	{
 		if (type != c.type)
@@ -402,7 +406,6 @@ public:
 		sLiveStreamDemuxId,
 		sBuffer,
 		sIsDedicated3D,
-		sHideVBI,
 		sCenterDVBSubs,
 
 		sGamma,
@@ -424,8 +427,8 @@ So we move all enum's to own classes (with _ENUMS as name ending) and let our re
 class inherit from the *_ENUMS class. This *_ENUMS classes are normally exportet via swig to python.
 But in the python code we doesn't like to write iServiceInformation_ENUMS.sVideoType....
 we like to write iServiceInformation.sVideoType.
-So until swig have no Solution for this Problem we call in lib/python/Makefile.am a python script named
-enigma_py_patcher.py to remove the "_ENUMS" strings in enigma.py at all needed locations. */
+So until swig have no Solution for this Problem we call in lib/python/Makefile.inc a sed command
+to remove the "_ENUMS" strings in enigma.py at all needed locations. */
 
 class iServiceInformation: public iServiceInformation_ENUMS, public iObject
 {
@@ -442,7 +445,6 @@ public:
 	virtual ePtr<iServiceInfoContainer> getInfoObject(int w);
 	virtual ePtr<iDVBTransponderData> getTransponderData();
 	virtual void getAITApplications(std::map<int, std::string> &aitlist) {};
-	virtual PyObject *getHbbTVApplications() {return getHbbTVApplications();};
 	virtual void getCaIds(std::vector<int> &caids, std::vector<int> &ecmpids, std::vector<std::string> &ecmdatabytes);
 	virtual long long getFileSize();
 
@@ -712,7 +714,6 @@ class PyList;
 struct eDVBTeletextSubtitlePage;
 struct eDVBSubtitlePage;
 struct ePangoSubtitlePage;
-struct eVobSubtitlePage;
 class eRect;
 class gRegion;
 class gPixmap;
@@ -724,7 +725,6 @@ public:
 	virtual void setPage(const eDVBTeletextSubtitlePage &p) = 0;
 	virtual void setPage(const eDVBSubtitlePage &p) = 0;
 	virtual void setPage(const ePangoSubtitlePage &p) = 0;
-	virtual void setPage(const eVobSubtitlePage &p) = 0;
 	virtual void setPixmap(ePtr<gPixmap> &pixmap, gRegion changed, eRect dest) = 0;
 	virtual void destroy() = 0;
 };
@@ -978,7 +978,7 @@ class iPlayableService: public iPlayableService_ENUMS, public iObject
 	friend class iServiceHandler;
 public:
 #ifndef SWIG
-	virtual RESULT connectEvent(const sigc::slot2<void,iPlayableService*,int> &event, ePtr<eConnection> &connection)=0;
+	virtual RESULT connectEvent(const sigc::slot<void(iPlayableService*,int)> &event, ePtr<eConnection> &connection)=0;
 #endif
 	virtual RESULT start()=0;
 	virtual RESULT stop()=0;
@@ -1046,7 +1046,7 @@ class iRecordableService: public iRecordableService_ENUMS, public iObject
 #endif
 public:
 #ifndef SWIG
-	virtual RESULT connectEvent(const sigc::slot2<void,iRecordableService*,int> &event, ePtr<eConnection> &connection)=0;
+	virtual RESULT connectEvent(const sigc::slot<void(iRecordableService*,int)> &event, ePtr<eConnection> &connection)=0;
 #endif
 	virtual SWIG_VOID(RESULT) getError(int &SWIG_OUTPUT)=0;
 	virtual RESULT prepare(const char *filename, time_t begTime=-1, time_t endTime=-1, int eit_event_id=-1, const char *name=0, const char *descr=0, const char *tags=0, bool descramble = true, bool recordecm = false, int packetsize = 188)=0;
@@ -1057,6 +1057,10 @@ public:
 	virtual SWIG_VOID(RESULT) stream(ePtr<iStreamableService> &SWIG_OUTPUT)=0;
 	virtual SWIG_VOID(RESULT) subServices(ePtr<iSubserviceList> &SWIG_OUTPUT)=0;
 	virtual SWIG_VOID(RESULT) getFilenameExtension(std::string &SWIG_OUTPUT)=0;
+	virtual PyObject *getCutList()
+	{
+		return PyList_New(0);
+	}
 };
 SWIG_TEMPLATE_TYPEDEF(ePtr<iRecordableService>, iRecordableServicePtr);
 
