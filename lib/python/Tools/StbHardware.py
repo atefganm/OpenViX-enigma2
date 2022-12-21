@@ -49,12 +49,10 @@ def setRTCoffset():
 
 
 def setRTCtime(wutime):
-        if path.exists("/proc/stb/fp/rtc_offset"):
+	if path.exists("/proc/stb/fp/rtc_offset"):
 		setRTCoffset()
 	try:
-		f = open("/proc/stb/fp/rtc", "w")
-		f.write(str(wutime))
-		f.close()
+		open("/proc/stb/fp/rtc", "w").write(str(wutime))
 	except IOError:
 		try:
 			fp = open("/dev/dbox/fp0")
@@ -105,7 +103,7 @@ def getFPWasTimerWakeup(check = False):
 			wasTimerWakeup = unpack('B', ioctl(fp.fileno(), 9, ' '))[0] and True or False
 			fp.close()
 		except IOError:
-			print("wasTimerWakeup failed!")
+			print("[wasTimerWakeup failed!")
 			isError = True
 
 	if wasTimerWakeup:

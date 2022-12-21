@@ -31,22 +31,22 @@ config.av = ConfigSubsection()
 config.av.edid_override = ConfigYesNo(default = False)
 
 class AVSwitch:
-		print("BoxBranding", "MachineBuild", getMachineBuild())
-		print("BoxBranding", "BoxType", getBoxType())
-		print("BoxBranding", "BrandOEM", getBrandOEM())
-		print("BoxBranding", "DisplayType", getDisplayType())
-		print("AVSwitch", "hasRCA", SystemInfo["hasRCA"])
-		print("AVSwitch", "hasSCART", SystemInfo["hasScart"])
-		print("AVSwitch", "hasJACK", SystemInfo["hasJack"])
-		print("AVSwitch", "hasYUV", SystemInfo["hasYUV"])
-		print("AVSwitch", "HasScartYUV", SystemInfo["hasScartYUV"])
+	print("BoxBranding", "MachineBuild", getMachineBuild())
+	print("BoxBranding", "BoxType", getBoxType())
+	print("BoxBranding", "BrandOEM", getBrandOEM())
+	print("BoxBranding", "DisplayType", getDisplayType())
+	print("AVSwitch", "hasRCA", SystemInfo["hasRCA"])
+	print("AVSwitch", "hasSCART", SystemInfo["hasScart"])
+	print("AVSwitch", "hasJACK", SystemInfo["hasJack"])
+	print("AVSwitch", "hasYUV", SystemInfo["hasYUV"])
+	print("AVSwitch", "HasScartYUV", SystemInfo["hasScartYUV"])
 
-		hw_type = HardwareInfo().get_device_name()
-		rates = {}  # high-level, use selectable modes.
-		modes = {}  # a list of (high-level) modes for a certain port.
+	hw_type = HardwareInfo().get_device_name()
+	rates = {}  # high-level, use selectable modes.
+	modes = {}  # a list of (high-level) modes for a certain port.
 
-		rates["PAL"] = {"50Hz": {50: "pal"}, "60Hz": {60: "pal60"}, "multi": {50: "pal", 60: "pal60"}}
-		rates["NTSC"] = {"60Hz": {60: "ntsc"}}
+	rates["PAL"] = {"50Hz": {50: "pal"}, "60Hz": {60: "pal60"}, "multi": {50: "pal", 60: "pal60"}}
+	rates["NTSC"] = {"60Hz": {60: "ntsc"}}
         rates["Multi"] = {"multi": {50: "pal", 60: "ntsc"}}
         rates["480i"] = {"60Hz": {60: "480i"}}
         rates["576i"] = {"50Hz": {50: "576i"}}
