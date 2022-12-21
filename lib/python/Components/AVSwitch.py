@@ -168,7 +168,7 @@ class AVSwitch:
                 except IOError:
                         print("[AVSwitch] failed to read video choices 24hz .")
                         self.has24pAvailable = False
-                BoxInfo.setItem("have24hz", self.has24pAvailable)
+                SystemInfo["have24hz"] = self.has24pAvailable
 
         # check if a high-level mode with a given rate is available.
         def isModeAvailable(self, port, mode, rate):
