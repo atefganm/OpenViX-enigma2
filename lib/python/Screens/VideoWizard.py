@@ -1,35 +1,20 @@
+from boxbranding import getBoxType, getMachineName, getHaveRCA, getHaveDVI, getHaveSCART, getHaveAVJACK
+from Screens.Wizard import WizardSummary
+from Screens.WizardLanguage import WizardLanguage
 from Screens.Rc import Rc
 from Components.AVSwitch import iAVSwitch as iAV
 
-from Components.config import config, ConfigBoolean, configfile
 from Components.Pixmap import Pixmap
-from Components.SystemInfo import BoxInfo
-from Screens.HelpMenu import ShowRemoteControl
-from Screens.Screen import Screen
-from Screens.Wizard import WizardSummary
-from Screens.WizardLanguage import WizardLanguage
+from Components.config import config, ConfigBoolean, configfile
+from Components.SystemInfo import SystemInfo
+
 from Tools.Directories import resolveFilename, SCOPE_SKIN, SCOPE_CURRENT_SKIN
 from Tools.HardwareInfo import HardwareInfo
 
 config.misc.showtestcard = ConfigBoolean(default=False)
 
 
-has_scart = BoxInfo.getItem("scart", False)
-has_rca = BoxInfo.getItem("rca", False)
-has_jack = BoxInfo.getItem("avjack", False)
-has_dvi = BoxInfo.getItem("dvi", False)
-
 class VideoWizardSummary(WizardSummary):
-	skin = (
-	"""<screen name="VideoWizardSummary" position="0,0" size="132,64">
-		<widget name="text" position="6,4" size="120,40" font="Regular;12" transparent="1" />
-		<widget source="parent.list" render="Label" position="6,40" size="120,21" font="Regular;14">
-			<convert type="StringListSelection" />
-		</widget>
-		<!--widget name="pic" pixmap="%s" position="6,22" zPosition="10" size="64,64" transparent="1" alphatest="on"/-->
-	</screen>""")
-	#% (resolveFilename(SCOPE_PLUGINS, "SystemPlugins/Videomode/lcd_Scart.png"))
-
 	def __init__(self, session, parent):
 		WizardSummary.__init__(self, session, parent)
 
@@ -71,17 +56,14 @@ class VideoWizard(WizardLanguage, Rc):
 		WizardLanguage.__init__(self, session, showSteps=False, showStepSlider=False)
 		Rc.__init__(self)
 		self["wizard"] = Pixmap()
-		self["HelpWindow"] = Pixmap()
-		self["HelpWindow"].hide()
 		self["portpic"] = Pixmap()
-		#Screen.setTitle(self, _("Welcome..."))
-		Screen.setTitle(self, _("VideoWizard"))
 
 		self.port = None
 		self.mode = None
 		self.rate = None
 
 	def createSummary(self):
+		print("[VideoWizard] createSummary")
 		return VideoWizardSummary
 
 	def markDone(self):
@@ -134,26 +116,26 @@ class VideoWizard(WizardLanguage, Rc):
 
 	def listModes(self):
 		list = []
-		print("modes for port", self.port)
+		print("[VideoWizard] modes for port", self.port)
 		for mode in iAV.getModeList(self.port):
 			# if mode[0] != "PC":
 			list.append((mode[0], mode[0]))
-		print("modeslist:", list)
+		print("[VideoWizard] modeslist:", list)
 		return list
 
 	def modeSelectionMade(self, index):
-		print("modeSelectionMade:", index)
+		print("[VideoWizard] modeSelectionMade:", index)
 		self.mode = index
 		self.modeSelect(index)
 
 	def modeSelectionMoved(self):
-		print("mode selection moved:", self.selection)
+		print("[VideoWizard] mode selection moved:", self.selection)
 		self.modeSelect(self.selection)
 
 	def modeSelect(self, mode):
 		ratesList = self.listRates(mode)
-		print("ratesList:", ratesList)
-		if self.port == "HDMI" and mode in ("720p", "1080i", "1080p"):
+		print("[VideoWizard] ratesList:", ratesList)
+		if self.port == "HDMI" and mode in ("720p", "1080i", "1080p", "2160p"):
 			self.rate = "multi"
 			iAV.setMode(port=self.port, mode=mode, rate="multi")
 		else:
@@ -163,15 +145,13 @@ class VideoWizard(WizardLanguage, Rc):
 		if querymode is None:
 			querymode = self.mode
 		list = []
-		print("modes for port", self.port, "and mode", querymode)
+		print("[VideoWizard] modes for port", self.port, "and mode", querymode)
 		for mode in iAV.getModeList(self.port):
-			print(mode)
+			print("[VideoWizard] mode:", mode)
 			if mode[0] == querymode:
 				for rate in mode[1]:
-					if rate in ("auto") and not SystemInfo["have24hz"]:
-						continue
 					if self.port == "DVI-PC":
-						print("rate:", rate)
+						print("[VideoWizard] rate:", rate)
 						if rate == "640x480":
 							list.insert(0, (rate, rate))
 							continue
@@ -179,12 +159,12 @@ class VideoWizard(WizardLanguage, Rc):
 		return list
 
 	def rateSelectionMade(self, index):
-		print("rateSelectionMade:", index)
+		print("[VideoWizard] rateSelectionMade:", index)
 		self.rate = index
 		self.rateSelect(index)
 
 	def rateSelectionMoved(self):
-		print("rate selection moved:", self.selection)
+		print("[VideoWizard] rate selection moved:", self.selection)
 		self.rateSelect(self.selection)
 
 	def rateSelect(self, rate):
@@ -193,7 +173,7 @@ class VideoWizard(WizardLanguage, Rc):
 	def showTestCard(self, selection=None):
 		if selection is None:
 			selection = self.selection
-		print("set config.misc.showtestcard to", {'yes': True, 'no': False}[selection])
+		print("[VideoWizard] set config.misc.showtestcard to", {"yes": True, "no": False}[selection])
 		if selection == "yes":
 			config.misc.showtestcard.value = True
 		else:
