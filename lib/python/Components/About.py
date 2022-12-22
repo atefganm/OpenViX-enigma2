@@ -1,9 +1,15 @@
-from sys import modules, version_info
-import socket
-import fcntl
-import struct
+from __future__ import print_function
+from sys import modules, version as pyversion
+from fcntl import ioctl
+from struct import pack
+from socket import socket, inet_ntoa, AF_INET, SOCK_DGRAM
+from time import localtime, strftime
+from os import stat
 
-from boxbranding import getImageVersion, getMachineBuild, getBoxType
+from boxbranding import getBoxType, getMachineBuild, getImageVersion
+from Tools.Directories import fileReadLine, fileReadLines
+
+MODULE_NAME = __name__.split(".")[-1]
 
 
 def getVersionString():
@@ -41,35 +47,19 @@ def getKernelVersionString():
 		return _("unknown")
 
 
-def getIsBroadcom():
-	try:
-		with open("/proc/cpuinfo", "r") as file:
-			lines = file.readlines()
-			for x in lines:
-				splitted = x.split(": ")
-				if len(splitted) > 1:
-					splitted[1] = splitted[1].replace("\n", "")
-					if splitted[0].startswith("Hardware"):
-						system = splitted[1].split(" ")[0]
-					elif splitted[0].startswith("system type"):
-						if splitted[1].split(" ")[0].startswith("BCM"):
-							system = "Broadcom"
-		if "Broadcom" in system:
-			return True
-		else:
-			return False
-	except:
-		return False
+def getModelString():
+	model = getBoxType()
+	return model
 
 
 def getChipSetString():
-	if getMachineBuild() in ('dm7080','dm820'):
+	if getMachineBuild() in ('dm7080', 'dm820'):
 		return "7435"
-	elif getMachineBuild() in ('dm520','dm525'):
+	elif getMachineBuild() in ('dm520', 'dm525'):
 		return "73625"
-	elif getMachineBuild() in ('dm900','dm920','et13000','sf5008'):
+	elif getMachineBuild() in ('dm900', 'dm920', 'et13000', 'sf5008'):
 		return "7252S"
-	elif getMachineBuild() in ('hd51','vs1500','h7'):
+	elif getMachineBuild() in ('hd51', 'vs1500', 'h7'):
 		return "7251S"
 	elif getMachineBuild() in ('alien5',):
 		return "S905D"
@@ -78,7 +68,7 @@ def getChipSetString():
 			f = open('/proc/stb/info/chipset', 'r')
 			chipset = f.read()
 			f.close()
-			return str(chipset.lower().replace('\n','').replace('bcm','').replace('brcm','').replace('sti',''))
+			return str(chipset.lower().replace('\n', '').replace('bcm', '').replace('brcm', '').replace('sti', ''))
 		except IOError:
 			return "unavailable"
 
