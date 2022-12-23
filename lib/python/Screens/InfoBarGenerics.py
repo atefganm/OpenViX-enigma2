@@ -55,7 +55,7 @@ from Tools.KeyBindings import getKeyDescription, getKeyBindingKeys
 import NavigationInstance
 
 from enigma import eTimer, eServiceCenter, eDVBServicePMTHandler, iServiceInformation, iPlayableService, iRecordableService, eServiceReference, eEPGCache, eActionMap, getDesktop, eDVBDB
-from keyids import KEYFLAGS, KEYIDS, invertKeyIds
+from keyids import KEYFLAGS, KEYIDS, KEYIDNAMES
 
 from time import time, localtime, strftime
 from bisect import insort
@@ -256,7 +256,6 @@ class InfoBarUnhandledKey:
 		eActionMap.getInstance().bindAction("", maxsize, self.actionB)  # Lowest priority.
 		self.flags = (1 << 1)
 		self.uflags = 0
-		self.invKeyIds = invertKeyIds()
 		self.sibIgnoreKeys = (
 			KEYIDS["KEY_VOLUMEDOWN"], KEYIDS["KEY_VOLUMEUP"],
 			KEYIDS["KEY_OK"], KEYIDS["KEY_UP"], KEYIDS["KEY_DOWN"],
@@ -273,7 +272,7 @@ class InfoBarUnhandledKey:
 			self.unhandledKeyDialog = None
 
 	def actionA(self, key, flag):  # This function is called on every keypress!
-		print("[InfoBarGenerics] Key: %s (%s) KeyID='%s' Binding='%s'." % (key, KEYFLAGS[flag], self.invKeyIds.get(key, ""), getKeyDescription(key)))
+		print("[InfoBarGenerics] Key: %s (%s) KeyID='%s' Binding='%s'." % (key, KEYFLAGS.get(flag, _("Unknown")), KEYIDNAMES.get(key, _("Unknown")), getKeyDescription(key)))
 		if flag != 2: # don't hide on repeat
 			self.unhandledKeyDialog.hide()
 			if self.closeSIB(key) and self.secondInfoBarScreen and self.secondInfoBarScreen.shown:
@@ -4450,92 +4449,29 @@ class InfoBarHdmi:
 			return _("Turn off HDMI-IN PiP mode")
 
 	def HDMIInPiP(self):
-		if getMachineBuild() in ('dm7080', 'dm820', 'dm900', 'dm920'):
-			f=open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor","r")
-			check=f.read()
-			f.close()
-			if check.startswith("off"):
-				f=open("/proc/stb/audio/hdmi_rx_monitor","w")
-				f.write("on")
-				f.close()
-				f=open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor","w")
-				f.write("on")
-				f.close()
-			else:
-				f=open("/proc/stb/audio/hdmi_rx_monitor","w")
-				f.write("off")
-				f.close()
-				f=open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor","w")
-				f.write("off")
-				f.close()
+		if not hasattr(self.session, 'pip') and not self.session.pipshown:
+			self.hdmi_enabled_pip = True
+			self.session.pip = self.session.instantiateDialog(PictureInPicture)
+			self.session.pip.playService(eServiceReference('8192:0:1:0:0:0:0:0:0:0:'))
+			self.session.pip.show()
+			self.session.pipshown = True
+			self.session.pip.servicePath = self.servicelist.getCurrentServicePath()
 		else:
-			if not hasattr(self.session, 'pip') and not self.session.pipshown:
+			curref = self.session.pip.getCurrentService()
+			if curref and curref.type != 8192:
 				self.hdmi_enabled_pip = True
-				self.session.pip = self.session.instantiateDialog(PictureInPicture)
-				self.session.pip.playService(hdmiInServiceRef())
-				self.session.pip.show()
-				self.session.pipshown = True
-				self.session.pip.servicePath = self.servicelist.getCurrentServicePath()
+				self.session.pip.playService(eServiceReference('8192:0:1:0:0:0:0:0:0:0:'))
 			else:
-				curref = self.session.pip.getCurrentService()
-				if curref and curref.type != eServiceReference.idServiceHDMIIn:
-					self.hdmi_enabled_pip = True
-					self.session.pip.playService(hdmiInServiceRef())
-					self.session.pip.servicePath = self.servicelist.getCurrentServicePath()
-				else:
-					self.hdmi_enabled_pip = False
-					self.session.pipshown = False
-					del self.session.pip
+				self.hdmi_enabled_pip = False
+				self.session.pipshown = False
+				del self.session.pip
 
 	def HDMIInFull(self):
-		if getMachineBuild() in ('dm7080', 'dm820', 'dm900', 'dm920'):
-			f=open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor","r")
-			check=f.read()
-			f.close()
-			if check.startswith("off"):
-				f=open("/proc/stb/video/videomode","r")
-				self.oldvideomode=f.read()
-				f.close()
-				f=open("/proc/stb/video/videomode_50hz","r")
-				self.oldvideomode_50hz=f.read()
-				f.close()
-				f=open("/proc/stb/video/videomode_60hz","r")
-				self.oldvideomode_60hz=f.read()
-				f.close()
-				f=open("/proc/stb/video/videomode","w")
-				if getMachineBuild() in ('dm900', 'dm920'):
-					f.write("1080p")
-				else:
-					f.write("720p")
-				f.close()
-				f=open("/proc/stb/audio/hdmi_rx_monitor","w")
-				f.write("on")
-				f.close()
-				f=open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor","w")
-				f.write("on")
-				f.close()
-			else:
-				f=open("/proc/stb/audio/hdmi_rx_monitor","w")
-				f.write("off")
-				f.close()
-				f=open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor","w")
-				f.write("off")
-				f.close()
-				f=open("/proc/stb/video/videomode","w")
-				f.write(self.oldvideomode)
-				f.close()
-				f=open("/proc/stb/video/videomode_50hz","w")
-				f.write(self.oldvideomode_50hz)
-				f.close()
-				f=open("/proc/stb/video/videomode_60hz","w")
-				f.write(self.oldvideomode_60hz)
-				f.close()
+		slist = self.servicelist
+		curref = self.session.nav.getCurrentlyPlayingServiceOrGroup()
+		if curref and curref.type != 8192:
+			self.hdmi_enabled_full = True
+			self.session.nav.playService(eServiceReference('8192:0:1:0:0:0:0:0:0:0:'))
 		else:
-			slist = self.servicelist
-			curref = self.session.nav.getCurrentlyPlayingServiceOrGroup()
-			if curref and curref.type != eServiceReference.idServiceHDMIIn:
-				self.hdmi_enabled_full = True
-				self.session.nav.playService(hdmiInServiceRef())
-			else:
-				self.hdmi_enabled_full = False
-				self.session.nav.playService(slist.servicelist.getCurrent())
+			self.hdmi_enabled_full = False
+			self.session.nav.playService(slist.servicelist.getCurrent())
