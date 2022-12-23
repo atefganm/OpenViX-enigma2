@@ -55,7 +55,7 @@ profile("InfoBar")
 from Screens import InfoBar
 
 from sys import stdout
-from Components.config import config, ConfigYesNo, ConfigSubsection, ConfigInteger, ConfigText, ConfigOnOff
+from Components.config import config, ConfigYesNo, ConfigSubsection, ConfigInteger, ConfigText, ConfigOnOff, ConfigSelection
 
 config.parental = ConfigSubsection()
 config.parental.lock = ConfigOnOff(default=False)
@@ -96,7 +96,7 @@ profile("LOAD:skin")
 from skin import readSkin
 
 profile("LOAD:Tools")
-from Components.config import configfile, ConfigText, ConfigInteger, ConfigSelection, NoSave, ConfigSubsection
+from Components.config import configfile, NoSave, ConfigSubsection
 from Tools.Directories import InitFallbackFiles, resolveFilename, SCOPE_PLUGINS, SCOPE_CURRENT_SKIN, SCOPE_CONFIG
 InitFallbackFiles()
 
