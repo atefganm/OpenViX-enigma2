@@ -61,6 +61,185 @@ config.misc.load_unlinked_userbouquets.addNotifier(setLoadUnlinkedUserbouquets)
 if config.clientmode.enabled.value == False:
 	enigma.eDVBDB.getInstance().reloadBouquets()
 
+# Demo code for use of standby enter leave callbacks.
+#
+# def leaveStandby():
+# 	print("[StartEnigma] Leaving standby.")
+#
+#
+# def standbyCountChanged(configElement):
+# 	print("[StartEnigma] Enter standby number %s." % configElement.value)
+# 	from Screens.Standby import inStandby
+# 	inStandby.onClose.append(leaveStandby)
+#
+#
+# config.misc.standbyCounter.addNotifier(standbyCountChanged, initial_call=False)
+
+#################################
+#                               #
+#  Code execution starts here!  #
+#                               #
+#################################
+
+from sys import stdout
+
+MODULE_NAME = __name__.split(".")[-1]
+
+profile("Twisted")
+try:  # Configure the twisted processor.
+	from twisted.python.runtime import platform
+	platform.supportsThreads = lambda: True
+	from e2reactor import install
+	install()
+	from twisted.internet import reactor
+
+	def runReactor():
+		reactor.run(installSignalHandlers=False)
+
+except ImportError:
+	print("[StartEnigma] Error: Twisted not available!")
+
+	def runReactor():
+		enigma.runMainloop()
+
+try:  # Configure the twisted logging.
+	from twisted.python import log, util
+
+	def quietEmit(self, eventDict):
+		text = log.textFromEventDict(eventDict)
+		if text is None:
+			return
+		if "/api/statusinfo" in text:  # Do not log OpenWebif status info.
+			return
+		# Log with time stamp.
+		#
+		# timeStr = self.formatTime(eventDict["time"])
+		# fmtDict = {
+		# 	"ts": timeStr,
+		# 	"system": eventDict["system"],
+		# 	"text": text.replace("\n", "\n\t")
+		# }
+		# msgStr = log._safeFormat("%(ts)s [%(system)s] %(text)s\n", fmtDict)
+		#
+		# Log without time stamp.
+		#
+		fmtDict = {
+			"text": text.replace("\n", "\n\t")
+		}
+		msgStr = log._safeFormat("%(text)s\n", fmtDict)
+		util.untilConcludes(self.write, msgStr)
+		util.untilConcludes(self.flush)
+
+	logger = log.FileLogObserver(stdout)
+	log.FileLogObserver.emit = quietEmit
+	stdoutBackup = sys.stdout  # Backup stdout and stderr redirections.
+	stderrBackup = sys.stderr
+	log.startLoggingWithObserver(logger.emit)
+	sys.stdout = stdoutBackup  # Restore stdout and stderr redirections because of twisted redirections.
+	sys.stderr = stderrBackup
+
+except ImportError:
+	print("[StartEnigma] Error: Twisted not available!")
+
+profile("SystemInfo")
+from enigma import getE2Rev
+from Components.SystemInfo import BoxInfo
+
+BRAND = BoxInfo.getItem("brand")
+BOX_TYPE = BoxInfo.getItem("machinebuild")
+MODEL = BoxInfo.getItem("model")
+DISPLAYBRAND = BoxInfo.getItem("displaybrand")
+
+print("[StartEnigma] Receiver name = %s %s" % (DISPLAYBRAND, BoxInfo.getItem("displaymodel")))
+print("[StartEnigma] %s version = %s" % (BoxInfo.getItem("displaydistro"), BoxInfo.getItem("imgversion")))
+print("[StartEnigma] %s revision = %s" % (BoxInfo.getItem("displaydistro"), BoxInfo.getItem("imgrevision")))
+print("[StartEnigma] Build Brand = %s" % BRAND)
+print("[StartEnigma] Build Model = %s" % MODEL)
+print("[StartEnigma] Platform = %s" % BoxInfo.getItem("platform"))
+print("[StartEnigma] SoC family = %s" % BoxInfo.getItem("socfamily"))
+print("[StartEnigma] Enigma2 revision = %s" % getE2Rev())
+
+if BoxInfo.getItem("architecture") in ("aarch64"):
+	import usb.core
+	import usb.backend.libusb1
+	usb.backend.libusb1.get_backend(find_library=lambda x: "/lib64/libusb-1.0.so.0")
+
+from traceback import print_exc
+from Components.config import config, ConfigYesNo, ConfigSubsection, ConfigInteger, ConfigText, ConfigOnOff, ConfigSelection
+
+# Initialize the country, language and locale data.
+#
+profile("InternationalLocalization")
+from Components.International import international
+
+config.osd = ConfigSubsection()
+
+if DISPLAYBRAND == "Atto.TV":
+	defaultLocale = "pt_BR"
+elif DISPLAYBRAND == "Zgemma":
+	defaultLocale = "en_US"
+elif DISPLAYBRAND == "Beyonwiz":
+	defaultLocale = "en_AU"
+else:
+	defaultLocale = "de_DE"
+config.misc.locale = ConfigText(default=defaultLocale)
+config.misc.language = ConfigText(default=international.getLanguage(defaultLocale))
+config.misc.country = ConfigText(default=international.getCountry(defaultLocale))
+config.osd.language = ConfigText(default=defaultLocale)
+config.osd.language.addNotifier(localeNotifier)
+# TODO
+# config.misc.locale.addNotifier(localeNotifier)
+
+# These entries should be moved back to UsageConfig.py when it is safe to bring UsageConfig init to this location in StartEnigma.py.
+#
+config.crash = ConfigSubsection()
+config.crash.debugMultiBoot = ConfigYesNo(default=False)
+config.crash.debugActionMaps = ConfigYesNo(default=False)
+config.crash.debugKeyboards = ConfigYesNo(default=False)
+config.crash.debugOpkg = ConfigYesNo(default=False)
+config.crash.debugRemoteControls = ConfigYesNo(default=False)
+config.crash.debugScreens = ConfigYesNo(default=False)
+config.crash.debugEPG = ConfigYesNo(default=False)
+config.crash.debugDVBScan = ConfigYesNo(default=False)
+config.crash.debugTimers = ConfigYesNo(default=False)
+
+# config.plugins needs to be defined before InputDevice < HelpMenu < MessageBox < InfoBar.
+config.plugins = ConfigSubsection()
+config.plugins.remotecontroltype = ConfigSubsection()
+config.plugins.remotecontroltype.rctype = ConfigInteger(default=0)
+
+config.parental = ConfigSubsection()
+config.parental.lock = ConfigOnOff(default=False)
+config.parental.setuplock = ConfigOnOff(default=False)
+
+config.expert = ConfigSubsection()
+config.expert.satpos = ConfigOnOff(default=True)
+config.expert.fastzap = ConfigOnOff(default=True)
+config.expert.skipconfirm = ConfigOnOff(default=False)
+config.expert.hideerrors = ConfigOnOff(default=False)
+config.expert.autoinfo = ConfigOnOff(default=True)
+
+profile("Keyboard")
+from Components.InputDevice import keyboard
+
+
+def keyboardNotifier(configElement):
+	keyboard.activateKeyboardMap(configElement.index)
+
+
+config.keyboard = ConfigSubsection()
+config.keyboard.keymap = ConfigSelection(default=keyboard.getDefaultKeyboardMap(), choices=keyboard.getKeyboardMaplist())
+config.keyboard.keymap.addNotifier(keyboardNotifier)
+
+profile("SimpleSummary")
+from Screens import InfoBar
+from Screens.SimpleSummary import SimpleSummary
+
+profile("Bouquets")
+config.misc.load_unlinked_userbouquets = ConfigYesNo(default=False)
+config.misc.load_unlinked_userbouquets.addNotifier(setLoadUnlinkedUserbouquets)
+enigma.eDVBDB.getInstance().reloadBouquets()
+
 profile("ParentalControl")
 import Components.ParentalControl
 Components.ParentalControl.InitParentalControl()
@@ -682,7 +861,32 @@ Components.HdmiCec.HdmiCec()
 profile("LCD")
 import Components.Lcd
 Components.Lcd.InitLcd()
-# ------------------>Components.Lcd.IconCheck()
+# Disable internal clock vfd for ini5000 until we can adjust it for standby.
+if BOX_TYPE in ("uniboxhd1", "uniboxhd2", "uniboxhd3", "sezam5000hd", "mbtwin", "beyonwizt3"):
+	try:
+		f = open("/proc/stb/fp/enable_clock", "r").readline()[:-1]
+		if f != "0":
+			f = open("/proc/stb/fp/enable_clock", "w")
+			f.write("0")
+			f.close()
+	except:
+		print("[StartEnigma] Error: Disable enable_clock for ini5000 boxes!")
+
+if BOX_TYPE in ("dm7080", "dm820", "dm900", "dm920", "gb7252"):
+	f = open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor", "r")
+	check = f.read()
+	f.close()
+	if check.startswith("on"):
+		f = open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor", "w")
+		f.write("off")
+		f.close()
+	f = open("/proc/stb/audio/hdmi_rx_monitor", "r")
+	check = f.read()
+	f.close()
+	if check.startswith("on"):
+		f = open("/proc/stb/audio/hdmi_rx_monitor", "w")
+		f.write("off")
+		f.close()
 
 profile("UserInterface")
 import Screens.UserInterfacePositioner
