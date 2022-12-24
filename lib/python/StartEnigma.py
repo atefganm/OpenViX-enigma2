@@ -28,6 +28,9 @@ enigma.eConsoleAppContainer = eConsoleImpl.eConsoleAppContainer
 # This includes initializing the translation engine.
 # Moving this further down will break translation.
 # Moving further up will break imports in config.py
+profile("SetupDevices")
+import Components.SetupDevices
+Components.SetupDevices.InitSetupDevices()
 
 if getImageArch() in ("aarch64"):
 	import usb.core
@@ -35,17 +38,6 @@ if getImageArch() in ("aarch64"):
 	usb.backend.libusb1.get_backend(find_library=lambda x: "/lib64/libusb-1.0.so.0")
 
 from traceback import print_exc
-
-profile("Bouquets")
-from Components.config import config, ConfigYesNo, ConfigSubsection
-config.misc.load_unlinked_userbouquets = ConfigYesNo(default=False)
-# These entries should be moved back to UsageConfig.py when it is safe to bring UsageConfig init to this location in StartEnigma2.py.
-#
-config.crash = ConfigSubsection()
-config.crash.debugActionMaps = ConfigYesNo(default=False)
-config.crash.debugKeyboards = ConfigYesNo(default=False)
-config.crash.debugRemoteControls = ConfigYesNo(default=False)
-config.crash.debugScreens = ConfigYesNo(default=False)
 
 profile("ClientMode")
 import Components.ClientMode
@@ -55,27 +47,11 @@ profile("InfoBar")
 from Screens import InfoBar
 
 from sys import stdout
-from Components.config import config, ConfigYesNo, ConfigSubsection, ConfigInteger, ConfigText, ConfigOnOff, ConfigSelection
 
-config.parental = ConfigSubsection()
-config.parental.lock = ConfigOnOff(default=False)
-config.parental.setuplock = ConfigOnOff(default=False)
+profile("Bouquets")
+from Components.config import config, configfile, ConfigText, ConfigYesNo, ConfigInteger, NoSave
+config.misc.load_unlinked_userbouquets = ConfigYesNo(default=False)
 
-config.expert = ConfigSubsection()
-config.expert.satpos = ConfigOnOff(default=True)
-config.expert.fastzap = ConfigOnOff(default=True)
-config.expert.skipconfirm = ConfigOnOff(default=False)
-config.expert.hideerrors = ConfigOnOff(default=False)
-config.expert.autoinfo = ConfigOnOff(default=True)
-
-profile("Keyboard")
-from Components.InputDevice import keyboard
-def keyboardNotifier(configElement):
-	keyboard.activateKeyboardMap(configElement.index)
-
-config.keyboard = ConfigSubsection()
-config.keyboard.keymap = ConfigSelection(default=keyboard.getDefaultKeyboardMap(), choices=keyboard.getKeyboardMaplist())
-config.keyboard.keymap.addNotifier(keyboardNotifier)
 
 def setLoadUnlinkedUserbouquets(configElement):
 	enigma.eDVBDB.getInstance().setLoadUnlinkedUserbouquets(configElement.value)
@@ -96,8 +72,8 @@ profile("LOAD:skin")
 from skin import readSkin
 
 profile("LOAD:Tools")
-from Components.config import configfile, NoSave, ConfigSubsection
 from Tools.Directories import InitFallbackFiles, resolveFilename, SCOPE_PLUGINS, SCOPE_CURRENT_SKIN, SCOPE_CONFIG
+from Components.config import config, configfile, ConfigText, ConfigYesNo, ConfigInteger, ConfigSelection, NoSave
 InitFallbackFiles()
 
 profile("config.misc")
