@@ -2,6 +2,17 @@ import sys
 import os
 from time import time
 
+from Tools.Profile import profile, profile_final  # This facilitates the start up progress counter.
+profile("StartPython")
+import Tools.RedirectOutput  # Don't remove this line. This import facilitates connecting stdout and stderr redirections to the log files.
+
+import enigma  # Establish enigma2 connections to processing methods.
+import eBaseImpl
+import eConsoleImpl
+enigma.eTimer = eBaseImpl.eTimer
+enigma.eSocketNotifier = eBaseImpl.eSocketNotifier
+enigma.eConsoleAppContainer = eConsoleImpl.eConsoleAppContainer
+
 if os.path.isfile("/usr/lib/enigma2/python/enigma.zip"):
 	sys.path.append("/usr/lib/enigma2/python/enigma.zip")
 
