@@ -17,12 +17,12 @@
 
 static const char *crash_emailaddr =
 #ifndef CRASH_EMAILADDR
-	"the openViX forum";
+	"the OpenViX forum";
 #else
 	CRASH_EMAILADDR;
 #endif
 
-/* Defined in bsod.cpp */
+/* Defined in eerror.cpp */
 void retrieveLogBuffer(const char **p1, unsigned int *s1, const char **p2, unsigned int *s2);
 
 static const std::string getConfigString(const char* key, const char* defaultValue)
@@ -165,7 +165,7 @@ void bsodFatal(const char *component)
 			/* Re-write the same file in /tmp/ because it's expected to
 			 * be in RAM. So the first crash log will end up in /home
 			 * and the last in /tmp */
-			crashlog_name = "/tmp/enigma2_crash.log";
+			crashlog_name = "/tmp/Enigma2_crash.log";
 			f = fopen(crashlog_name.c_str(), "wb");
 		}
 	}
@@ -180,7 +180,7 @@ void bsodFatal(const char *component)
 		strftime(tm_str, sizeof(tm_str), "%a %b %_d %T %Y", &tm);
 
 		fprintf(f,
-			"openViX Enigma2 crash log\n\n"
+			"OpenViX Enigma2 Crashlog\n\n"
 			"crashdate=%s\n"
 			"compiledate=%s\n"
 			"skin=%s\n"
@@ -393,18 +393,19 @@ void print_backtrace()
 	}
 }
 
+
 void handleFatalSignal(int signum, siginfo_t *si, void *ctx)
 {
 	ucontext_t *uc = (ucontext_t*)ctx;
 	oops(uc->uc_mcontext);
 	print_backtrace();
-	eLog(lvlFatal, "-------FATAL SIGNAL");
+	eLog(lvlFatal, "-------FATAL SIGNAL (%d)", signum);
 	bsodFatal("enigma2, signal");
 }
 
 void bsodCatchSignals()
 {
-	struct sigaction act;
+	struct sigaction act = {};
 	act.sa_sigaction = handleFatalSignal;
 	act.sa_flags = SA_RESTART | SA_SIGINFO;
 	if (sigemptyset(&act.sa_mask) == -1)
