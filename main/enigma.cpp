@@ -104,7 +104,6 @@ void keyEvent(const eRCKey &key)
 
 /* Defined in eerror.cpp */
 void setDebugTime(int level);
-
 class eMain: public eApplication, public sigc::trackable
 {
 	eInit init;
@@ -234,27 +233,26 @@ int main(int argc, char **argv)
 	atexit(object_dump);
 #endif
 
-	// Clear LD_PRELOAD so that shells and processes launched by Enigma2 can pass on file handles and pipes
-	unsetenv("LD_PRELOAD");
-
 	gst_init(&argc, &argv);
 
 	// set pythonpath if unset
 	setenv("PYTHONPATH", eEnv::resolve("${libdir}/enigma2/python").c_str(), 0);
-	printf("[Enigma2] PYTHONPATH: %s\n", getenv("PYTHONPATH"));
-	printf("[Enigma2] DVB_API_VERSION %d DVB_API_VERSION_MINOR %d\n", DVB_API_VERSION, DVB_API_VERSION_MINOR);
 
 	// get enigma2 debug level settings
-	debugLvl = getenv("ENIGMA_DEBUG_LVL") ? atoi(getenv("ENIGMA_DEBUG_LVL")) : eSimpleConfig::getInt("config.crash.e2_debug_level", 4);
+	debugLvl = getenv("ENIGMA_DEBUG_LVL") ? atoi(getenv("ENIGMA_DEBUG_LVL")) : 4;
 	if (debugLvl < 0)
 		debugLvl = 0;
-	printf("ENIGMA_DEBUG_LVL=%d\n", debugLvl);
 	if (getenv("ENIGMA_DEBUG_TIME"))
 		setDebugTime(atoi(getenv("ENIGMA_DEBUG_TIME")));
+
+	eLog(0, "[Enigma] Python path is '%s'.", getenv("PYTHONPATH"));
+	eLog(0, "[Enigma] DVB API version %d, DVB API version minor %d.", DVB_API_VERSION, DVB_API_VERSION_MINOR);
+	eLog(0, "[Enigma] Enigma debug level %d.", debugLvl);
 
 	ePython python;
 	eMain main;
 
+#if 1
 	ePtr<gMainDC> my_dc;
 	gMainDC::getInstance(my_dc);
 

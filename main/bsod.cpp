@@ -17,7 +17,7 @@
 
 static const char *crash_emailaddr =
 #ifndef CRASH_EMAILADDR
-	"the openVIX forum";
+	"the openViX forum";
 #else
 	CRASH_EMAILADDR;
 #endif
@@ -180,7 +180,7 @@ void bsodFatal(const char *component)
 		strftime(tm_str, sizeof(tm_str), "%a %b %_d %T %Y", &tm);
 
 		fprintf(f,
-			"openVIX Enigma2 crash log\n\n"
+			"openViX Enigma2 crash log\n\n"
 			"crashdate=%s\n"
 			"compiledate=%s\n"
 			"skin=%s\n"
