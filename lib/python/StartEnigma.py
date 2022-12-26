@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 from time import time
 
 from Tools.Profile import profile, profile_final  # This facilitates the start up progress counter.
@@ -12,6 +12,7 @@ import eConsoleImpl
 enigma.eTimer = eBaseImpl.eTimer
 enigma.eSocketNotifier = eBaseImpl.eSocketNotifier
 enigma.eConsoleAppContainer = eConsoleImpl.eConsoleAppContainer
+
 
 # Session.open:
 # * Push current active dialog ("current_dialog") onto stack.
@@ -55,9 +56,10 @@ class Session:
 		for plugin in plugins.getPlugins(PluginDescriptor.WHERE_SESSIONSTART):
 			try:
 				plugin.__call__(reason=0, session=self)
-			except Exception:
+			except:
 				print("[StartEnigma] Error: Plugin raised exception at WHERE_SESSIONSTART!")
-				print_exc()
+				import traceback
+				traceback.print_exc()
 
 	def processDelay(self):
 		callback = self.current_dialog.callback
@@ -104,11 +106,11 @@ class Session:
 		screen.hide()
 		screen.doClose()
 
-	def deleteDialogWithCallback(self, callback, screen, *retval):
+	def deleteDialogWithCallback(self, callback, screen, *retVal):
 		screen.hide()
 		screen.doClose()
 		if callback is not None:
-			callback(*retval)
+			callback(*retVal)
 
 	def instantiateSummaryDialog(self, screen, **kwargs):
 		if self.summaryDesktop is not None:
@@ -149,21 +151,21 @@ class Session:
 
 	def openWithCallback(self, callback, screen, *arguments, **kwargs):
 		dialog = self.open(screen, *arguments, **kwargs)
-		if dialog != 'config.crash.bsodpython.value=True':
+		if dialog != "config.crash.bsodpython.value=True":
 			dialog.callback = callback
 			return dialog
 
 	def open(self, screen, *arguments, **kwargs):
 		if self.dialog_stack and not self.in_exec:
 			raise RuntimeError("[StartEnigma] Error: Modal open are allowed only from a screen which is modal!")  # ...unless it's the very first screen.
- 		self.pushCurrent()
- 		if config.crash.bsodpython.value:
- 			try:
+		self.pushCurrent()
+		if config.crash.bsodpython.value:
+			try:
 				dialog = self.current_dialog = self.instantiateDialog(screen, *arguments, **kwargs)
 			except:
 				self.popCurrent()
 				raise
-				return 'config.crash.bsodpython.value=True'
+				return "config.crash.bsodpython.value=True"
 		else:
 			dialog = self.current_dialog = self.instantiateDialog(screen, *arguments, **kwargs)
 		dialog.isTmp = True
@@ -175,7 +177,6 @@ class Session:
 		if not self.in_exec:
 			print("[StartEnigma] Close after exec!")
 			return
-
 		# Be sure that the close is for the right dialog!  If it's
 		# not, you probably closed after another dialog was opened.
 		# This can happen if you open a dialog onExecBegin, and
