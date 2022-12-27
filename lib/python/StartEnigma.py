@@ -507,7 +507,7 @@ def dump(dir, p=""):
 #################################
 
 from sys import stdout
-from Components.config import config, ConfigYesNo, ConfigSubsection, ConfigInteger, ConfigText, ConfigOnOff
+from Components.config import config, ConfigYesNo, ConfigSubsection, ConfigInteger, ConfigText, ConfigOnOff, ConfigSelection
 
 MODULE_NAME = __name__.split(".")[-1]
 
@@ -652,10 +652,10 @@ profile("LOAD:skin")
 from skin import readSkin
 
 profile("LOAD:Tools")
-from Components.config import configfile, ConfigSelection, NoSave, ConfigSubsection
-from Tools.Directories import InitFallbackFiles, resolveFilename, SCOPE_PLUGINS, SCOPE_ACTIVE_SKIN, SCOPE_CURRENT_SKIN, SCOPE_CONFIG
+from Components.config import configfile, NoSave, ConfigSubsection
+from Tools.Directories import InitDefaultPaths, resolveFilename, SCOPE_PLUGINS, SCOPE_CURRENT_SKIN, SCOPE_CONFIG
 import Components.RecordingConfig
-InitFallbackFiles()
+InitDefaultPaths()
 
 profile("config.misc")
 config.misc.boxtype = ConfigText(default=boxtype)
