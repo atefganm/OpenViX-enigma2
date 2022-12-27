@@ -566,6 +566,17 @@ if getImageArch() in ("aarch64"):
 
 from traceback import print_exc
 
+profile("Bouquets")
+from Components.config import config, ConfigYesNo, ConfigSubsection
+config.misc.load_unlinked_userbouquets = ConfigYesNo(default=False)
+# These entries should be moved back to UsageConfig.py when it is safe to bring UsageConfig init to this location in StartEnigma2.py.
+#
+config.crash = ConfigSubsection()
+config.crash.debugActionMaps = ConfigYesNo(default=False)
+config.crash.debugKeyboards = ConfigYesNo(default=False)
+config.crash.debugRemoteControls = ConfigYesNo(default=False)
+config.crash.debugScreens = ConfigYesNo(default=False)
+
 profile("Geolocation")
 import Tools.Geolocation
 Tools.Geolocation.InitGeolocation()
@@ -636,11 +647,6 @@ profile("SimpleSummary")
 from Screens import InfoBar
 from Screens.SimpleSummary import SimpleSummary
 
-profile("Bouquets")
-config.misc.load_unlinked_userbouquets = ConfigYesNo(default=False)
-config.misc.load_unlinked_userbouquets.addNotifier(setLoadUnlinkedUserbouquets)
-enigma.eDVBDB.getInstance().reloadBouquets()
-
 profile("ParentalControl")
 import Components.ParentalControl
 Components.ParentalControl.InitParentalControl()
@@ -652,7 +658,7 @@ profile("LOAD:skin")
 from skin import readSkin
 
 profile("LOAD:Tools")
-from Components.config import configfile, NoSave, ConfigSubsection
+from Components.config import configfile, ConfigText, ConfigInteger, ConfigSelection, NoSave, ConfigSubsection
 from Tools.Directories import InitDefaultPaths, resolveFilename, SCOPE_PLUGINS, SCOPE_CURRENT_SKIN, SCOPE_CONFIG
 import Components.RecordingConfig
 InitDefaultPaths()
