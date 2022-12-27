@@ -507,7 +507,7 @@ def dump(dir, p=""):
 #################################
 
 from sys import stdout
-from Components.config import config, ConfigYesNo, ConfigSubsection, ConfigInteger, ConfigText
+from Components.config import config, ConfigYesNo, ConfigSubsection, ConfigInteger, ConfigText, ConfigOnOff
 
 MODULE_NAME = __name__.split(".")[-1]
 
@@ -570,10 +570,6 @@ profile("Geolocation")
 import Tools.Geolocation
 Tools.Geolocation.InitGeolocation()
 
-profile("SetupDevices")
-import Components.SetupDevices
-Components.SetupDevices.InitSetupDevices()
-
 # Initialize the country, language and locale data.
 #
 profile("InternationalLocalization")
@@ -616,6 +612,25 @@ config.plugins = ConfigSubsection()
 config.plugins.remotecontroltype = ConfigSubsection()
 config.plugins.remotecontroltype.rctype = ConfigInteger(default=0)
 
+config.parental = ConfigSubsection()
+config.parental.lock = ConfigOnOff(default=False)
+config.parental.setuplock = ConfigOnOff(default=False)
+
+config.expert = ConfigSubsection()
+config.expert.satpos = ConfigOnOff(default=True)
+config.expert.fastzap = ConfigOnOff(default=True)
+config.expert.skipconfirm = ConfigOnOff(default=False)
+config.expert.hideerrors = ConfigOnOff(default=False)
+config.expert.autoinfo = ConfigOnOff(default=True)
+
+profile("Keyboard")
+from Components.InputDevice import keyboard
+def keyboardNotifier(configElement):
+	keyboard.activateKeyboardMap(configElement.index)
+
+config.keyboard = ConfigSubsection()
+config.keyboard.keymap = ConfigSelection(default=keyboard.getDefaultKeyboardMap(), choices=keyboard.getKeyboardMaplist())
+config.keyboard.keymap.addNotifier(keyboardNotifier)
 
 profile("SimpleSummary")
 from Screens import InfoBar
