@@ -239,32 +239,22 @@ class PowerKey:
 		globalActionMap.actions["power_down"] = self.powerdown
 		globalActionMap.actions["power_up"] = self.powerup
 		globalActionMap.actions["power_long"] = self.powerlong
-		globalActionMap.actions["deepstandby"] = self.shutdown # frontpanel long power button press
+		globalActionMap.actions["deepstandby"] = self.shutdown  # Frontpanel long power button press.
 		globalActionMap.actions["discrete_off"] = self.standby
+		globalActionMap.actions["sleeptimer"] = self.openSleepTimer
+		globalActionMap.actions["powertimer_standby"] = self.sleepStandby
+		globalActionMap.actions["powertimer_deepstandby"] = self.sleepDeepStandby
 		self.standbyblocked = 1
 
 	def MenuClosed(self, *val):
 		self.session.infobar = None
 
 	def shutdown(self):
-		wasRecTimerWakeup = False
-		recordings = self.session.nav.getRecordings()
-		if not recordings:
-			next_rec_time = self.session.nav.RecordTimer.getNextRecordingTime()
-		if recordings or (next_rec_time > 0 and (next_rec_time - time()) < 360):
-			if os.path.exists("/tmp/was_rectimer_wakeup") and not self.session.nav.RecordTimer.isRecTimerWakeup():
-				f = open("/tmp/was_rectimer_wakeup", "r")
-				file = f.read()
-				f.close()
-				wasRecTimerWakeup = int(file) and True or False
-			if self.session.nav.RecordTimer.isRecTimerWakeup() or wasRecTimerWakeup:
-				print("StartEnigma] PowerOff (timer wakewup) - Recording in progress or a timer about to activate, entering standby!")
-				self.standby()
-			else:
-				print("StartEnigma] PowerOff - Now!")
-				self.session.open(Screens.Standby.TryQuitMainloop, 1)
+		recordings = self.session.nav.getRecordingsCheckBeforeActivateDeepStandby()
+		if recordings:
+			from Screens.MessageBox import MessageBox
+			self.session.openWithCallback(self.gotoStandby, MessageBox, _("Recording(s) are in progress or coming up in few seconds!\nEntering standby, after recording the box will shutdown."), type=MessageBox.TYPE_INFO, close_on_any_key=True, timeout=10)
 		elif not Screens.Standby.inTryQuitMainloop and self.session.current_dialog and self.session.current_dialog.ALLOW_SUSPEND:
-			print("StartEnigma] PowerOff - Now!")
 			self.session.open(Screens.Standby.TryQuitMainloop, 1)
 
 	def powerlong(self):
@@ -273,23 +263,34 @@ class PowerKey:
 		self.doAction(action=config.usage.on_long_powerpress.value)
 
 	def doAction(self, action):
+		if Screens.Standby.TVinStandby.getTVstate("standby"):
+			Screens.Standby.TVinStandby.setTVstate("on")
+			return
+
 		self.standbyblocked = 1
 		if action == "shutdown":
 			self.shutdown()
 		elif action == "show_menu":
-			print("StartEnigma] Show shutdown Menu")
-			root = mdom.getroot()
-			for x in root.findall("menu"):
-				y = x.find("id")
-				if y is not None:
-					id = y.get("val")
-					if id and id == "shutdown":
-						self.session.infobar = self
-						menu_screen = self.session.openWithCallback(self.MenuClosed, MainMenu, x)
-						menu_screen.setTitle(_("Standby / restart"))
-						return
+			print("[StartEnigma] Show shutdown menu.")
+			menu = findMenu("shutdown")
+			if menu:
+				self.session.infobar = self
+				self.session.openWithCallback(self.MenuClosed, Menu, menu)
+				return
 		elif action == "standby":
+			Screens.Standby.TVinStandby.skipHdmiCecNow(False)
 			self.standby()
+		elif action == "standby_noTVshutdown":
+			Screens.Standby.TVinStandby.skipHdmiCecNow(True)
+			self.standby()
+		elif action == "powertimerStandby":
+			val = 3
+			self.setSleepTimer(val)
+		elif action == "powertimerDeepStandby":
+			val = 4
+			self.setSleepTimer(val)
+		elif action == "sleeptimer":
+			self.openSleepTimer()
 
 	def powerdown(self):
 		self.standbyblocked = 0
@@ -298,9 +299,38 @@ class PowerKey:
 		if self.standbyblocked == 0:
 			self.doAction(action=config.usage.on_short_powerpress.value)
 
+	def gotoStandby(self, ret):
+		self.standby()
+
 	def standby(self):
 		if not Screens.Standby.inStandby and self.session.current_dialog and self.session.current_dialog.ALLOW_SUSPEND and self.session.in_exec:
+			self.session.nav.skipWakeup = True
 			self.session.open(Screens.Standby.Standby)
+
+	def openSleepTimer(self):
+		from Screens.SleepTimer import SleepTimerButton
+		self.session.open(SleepTimerButton)
+
+	def setSleepTimer(self, val):
+		from PowerTimer import PowerTimerEntry
+		sleeptime = 15
+		data = (int(time() + 60), int(time() + 120))
+		self.addSleepTimer(PowerTimerEntry(checkOldTimers=True, *data, timerType=val, autosleepdelay=sleeptime))
+
+	def addSleepTimer(self, timer):
+		from Screens.Timers import PowerTimerEdit
+		self.session.openWithCallback(self.finishedAdd, PowerTimerEdit, timer)
+
+	def finishedAdd(self, answer):
+		if not isinstance(answer, bool) and answer[0]:
+			entry = answer[1]
+			simulTimerList = self.session.nav.PowerTimer.record(entry)
+
+	def sleepStandby(self):
+		self.doAction(action="powertimerStandby")
+
+	def sleepDeepStandby(self):
+		self.doAction(action="powertimerDeepStandby")
 
 
 class AutoScartControl:

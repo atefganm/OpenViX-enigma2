@@ -661,4 +661,12 @@
 			</if>
 		</if>
 	</setup>
+	<setup key="SleepTimer" title="SleepTimer Settings" showOpenWebif="1">
+		<item text="SleepTimer activation delay" description="Configure the duration, in minutes, before the SleepTimer activates.">config.usage.sleepTimer</item>
+		<item text="SleepTimer action" description="Select the type of shutdown desired when the SleepTimer activates.">config.usage.sleepTimerAction</item>
+		<if conditional="self.setupMode">
+			<item text="EnergySaver activation delay" description="Configure the duration, in minutes, before the EnergySaver timer activates.">config.usage.energyTimer</item>
+			<item text="EnergySaver action" description="Select the type of shutdown desired when the EnergySaver timer activates.">config.usage.energyTimerAction</item>
+		</if>
+	</setup>
 </setupxml>
