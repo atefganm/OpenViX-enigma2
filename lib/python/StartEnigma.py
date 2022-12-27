@@ -443,10 +443,11 @@ def runScreenTest():
 def localeNotifier(configElement):
 	international.activateLocale(configElement.value)
 
-
 def setLoadUnlinkedUserbouquets(configElement):
 	enigma.eDVBDB.getInstance().setLoadUnlinkedUserbouquets(configElement.value)
 
+profile("Bouquets")
+config.misc.load_unlinked_userbouquets = ConfigYesNo(default=False)
 
 def useSyncUsingChanged(configelement):
 	if config.misc.SyncTimeUsing.value == "0":
@@ -566,8 +567,13 @@ if getImageArch() in ("aarch64"):
 
 from traceback import print_exc
 
-# Init Language
-from Components.Language import language
+profile("Geolocation")
+import Tools.Geolocation
+Tools.Geolocation.InitGeolocation()
+
+profile("SetupDevices")
+import Components.SetupDevices
+Components.SetupDevices.InitSetupDevices()
 
 profile("Bouquets")
 from Components.config import config, ConfigYesNo, ConfigSubsection
@@ -579,10 +585,6 @@ config.crash.debugActionMaps = ConfigYesNo(default=False)
 config.crash.debugKeyboards = ConfigYesNo(default=False)
 config.crash.debugRemoteControls = ConfigYesNo(default=False)
 config.crash.debugScreens = ConfigYesNo(default=False)
-
-profile("Geolocation")
-import Tools.Geolocation
-Tools.Geolocation.InitGeolocation()
 
 # Initialize the country, language and locale data.
 #
