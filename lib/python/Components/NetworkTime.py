@@ -1,58 +1,69 @@
-from Components.Console import Console
-from Components.config import config
+from time import ctime, time
+
 from enigma import eTimer, eDVBLocalTimeHandler, eEPGCache
+
+from Components.config import config
+from Components.Console import Console
 from Tools.StbHardware import setRTCtime
-from time import time
-from os import chmod as oschmod
-
-# _session = None
-#
-
-
-def AutoNTPSync(session=None, **kwargs):
-	global ntpsyncpoller
-	ntpsyncpoller = NTPSyncPoller()
-	ntpsyncpoller.start()
 
 
 class NTPSyncPoller:
 	"""Automatically Poll NTP"""
 
 	def __init__(self):
-		# Init Timer
 		self.timer = eTimer()
 		self.Console = Console()
 
-	def start(self):
-		if self.timecheck not in self.timer.callback:
-			self.timer.callback.append(self.timecheck)
-		self.ntpConfigUpdated() # update NTP url, create if not exists
+	def syncTimeUsingChanged(self, configElement):
+		print("[NetworkTime] Time reference changed to '%s'." % configElement.toDisplayString(configElement.value))
+		eDVBLocalTimeHandler.getInstance().setUseDVBTime(configElement.value == "0")
+		eEPGCache.getInstance().timeUpdated()
+		self.timer.startLongTimer(0)
 
-	def stop(self):
-		if self.timecheck in self.timer.callback:
-			self.timer.callback.remove(self.timecheck)
+	def ntpServerChanged(self, configElement):
+		print("[NetworkTime] Time server changed to '%s'." % configElement.value)
+		self.timeCheck()
+
+	def useNTPminutesChanged(self, configElement):
+		print("[NetworkTime] Time sync period changed to '%s'." % configElement.toDisplayString(configElement.value))
+		self.timeCheck()
+
+	def startTimer(self):
+		if self.timeCheck not in self.timer.callback:
+			self.timer.callback.append(self.timeCheck)
+			config.misc.SyncTimeUsing.addNotifier(self.syncTimeUsingChanged, initial_call=False, immediate_feedback=False)
+			config.misc.NTPserver.addNotifier(self.ntpServerChanged, initial_call=False, immediate_feedback=False)
+			config.misc.useNTPminutes.addNotifier(self.useNTPminutesChanged, initial_call=False, immediate_feedback=False)
+		self.timer.startLongTimer(0)
+
+	def stopTimer(self):
+		if self.timeCheck in self.timer.callback:
+			self.timer.callback.remove(self.timeCheck)
 		self.timer.stop()
 
-	def timecheck(self):
-		if config.misc.SyncTimeUsing.value == "ntp":
-			print('[NetworkTime] Updating from NTP')
-			self.Console.ePopen('/usr/bin/ntpdate-sync', self.update_schedule)
+	def timeCheck(self):
+		if config.misc.SyncTimeUsing.value == "1":
+			print("[NetworkTime] Updating time via NTP.")
+			self.Console.ePopen(["/usr/sbin/ntpd", "/usr/sbin/ntpd", "-nq", "-p", config.misc.NTPserver.value], self.updateSchedule)
 		else:
-			self.update_schedule()
+			self.updateSchedule()
 
-	def update_schedule(self, result=None, retval=None, extra_args=None):
-		if retval and result:
-			print("[NetworkTime] Error %d: Unable to synchronize the time!\n%s" % (retval, result.strip()))
+	def updateSchedule(self, data=None, retVal=None, extraArgs=None):
+		if retVal and data:
+			print("[NetworkTime] Error %d: /usr/sbin/ntpd was unable to synchronize the time!\n%s" % (retVal, data.strip()))
 		nowTime = time()
 		if nowTime > 10000:
-			print('[NetworkTime] setting E2 time:', nowTime)
+			print("[NetworkTime] Setting time to '%s' (%s)." % (ctime(nowTime), str(nowTime)))
 			setRTCtime(nowTime)
-			eDVBLocalTimeHandler.getInstance().setUseDVBTime(config.misc.SyncTimeUsing.value == "dvb")
+			eDVBLocalTimeHandler.getInstance().setUseDVBTime(config.misc.SyncTimeUsing.value == "0")
 			eEPGCache.getInstance().timeUpdated()
-			self.timer.startLongTimer(int(config.misc.useNTPminutes.value if config.misc.SyncTimeUsing.value == "ntp" else config.misc.useNTPminutes.default) * 60)
+			self.timer.startLongTimer(int(config.misc.useNTPminutes.value) * 60)
 		else:
-			print('[NetworkTime] NO TIME SET')
+			print("[NetworkTime] System time not yet available.")
 			self.timer.startLongTimer(10)
+
+
+ntpSyncPoller = NTPSyncPoller()
 
 	def ntpConfigUpdated(self):
 		self.updateNtpUrl()
