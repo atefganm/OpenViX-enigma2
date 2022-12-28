@@ -586,6 +586,23 @@ else:
 	log.FileLogObserver.emit = quietEmit
 	log.startLoggingWithObserver(logger.emit)
 
+profile("SystemInfo")
+from enigma import getE2Rev
+from Components.SystemInfo import BoxInfo
+
+model = BoxInfo.getItem("model")
+brand = BoxInfo.getItem("brand")
+platform = BoxInfo.getItem("platform")
+socfamily = BoxInfo.getItem("socfamily")
+
+print("[StartEnigma] Receiver name = %s %s" % (BoxInfo.getItem("displaybrand"), BoxInfo.getItem("displaymodel")))
+print("[StartEnigma] %s version = %s" % (BoxInfo.getItem("displaydistro"), BoxInfo.getItem("imgversion")))
+print("[StartEnigma] %s revision = %s" % (BoxInfo.getItem("displaydistro"), BoxInfo.getItem("imgrevision")))
+print("[StartEnigma] Build Brand = %s" % brand)
+print("[StartEnigma] Build Model = %s" % model)
+print("[StartEnigma] Platform = %s" % platform)
+print("[StartEnigma] SoC family = %s" % socfamily)
+print("[StartEnigma] Enigma2 revision = %s" % getE2Rev())
 
 from boxbranding import getBoxType, getBrandOEM, getMachineBuild, getImageArch, getMachineBrand
 boxtype = getBoxType()
