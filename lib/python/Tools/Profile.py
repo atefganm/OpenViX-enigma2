@@ -1,7 +1,11 @@
 # the implementation here is a bit crappy.
-from boxbranding import getBoxType, getMachineBuild
+from Components.SystemInfo import BoxInfo
 import time
 from Tools.Directories import resolveFilename, SCOPE_CONFIG
+
+MODULE_NAME = __name__.split(".")[-1]
+
+model = BoxInfo.getItem("machinebuild")
 
 PERCENTAGE_START = 0
 PERCENTAGE_END = 100

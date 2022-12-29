@@ -1,7 +1,7 @@
 from keyids import KEYIDS
 from Components.config import config, ConfigInteger
 from Components.Pixmap import MovingPixmap, MultiPixmap
-from Components.SystemInfo import SystemInfo
+from Components.SystemInfo import BoxInfo
 from Tools.Directories import resolveFilename, SCOPE_SKIN, fileReadXML
 from Tools.KeyBindings import keyDescriptions
 
@@ -81,7 +81,7 @@ class Rc:
 				pm.hide()
 
 	def initRc(self):
-		if SystemInfo["rc_default"]:
+		if BoxInfo.getItem["rc_default"]:
 			self["rc"].setPixmapNum(config.misc.rcused.value)
 		else:
 			self["rc"].setPixmapNum(0)

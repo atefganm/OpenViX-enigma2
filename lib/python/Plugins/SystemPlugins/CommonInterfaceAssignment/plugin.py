@@ -12,7 +12,7 @@ from Components.ConfigList import ConfigList
 from Components.Label import Label
 from Components.MenuList import MenuList
 from Components.SelectionList import SelectionList
-from Components.SystemInfo import SystemInfo
+from Components.SystemInfo import BoxInfo
 from ServiceReference import ServiceReference
 from Plugins.Plugin import PluginDescriptor
 from Screens.ChannelSelection import *

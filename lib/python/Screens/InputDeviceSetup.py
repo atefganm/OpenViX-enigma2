@@ -7,9 +7,11 @@ from Components.Sources.List import List
 from Components.config import config, ConfigYesNo, getConfigListEntry, ConfigSelection
 from Components.ConfigList import ConfigListScreen
 from Components.ActionMap import ActionMap, HelpableActionMap
+from Components.SystemInfo import BoxInfo
 from Tools.Directories import resolveFilename, SCOPE_CURRENT_SKIN
 from Tools.LoadPixmap import LoadPixmap
-from boxbranding import getBoxType, getMachineBrand, getMachineName, getMachineBuild
+
+MACHINE_NAME = (BoxInfo.getItem("displaybrand"), BoxInfo.getItem("displaymodel"))
 
 
 class InputDeviceSelection(Screen, HelpableScreen):
@@ -129,7 +131,7 @@ class InputDeviceSetup(ConfigListScreen, Screen):
 		self["introduction"] = StaticText()
 
 		# for generating strings into .po only
-		devicenames = [_("%s %s front panel") % (getMachineBrand(), getMachineName()), _("%s %s front panel") % (getMachineBrand(), getMachineName()), _("%s %s remote control (native)") % (getMachineBrand(), getMachineName()), _("%s %s advanced remote control (native)") % (getMachineBrand(), getMachineName()), _("%s %s ir keyboard") % (getMachineBrand(), getMachineName()), _("%s %s ir mouse") % (getMachineBrand(), getMachineName())]
+		devicenames = [_("%s %s front panel") % MACHINE_NAME, _("%s %s front panel") % MACHINE_NAME, _("%s %s remote control (native)") % MACHINE_NAME, _("%s %s advanced remote control (native)") % MACHINE_NAME, _("%s %s ir keyboard") % MACHINE_NAME, _("%s %s ir mouse") % MACHINE_NAME]
 
 		self.createSetup()
 		self.onLayoutFinish.append(self.layoutFinished)
@@ -214,7 +216,7 @@ class InputDeviceSetup(ConfigListScreen, Screen):
 
 class RemoteControlType(ConfigListScreen, Screen):
 	odinRemote = "OdinM9"
-	if getBoxType() == "maram9":
++	if BoxInfo.getItem("brand") in ("maram9"):
 		odinRemote = "MaraM9"
 
 	rcList = [
@@ -311,7 +313,7 @@ class RemoteControlType(ConfigListScreen, Screen):
 		self.getDefaultRcType()
 
 	def getDefaultRcType(self):
-		boxtype = getMachineBuild()
+		boxtype = BoxInfo.getItem("machinebuild")
 		procBoxtype = iRcTypeControl.getBoxType()
 		print("[InputDevice] procBoxtype = %s, self.boxType = %s" % (procBoxtype, boxtype))
 		for x in self.defaultRcList:
