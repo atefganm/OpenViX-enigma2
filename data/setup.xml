@@ -14,6 +14,11 @@
 	<setup key="avsetup" title="A/V settings">
 		<!-- This is just a placeholder, the Videomode plugin implements this submenu -->
 	</setup>
+	<setup key="VolumeAdjust" title="Volume Adjust Settings">
+		<item level="0" text="Default volume offset" description="This is the initial / default volume offset applied to any services added the the volume adjust list.">config.volume.defaultOffset</item>
+		<item level="0" text="Enable Dolby Digital / Dolby AC-3 offsets" description="Select 'Yes' if volume adjustments should be applied to Dolby sound tracks.">config.volume.dolbyEnabled</item>
+		<item level="0" text="Default Dolby Digital / Dolby AC-3 offset" description="This offset will only be used if the channel does not have its own volume offset.">config.volume.dolbyOffset</item>
+	</setup>
 	<setup key="usage" title="Customize settings">
 		<item level="0" text="Setup mode" description="Choose which level of menu/settings to display. 'Expert' level shows all items.">config.usage.setup_level</item>
 		<item level="0" text="Task warning on shutdown" description="On shutdown/restart warn about any pending jobs being carried out in the background.">config.usage.task_warning</item>
