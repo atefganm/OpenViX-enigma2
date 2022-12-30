@@ -94,6 +94,12 @@
 		<key id="KEY_F8" mapto="blueLong" flags="l" />
 	</map>
 
+	<map context="FunctionKeyActions">
+		<key id="KEY_F1" mapto="f1" flags="m" />
+		<key id="KEY_F2" mapto="f2" flags="m" />
+		<key id="KEY_F3" mapto="f3" flags="m" />
+	</map>
+
 	<map context="HelpActions">
 		<!-- <key id="KEY_HELP" mapto="displayHelp" flags="m" /> -->
 		<!-- <key id="KEY_HELP" mapto="DISPLAYHELP" flags="b" /> -->
@@ -110,12 +116,6 @@
 		<key id="KEY_ASCII" mapto="gotAsciiCode" flags="mr" />
 	</map>
 
-	<map context="MenuActions">
-		<key id="KEY_MENU" mapto="menu" flags="mr" />
-		<!-- Keyboard specific buttons -->
-		<key id="KEY_SPACE" mapto="menu" flags="mr" />
-	</map>
-
 	<map context="MenuActionsNew">
 		<key id="KEY_MENU" mapto="menu" flags="m" />
 		<key id="KEY_MENU" mapto="MENU" flags="b" />
@@ -124,6 +124,16 @@
 		<key id="KEY_SPACE" mapto="menu" flags="m" />
 		<key id="KEY_SPACE" mapto="MENU" flags="b" />
 		<key id="KEY_SPACE" mapto="menuLong" flags="l" />
+	</map>
+
+	<map context="InfoActions">
+		<key id="KEY_INFO" mapto="info" flags="m" />
+	</map>
+
+	<map context="MenuActions">
+		<key id="KEY_MENU" mapto="menu" flags="m" />
+		<!-- Keyboard specific buttons -->
+		<key id="KEY_SPACE" mapto="menu" flags="m" />
 	</map>
 
 	<map context="NavigationActions">
@@ -584,15 +594,6 @@
 		<key id="KEY_RIGHT" mapto="right" flags="mr" />
 	</map>
 
-	<map context="InfobarMenuActions">
-		<key id="KEY_MENU" mapto="mainMenu" flags="mr" />
-		<key id="KEY_SPACE" mapto="mainMenu" flags="mr" />
-		<key id="KEY_SETUP" mapto="showSystemSetup" flags="mr" />
-		<key id="KEY_OPTION" mapto="showNetworkSetup" flags="mr" />
-		<key id="KEY_F5" mapto="showRFmod" flags="b" />
-		<key id="KEY_F5" mapto="toggleAspectRatio" flags="l" />
-	</map>
-
 	<map context="InfobarShowHideActions">
 		<key id="KEY_OK" mapto="toggleShow" flags="m" />
 		<key id="KEY_OK" mapto="LongOKPressed" flags="l" />
@@ -1031,10 +1032,17 @@
 		<key id="KEY_NEXT" mapto="shiftDown" flags="m" />
 	</map>
 
-	<map context="FunctionKeyActions">
-		<key id="KEY_F1" mapto="f1" flags="m" />
-		<key id="KEY_F2" mapto="f2" flags="m" />
-		<key id="KEY_F3" mapto="f3" flags="m" />
+	<map context="InfoBarMenuActions">
+		<key id="KEY_MENU" mapto="showMenu" flags="m" />
+		<key id="KEY_SETUP" mapto="showSetup" flags="m" />
+		<key id="KEY_PC" mapto="showNetworkSetup" flags="m" />
+		<key id="KEY_LAN" mapto="showNetworkSetup" flags="m" />
+		<!-- <key id="KEY_XXX" mapto="showSystemSetup" flags="m" /> -->
+		<!-- <key id="KEY_XXX" mapto="showHDMIRecordSetup" flags="m" /> -->
+		<key id="KEY_ANGLE" mapto="showRFmod" flags="m" />
+		<key id="KEY_VMODE" mapto="toggleAspectRatio" flags="m" />
+		<!-- Keyboard specific buttons -->
+		<key id="KEY_SPACE" mapto="showMenu" flags="m" />
 	</map>
 
 	<map context="MsgBoxActions">

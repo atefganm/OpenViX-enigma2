@@ -476,9 +476,6 @@ def localeNotifier(configElement):
 def setLoadUnlinkedUserbouquets(configElement):
 	enigma.eDVBDB.getInstance().setLoadUnlinkedUserbouquets(configElement.value)
 
-profile("Bouquets")
-config.misc.load_unlinked_userbouquets = ConfigYesNo(default=False)
-
 def dump(dir, p=""):
 	had = dict()
 	if isinstance(dir, dict):
@@ -514,12 +511,11 @@ def dump(dir, p=""):
 #################################
 
 from sys import stdout
-from Components.config import config, ConfigYesNo, ConfigSubsection, ConfigInteger, ConfigText, ConfigOnOff, ConfigSelection
 
 MODULE_NAME = __name__.split(".")[-1]
 
 profile("Twisted")
-try:  # Configure the twisted processor
+try:  # Configure the twisted processor.
 	from twisted.python.runtime import platform
 	platform.supportsThreads = lambda: True
 	from e2reactor import install
@@ -535,79 +531,70 @@ except ImportError:
 	def runReactor():
 		enigma.runMainloop()
 
+try:  # Configure the twisted logging.
+	from twisted.python import log, util
 
-def quietEmit(self, eventDict):
-	text = log.textFromEventDict(eventDict)
-	if text is None:
-		return
-	if "/api/statusinfo" in text: # do not log OWF statusinfo
-		return
+	def quietEmit(self, eventDict):
+		text = log.textFromEventDict(eventDict)
+		if text is None:
+			return
+		if "/api/statusinfo" in text:  # Do not log OpenWebif status info.
+			return
+		# Log with time stamp.
+		#
+		# timeStr = self.formatTime(eventDict["time"])
+		# fmtDict = {
+		# 	"ts": timeStr,
+		# 	"system": eventDict["system"],
+		# 	"text": text.replace("\n", "\n\t")
+		# }
+		# msgStr = log._safeFormat("%(ts)s [%(system)s] %(text)s\n", fmtDict)
+		#
+		# Log without time stamp.
+		#
+		fmtDict = {
+			"text": text.replace("\n", "\n\t")
+		}
+		msgStr = log._safeFormat("%(text)s\n", fmtDict)
+		util.untilConcludes(self.write, msgStr)
+		util.untilConcludes(self.flush)
 
-	timeStr = self.formatTime(eventDict["time"])
-	fmtDict = {"system": eventDict["system"], "text": text.replace("\n", "\n\t")}
-	msgStr = log._safeFormat("[%(system)s] %(text)s\n", fmtDict)
-	util.untilConcludes(self.write, timeStr + " " + msgStr)
-	util.untilConcludes(self.flush)
-
-from twisted.python import log, uti
-etl = config.content.stored_values
-if 'misc' in etl:
-	etl = etl['misc']
-	if 'enabletwistedlog' in etl:
-		etl = etl['enabletwistedlog'].lower()
-if etl == 'true':
-	log.startLogging(open('/tmp/twisted.log', 'w'))
-else:
 	logger = log.FileLogObserver(stdout)
 	log.FileLogObserver.emit = quietEmit
+	stdoutBackup = sys.stdout  # Backup stdout and stderr redirections.
+	stderrBackup = sys.stderr
 	log.startLoggingWithObserver(logger.emit)
+	sys.stdout = stdoutBackup  # Restore stdout and stderr redirections because of twisted redirections.
+	sys.stderr = stderrBackup
+
+except ImportError:
+	print("[StartEnigma] Error: Twisted not available!")
 
 profile("SystemInfo")
 from enigma import getE2Rev
 from Components.SystemInfo import BoxInfo
 
-model = BoxInfo.getItem("model")
-brand = BoxInfo.getItem("brand")
-platform = BoxInfo.getItem("platform")
-socfamily = BoxInfo.getItem("socfamily")
+BRAND = BoxInfo.getItem("brand")
+BOX_TYPE = BoxInfo.getItem("machinebuild")
+MODEL = BoxInfo.getItem("model")
+DISPLAYBRAND = BoxInfo.getItem("displaybrand")
 
-print("[StartEnigma] Receiver name = %s %s" % (BoxInfo.getItem("displaybrand"), BoxInfo.getItem("displaymodel")))
+print("[StartEnigma] Receiver name = %s %s" % (DISPLAYBRAND, BoxInfo.getItem("displaymodel")))
 print("[StartEnigma] %s version = %s" % (BoxInfo.getItem("displaydistro"), BoxInfo.getItem("imgversion")))
 print("[StartEnigma] %s revision = %s" % (BoxInfo.getItem("displaydistro"), BoxInfo.getItem("imgrevision")))
-print("[StartEnigma] Build Brand = %s" % brand)
-print("[StartEnigma] Build Model = %s" % model)
-print("[StartEnigma] Platform = %s" % platform)
-print("[StartEnigma] SoC family = %s" % socfamily)
+print("[StartEnigma] Build Brand = %s" % BRAND)
+print("[StartEnigma] Build Model = %s" % MODEL)
+print("[StartEnigma] Platform = %s" % BoxInfo.getItem("platform"))
+print("[StartEnigma] SoC family = %s" % BoxInfo.getItem("socfamily"))
 print("[StartEnigma] Enigma2 revision = %s" % getE2Rev())
 
-from boxbranding import getBoxType, getBrandOEM, getMachineBuild, getImageArch, getMachineBrand
-boxtype = getBoxType()
-
-if getImageArch() in ("aarch64"):
+if BoxInfo.getItem("architecture") in ("aarch64"):
 	import usb.core
 	import usb.backend.libusb1
 	usb.backend.libusb1.get_backend(find_library=lambda x: "/lib64/libusb-1.0.so.0")
 
 from traceback import print_exc
-
-profile("Geolocation")
-import Tools.Geolocation
-Tools.Geolocation.InitGeolocation()
-
-profile("SetupDevices")
-import Components.SetupDevices
-Components.SetupDevices.InitSetupDevices()
-
-profile("Bouquets")
-from Components.config import config, ConfigYesNo, ConfigSubsection
-config.misc.load_unlinked_userbouquets = ConfigYesNo(default=False)
-# These entries should be moved back to UsageConfig.py when it is safe to bring UsageConfig init to this location in StartEnigma2.py.
-#
-config.crash = ConfigSubsection()
-config.crash.debugActionMaps = ConfigYesNo(default=False)
-config.crash.debugKeyboards = ConfigYesNo(default=False)
-config.crash.debugRemoteControls = ConfigYesNo(default=False)
-config.crash.debugScreens = ConfigYesNo(default=False)
+from Components.config import config, ConfigYesNo, ConfigSubsection, ConfigInteger, ConfigText, ConfigOnOff, ConfigSelection
 
 # Initialize the country, language and locale data.
 #
@@ -615,24 +602,20 @@ profile("InternationalLocalization")
 from Components.International import international
 
 config.osd = ConfigSubsection()
-if getMachineBrand() == 'Atto.TV':
-	defaultLanguage = "pt_BR"
-elif getMachineBrand() == 'Zgemma':
-	defaultLanguage = "en_US"
-elif getMachineBrand() == 'Beyonwiz':
-	defaultLanguage = "en_GB"
+
+if DISPLAYBRAND == "Atto.TV":
+	defaultLocale = "pt_BR"
+elif DISPLAYBRAND == "Zgemma":
+	defaultLocale = "en_US"
+elif DISPLAYBRAND == "Beyonwiz":
+	defaultLocale = "en_AU"
 else:
-	defaultLanguage = "de_DE"
-
-defaultCountry = defaultLanguage[-2:]
-defaultShortLanguage = defaultLanguage[0:2]
-
-config.osd.language = ConfigText(default=defaultLanguage)
+	defaultLocale = "de_DE"
+config.misc.locale = ConfigText(default=defaultLocale)
+config.misc.language = ConfigText(default=international.getLanguage(defaultLocale))
+config.misc.country = ConfigText(default=international.getCountry(defaultLocale))
+config.osd.language = ConfigText(default=defaultLocale)
 config.osd.language.addNotifier(localeNotifier)
-
-config.misc.country = ConfigText(default=defaultCountry)
-config.misc.language = ConfigText(default=defaultShortLanguage)
-config.misc.locale = ConfigText(default=defaultLanguage)
 # TODO
 # config.misc.locale.addNotifier(localeNotifier)
 
@@ -729,7 +712,7 @@ Screen.globalScreen = Globals()
 
 profile("Standby,PowerKey")
 import Screens.Standby
-from Screens.Menu import MainMenu, mdom
+from Screens.Menu import Menu, findMenu
 from GlobalActions import globalActionMap
 
 profile("Scart")
@@ -813,7 +796,32 @@ Components.HdmiCec.HdmiCec()
 profile("LCD")
 import Components.Lcd
 Components.Lcd.InitLcd()
-# ------------------>Components.Lcd.IconCheck()
+# Disable internal clock vfd for ini5000 until we can adjust it for standby.
+if BOX_TYPE in ("uniboxhd1", "uniboxhd2", "uniboxhd3", "sezam5000hd", "mbtwin", "beyonwizt3"):
+	try:
+		f = open("/proc/stb/fp/enable_clock", "r").readline()[:-1]
+		if f != "0":
+			f = open("/proc/stb/fp/enable_clock", "w")
+			f.write("0")
+			f.close()
+	except:
+		print("[StartEnigma] Error: Disable enable_clock for ini5000 boxes!")
+
+if BOX_TYPE in ("dm7080", "dm820", "dm900", "dm920", "gb7252"):
+	f = open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor", "r")
+	check = f.read()
+	f.close()
+	if check.startswith("on"):
+		f = open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor", "w")
+		f.write("off")
+		f.close()
+	f = open("/proc/stb/audio/hdmi_rx_monitor", "r")
+	check = f.read()
+	f.close()
+	if check.startswith("on"):
+		f = open("/proc/stb/audio/hdmi_rx_monitor", "w")
+		f.write("off")
+		f.close()
 
 profile("UserInterface")
 import Screens.UserInterfacePositioner
@@ -832,10 +840,13 @@ profile("Init:CI")
 import Screens.Ci
 Screens.Ci.InitCiConfig()
 
-
-if config.clientmode.enabled.value:
-	import Components.ChannelsImporter
-	Components.ChannelsImporter.autostart()
+# ###############################################################################
+# NOTE: This migration helper can be used to update Enigma2 settings, files etc #
+#       etc that may need to change based on recent code changes.               #
+# ###############################################################################
+#
+from Tools.Migration import migrateSettings  # Migrate settings from older versions of enigma.
+migrateSettings()
 
 #from enigma import dump_malloc_stats
 #t = eTimer()
