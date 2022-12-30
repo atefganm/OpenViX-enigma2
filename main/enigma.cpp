@@ -169,6 +169,30 @@ static const std::string getConfigCurrentSpinner(const char* key)
 	return "spinner"; // fallback on default system spinner
 } 
 
+static const std::string getConfigValue(const std::string &key, const std::string &def)
+{
+	std::string value = defvalue;
+	std::ifstream in(eEnv::resolve("${sysconfdir}/enigma2/settings").c_str());
+	
+	if (in.good()) {
+		do {
+			std::string line;
+			std::getline(in, line);
+			size_t size = key.size();
+			if (line.compare(0, size, key)== 0) {
+				value = line.substr(size + 1);
+				break;
+			}
+		} while (in.good());
+		in.close();
+	}
+	if (value.empty()) 
+		return defvalue;
+	else
+		return value;
+}
+
+
 int exit_code;
 
 void quitMainloop(int exitCode)
@@ -297,19 +321,19 @@ int main(int argc, char **argv)
 	dsk_lcd.setRedrawTask(main);
 
 	std::string active_skin = getConfigCurrentSpinner("config.skin.primary_skin");
-	std::string spinnerPostion = eSimpleConfig::getString("config.misc.spinnerPosition", "25,25");
+	std::string spinnerPostion = getConfigValue("config.misc.spinnerPosition", "100,100");
 	int spinnerPostionX,spinnerPostionY;
 	if (sscanf(spinnerPostion.c_str(), "%d,%d", &spinnerPostionX, &spinnerPostionY) != 2)
 	{
-		spinnerPostionX = spinnerPostionY = 25;
+		spinnerPostionX = spinnerPostionY = 100;
 	}
 
 	eDebug("[Enigma] Loading spinners.");
 	{
 #define MAX_SPINNER 64
 		int i = 0;
-		std::string skinpath = "${datadir}/enigma2/" + active_skin;
-		std::string defpath = "${datadir}/enigma2/spinner";
+		std::string skinpath = "${sysconfdir}/enigma2/" + active_skin;
+		std::string defpath = "${sysconfdir}/enigma2/spinner";
 		bool def = (skinpath.compare(defpath) == 0);
 		ePtr<gPixmap> wait[MAX_SPINNER];
 		while(i < MAX_SPINNER)
