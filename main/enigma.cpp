@@ -225,7 +225,7 @@ void catchTermSignal()
 
 int main(int argc, char **argv)
 {
-	eLog(0, "Enigma starting.\n");
+	eLog(0, "Enigma is starting.\n");
 #ifdef MEMLEAK_CHECK
 	atexit(DumpUnfreed);
 #endif
@@ -241,7 +241,7 @@ int main(int argc, char **argv)
 
 	// set pythonpath if unset
 	setenv("PYTHONPATH", eEnv::resolve("${libdir}/enigma2/python").c_str(), 0);
-	eLog(0, "[Enigma] Python path '%s'.", getenv("PYTHONPATH"));
+	eLog(0, "[Enigma] Python path is '%s'.", getenv("PYTHONPATH"));
 	eLog(0, "[Enigma] DVB API version %d, DVB API version minor %d.", DVB_API_VERSION, DVB_API_VERSION_MINOR);
 
 	// get enigma2 debug level settings
@@ -349,7 +349,7 @@ int main(int argc, char **argv)
 
 	eRCInput::getInstance()->keyEvent.connect(sigc::ptr_fun(&keyEvent));
 
-	eDebug("[Enigma] Executing StartEnigma.py code.");
+	eDebug("[Enigma] Executing StartEnigma.py");
 
 	bsodCatchSignals();
 	catchTermSignal();
