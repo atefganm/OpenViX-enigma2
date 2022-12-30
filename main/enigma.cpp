@@ -169,7 +169,7 @@ static const std::string getConfigCurrentSpinner(const char* key)
 	return "spinner"; // fallback on default system spinner
 } 
 
-static const std::string getConfigValue(const std::string &key, const std::string &def)
+static const std::string getConfigValue(const std::string &key, const std::string &defvalue)
 {
 	std::string value = defvalue;
 	std::ifstream in(eEnv::resolve("${sysconfdir}/enigma2/settings").c_str());
@@ -249,7 +249,7 @@ void catchTermSignal()
 
 int main(int argc, char **argv)
 {
-	print("Enigma is starting.\n");
+	printf("Enigma is starting.\n");
 #ifdef MEMLEAK_CHECK
 	atexit(DumpUnfreed);
 #endif
