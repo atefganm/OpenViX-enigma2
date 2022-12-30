@@ -1,10 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-import six
-
 import sys
-from os import listdir, path as ospath
+import os
+import six
 import re
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler, property_lexical_handler
@@ -30,7 +29,7 @@ class parseXML(ContentHandler, LexicalHandler):
 			self.last_comment = comment
 
 	def startElement(self, name, attrs):
-		for x in ["text", "title", "menuTitle", "value", "caption", "description"]:
+		for x in ["text", "title", "value", "caption", "description"]:
 			try:
 				k = six.ensure_str(attrs[x])
 				if k.strip() != "" and not self.ishex.match(k):
@@ -50,10 +49,10 @@ if not no_comments:
 	parser.setProperty(property_lexical_handler, contentHandler)
 
 for arg in sys.argv[1:]:
-	if ospath.isdir(arg):
-		for file in listdir(arg):
+	if os.path.isdir(arg):
+		for file in os.listdir(arg):
 			if file.endswith(".xml"):
-				parser.parse(ospath.join(arg, file))
+				parser.parse(os.path.join(arg, file))
 	else:
 		parser.parse(arg)
 
