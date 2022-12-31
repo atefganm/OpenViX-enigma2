@@ -332,7 +332,7 @@
 		<item level="2" text="Show Log Manager in extensions list ?" description="Allows you to show/hide Log Manager in extensions (blue button).">config.logmanager.showinextensions</item>
 		<item level="2" text="Maximum number of days" description="Logs older than the specified number of days will be deleted.">config.crash.daysloglimit</item>
 		<item level="2" text="Maximum total space used (MB)" description="When maximum space for all logs is reached, the oldest logs will be deleted.">config.crash.sizeloglimit</item>
-		<item level="2" text="Debug log time format *" description="This is the prefix of each entry in the debug log. 'boot time' is the number of seconds since the receiver was last booted.">config.crash.logtimeformat</item>
+		<item level="2" text="Debug log time format *" description="This sets the prefix for each line in the debug log. The 'Boot time' is the number of seconds since your %s %s was last booted.">config.crash.debugTimeFormat</item>
 	</setup>
 	<setup key="timeshift" title="Timeshift">
 		<item level="0" text="Timeshift location" description="Set the default location for your timeshift files. Press OK to add new locations, LEFT/RIGHT to select any existing locations.">config.usage.timeshift_path</item>

@@ -72,17 +72,11 @@ sync
 
 export LC_CTYPE="en_US.UTF-8"
 
-# set time format used to prefix each line in the debug logs
-#
-if grep -q 'config\.crash\.logtimeformat' @sysconfdir@/enigma2/settings; then
-	export ENIGMA_DEBUG_TIME=`grep "config\.crash\.logtimeformat" @sysconfdir@/enigma2/settings | sed -E "s/^.*=(.*)$/\1/" -`
-fi
+# Set time format used to prefix each line in the debug logs.
+DEBUGTIME=`sed -En 's|^config\.crash\.debugTimeFormat=(.+)$|\1|p' "@sysconfdir@/enigma2/settings"`
+[ -n "${DEBUGTIME}" ] || DEBUGTIME="2"
+DEBUG_TIME="${DEBUGTIME}"
 
-# If we are running with a log then we need to set up a sub-process to
-# do this so that it can open a new log if the current one's size
-# becomes too large.
-# So, we define various functions for use
-#
 if grep -q 'config\.crash\.enabledebug=True' @sysconfdir@/enigma2/settings; then
 	DEBUG_LVL='4'
 
