@@ -395,17 +395,15 @@ def runScreenTest():
 	vol = VolumeControl(session)
 	profile("InitPowerKey")
 	power = PowerKey(session)
-
-	# we need session.scart to access it from within menu.xml
-	
-	if enigma.eAVSwitch.getInstance().haveScartSwitch():
-		# we need session.scart to access it from within menu.xml
-		session.scart = AutoScartControl(session)
-
+	if BoxInfo.getItem("VFDSymbols"):
+		profile("VFDSYMBOLS")
+		import Components.VfdSymbols
+		Components.VfdSymbols.SymbolsCheck(session)
+	# We need session.scart to access it from within menu.xml.
+	session.scart = AutoScartControl(session)
 	profile("InitTrashcan")
 	import Tools.Trashcan
 	Tools.Trashcan.init(session)
-
 	profile("Init:AutoVideoMode")
 	import Screens.VideoMode
 	Screens.VideoMode.autostart(session)
