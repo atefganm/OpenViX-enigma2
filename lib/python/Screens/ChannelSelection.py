@@ -24,7 +24,7 @@ from Components.Sources.List import List
 from Components.Sources.RdsDecoder import RdsDecoder
 from Components.Sources.ServiceEvent import ServiceEvent
 from Components.Sources.StaticText import StaticText
-from Components.SystemInfo import BoxInfo
+from Components.SystemInfo import SystemInfo
 from Plugins.Plugin import PluginDescriptor
 from RecordTimer import AFTEREVENT
 from Screens.Screen import Screen
@@ -724,7 +724,7 @@ class ChannelSelectionEPG(InfoBarButtonSetup, HelpableScreen):
 			("Epg/Guide" + " " + _("long"), "epg_long", "Infobar/showEventInfoPlugins")]
 		self["ChannelSelectEPGActions"] = helpableButtonSetupActionMap(self, ["ChannelSelectEPGActions"], dict((x[1], self.ButtonSetupGlobal) for x in self.hotkeys))
 		self.currentSavedPath = []
-		self.onExecBegin.append(self.clearLongKeyPressed)
+		self.onExecBegin.append(self.clearLongkeyPressed)
 
 		self["ChannelSelectEPGActions"] = HelpableActionMap(self, ["ChannelSelectEPGActions"],
 			{

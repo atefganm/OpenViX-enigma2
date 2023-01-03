@@ -3,7 +3,7 @@ from Tools.Directories import crawlDirectory, resolveFilename, SCOPE_CONFIG, SCO
 from Components.NimManager import nimmanager
 from Components.Ipkg import IpkgComponent
 from Components.config import config, configfile
-from Components.SystemInfo import BoxInfo
+from boxbranding import getBoxType
 from enigma import eConsoleAppContainer, eDVBDB
 from os import listdir, path, system
 
@@ -272,7 +272,7 @@ class PackageInfoHandler:
 		if "hardware" in prerequisites:
 			hardware_found = False
 			for hardware in prerequisites["hardware"]:
-				if hardware == BoxInfo.getItem("machinebuild"):
+				if hardware == getBoxType():
 					hardware_found = True
 			if not hardware_found:
 				return False

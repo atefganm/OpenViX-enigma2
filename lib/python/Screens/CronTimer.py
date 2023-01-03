@@ -1,6 +1,7 @@
 from os import system, listdir, rename, path, mkdir
 from time import sleep
 
+from boxbranding import getMachineBrand, getMachineName, getImageType
 from Components.ActionMap import ActionMap
 from Components.config import getConfigListEntry, config, ConfigSubsection, ConfigText, ConfigSelection, ConfigInteger, ConfigClock, NoSave
 from Components.ConfigList import ConfigListScreen
@@ -11,7 +12,6 @@ from Components.Pixmap import Pixmap
 from Components.OnlineUpdateCheck import feedsstatuscheck
 from Components.Sources.Boolean import Boolean
 from Components.Sources.StaticText import StaticText
-from Components.SystemInfo import BoxInfo
 from Screens.Screen import Screen
 from Screens.MessageBox import MessageBox
 from Tools.Directories import fileExists
@@ -59,21 +59,15 @@ class CronTimers(Screen):
 		self.Console.ePopen('/usr/bin/opkg list_installed ' + self.service_name, self.checkNetworkState)
 
 	def checkNetworkState(self, result, retval, extra_args):
-		if not result:
-			self.feedscheck = self.session.open(MessageBox, _("Please wait whilst feeds state is checked."), MessageBox.TYPE_INFO, enable_input=False)
-			self.feedscheck.setTitle(_("Checking Feeds"))
-			self.CheckConsole = Console()
-			self.CheckConsole.ePopen([OPKGCMD, OPKGCMD, "update"], self.checkNetworkStateFinished)
+		if 'Collected errors' in result:
+			self.session.openWithCallback(self.close, MessageBox, _("A background update check is in progress, please wait a few minutes and try again."), type=MessageBox.TYPE_INFO, timeout=10, close_on_any_key=True)
+		elif not result:
+			if (getImageType() != 'release' and feedsstatuscheck.getFeedsBool() != 'unknown') or (getImageType() == 'release' and feedsstatuscheck.getFeedsBool() not in ('stable', 'unstable')):
+				self.session.openWithCallback(self.InstallPackageFailed, MessageBox, feedsstatuscheck.getFeedsErrorMessage(), type=MessageBox.TYPE_INFO, timeout=10, close_on_any_key=True)
+			else:
+				self.session.openWithCallback(self.InstallPackage, MessageBox, _('Ready to install "%s" ?') % self.service_name, MessageBox.TYPE_YESNO)
 		else:
 			self.updateList()
-
-	def checkNetworkStateFinished(self, result, retval, extra_args=None):
-		if "bad address" in result:
-			self.session.openWithCallback(self.installPackageFailed, MessageBox, _("Your %s %s is not connected to the Internet, please check your network settings and try again.") % getBoxDisplayName(), type=MessageBox.TYPE_INFO, timeout=10, close_on_any_key=True)
-		elif ("wget returned 1" or "wget returned 255" or "404 Not Found") in result:
-			self.session.openWithCallback(self.installPackageFailed, MessageBox, _("Sorry feeds are down for maintenance, please try again later."), type=MessageBox.TYPE_INFO, timeout=10, close_on_any_key=True)
-		else:
-			self.session.openWithCallback(self.installPackage, MessageBox, _("Ready to install \"%s\" ?") % self.service_name, MessageBox.TYPE_YESNO)
 
 	def InstallPackage(self, val):
 		if val:

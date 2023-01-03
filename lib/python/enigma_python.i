@@ -48,7 +48,6 @@ is usually caused by not marking PSignals as immutable.
 #include <lib/service/iservice.h>
 #include <lib/service/service.h>
 #include <lib/service/servicedvb.h>
-#include <lib/service/servicefs.h>
 #include <lib/service/servicepeer.h>
 #include <lib/gdi/fb.h>
 #include <lib/gdi/font.h>
@@ -163,7 +162,6 @@ typedef long time_t;
 %include <lib/base/smartptr.h>
 %include <lib/service/event.h>
 %include <lib/service/iservice.h>
-%include <lib/service/servicefs.h>
 %include <lib/service/service.h>
 %include <lib/base/e2avahi.h>
 %include <lib/service/servicepeer.h>
@@ -451,7 +449,6 @@ extern eApplication *getApplication();
 extern int getPrevAsciiCode();
 extern void addFont(const char *filename, const char *alias, int scale_factor, int is_replacement, int renderflags = 0);
 extern const char *getEnigmaVersionString();
-extern const char *getE2Rev();
 extern const char *getGStreamerVersionString();
 extern void dump_malloc_stats(void);
 extern void pauseInit(void);
@@ -468,7 +465,6 @@ extern void runMainloop();
 extern void quitMainloop(int exit_code);
 extern eApplication *getApplication();
 extern const char *getEnigmaVersionString();
-extern const char *getE2Rev();
 extern const char *getGStreamerVersionString();
 extern void dump_malloc_stats(void);
 extern void pauseInit(void);

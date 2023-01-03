@@ -1,12 +1,12 @@
 from os import system
 
 from enigma import eTimer
+from boxbranding import getMachineBrand, getMachineName
 from Components.config import config
 from Components.Label import Label
 from Components.Network import iNetwork
 from Components.Pixmap import Pixmap
 from Components.Sources.Boolean import Boolean
-from Components.SystemInfo import BoxInfo
 from Screens.MessageBox import MessageBox
 from Screens.Rc import Rc
 from Screens.WizardLanguage import WizardLanguage

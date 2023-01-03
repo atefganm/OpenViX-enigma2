@@ -5,10 +5,11 @@ from Components.ConfigList import ConfigListScreen
 from Components.MenuList import MenuList
 from Components.Sources.StaticText import StaticText
 from Components.config import config, ConfigNumber, ConfigSelectionNumber, getConfigListEntry
-from Components.SystemInfo import BoxInfo
 from Plugins.Plugin import PluginDescriptor
 
 from enigma import setAnimation_current, setAnimation_speed
+
+from boxbranding import getBrandOEM
 
 # default = disabled
 g_default = {

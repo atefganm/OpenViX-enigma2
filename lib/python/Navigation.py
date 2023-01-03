@@ -5,7 +5,7 @@ from enigma import eServiceCenter, eServiceReference, eTimer, pNavigation, getBe
 
 from Components.ParentalControl import parentalControl
 from Components.config import config
-from Components.SystemInfo import BoxInfo
+from Components.SystemInfo import SystemInfo
 from Tools.BoundFunction import boundFunction
 from Tools.StbHardware import getFPWasTimerWakeup
 import RecordTimer

@@ -2,7 +2,7 @@ from os import listdir, path
 import re
 
 from enigma import RT_HALIGN_LEFT, eListboxPythonMultiContent, \
-	eServiceReference, eServiceReferenceFS, eServiceCenter, gFont
+	eServiceReference, eServiceCenter, gFont
 from Components.MenuList import MenuList
 from Components.Harddisk import harddiskmanager
 from Tools.Directories import SCOPE_CURRENT_SKIN, resolveFilename, fileExists, pathExists
@@ -184,7 +184,7 @@ class FileList(MenuList):
 			directories = []
 		elif self.useServiceRef:
 			# we should not use the "eServiceReference(string)" constructor, because it doesn't allow ":" in the directoryname
-			root = eServiceReference(eServiceReference.idFile, eServiceReference.noFlags, eServiceReferenceFS.directory)
+			root = eServiceReference(2, 0, directory)
 			if self.additional_extensions:
 				root.setName(self.additional_extensions)
 			serviceHandler = eServiceCenter.getInstance()
@@ -407,7 +407,7 @@ class MultiFileSelectList(FileList):
 			files = []
 			directories = []
 		elif self.useServiceRef:
-			root = eServiceReference(eServiceReference.idFile, eServiceReference.noFlags, eServiceReferenceFS.directory)
+			root = eServiceReference.fromDirectory(directory)
 			if self.additional_extensions:
 				root.setName(self.additional_extensions)
 			serviceHandler = eServiceCenter.getInstance()

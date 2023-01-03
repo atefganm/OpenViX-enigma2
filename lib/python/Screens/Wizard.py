@@ -1,3 +1,4 @@
+from boxbranding import getMachineBrand, getMachineName
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
 
@@ -12,8 +13,6 @@ from Components.Slider import Slider
 from Components.ActionMap import NumberActionMap
 from Components.ConfigList import ConfigList
 from Components.Sources.List import List
-
-MACHINE_NAME = (BoxInfo.getItem("displaybrand"), BoxInfo.getItem("displaymodel"))
 
 
 class WizardSummary(Screen):
@@ -316,7 +315,7 @@ class Wizard(Screen):
 		count = 0
 		for x in self.wizard.keys():
 			if self.wizard[x]["id"] == id:
-				print("result: %s" % count)
+				print("[Wizard] result:", count)
 				return count
 			count += 1
 # 		print "result: nothing"
@@ -418,7 +417,7 @@ class Wizard(Screen):
 		elif self.showList and len(self.wizard[self.currStep]["evaluatedlist"]) > 0:
 			self["list"].selectPrevious()
 			if "onselect" in self.wizard[self.currStep]:
-				print("current: %s" % str(self["list"].current))
+				print("[Wizard] current:", self["list"].current)
 				self.selection = self["list"].current[-1]
 				#self.selection = self.wizard[self.currStep]["evaluatedlist"][self["list"].l.getCurrentSelectionIndex()][1]
 				getattr(self, self.wizard[self.currStep]["onselect"])()
@@ -463,7 +462,7 @@ class Wizard(Screen):
 		return False
 
 	def getTranslation(self, text):
-		return _(text).replace("%s %s", "%s %s" % MACHINE_NAME)
+		return _(text).replace("%s %s", "%s %s" % (getMachineBrand(), getMachineName()))
 
 	def updateText(self, firstset=False):
 		text = self.getTranslation(self.wizard[self.currStep]["text"])
@@ -592,7 +591,7 @@ class Wizard(Screen):
 						self.session.openWithCallback(self.ok, self.wizard[self.currStep]["config"]["screen"])
 					else:
 						self["config"].instance.setZPosition(2)
-						print("wizard screen %s" % str(self.wizard[self.currStep]["config"]["screen"]))
+						print("[Wizard] ", self.wizard[self.currStep]["config"]["screen"])
 						if self.wizard[self.currStep]["config"]["args"] is None:
 							self.configInstance = self.session.instantiateDialog(self.wizard[self.currStep]["config"]["screen"])
 						else:
@@ -609,10 +608,10 @@ class Wizard(Screen):
 						self["config"].list = self.configInstance["config"].list
 						callbacks = self.configInstance["config"].onSelectionChanged
 						self.configInstance["config"].destroy()
-						print("clearConfigList %s" % str(self.configInstance["config"], self["config"]))
+						print("[Wizard] clearConfigList", self.configInstance["config"], self["config"])
 						self.configInstance["config"] = self["config"]
 						self.configInstance["config"].onSelectionChanged = callbacks
-						print("clearConfigList %s" % str(self.configInstance["config"], self["config"]))
+						print("[Wizard] clearConfigList", self.configInstance["config"], self["config"])
 				else:
 					self["config"].list = []
 					self.handleInputHelpers()

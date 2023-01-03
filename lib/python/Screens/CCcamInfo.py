@@ -1,18 +1,13 @@
 # -*- coding: UTF-8 -*-
 # CCcam Info by AliAbdul
-# CCcam Line Editor by egami and openATV
 from base64 import b64encode
-from glob import glob
-import requests
-from os import listdir, remove, rename, system
-from os.path import dirname, exists, isfile
-from urllib.parse import urlparse, urlunparse
-from skin import parameters, getSkinFactor
+from os import listdir, remove, rename, system, path
 
-from enigma import eListboxPythonMultiContent, gFont, loadPNG, RT_HALIGN_RIGHT, RT_VALIGN_CENTER, RT_HALIGN_LEFT
+from enigma import eListboxPythonMultiContent, eTimer, gFont, RT_HALIGN_RIGHT, getDesktop
 
-from Components.ActionMap import ActionMap, NumberActionMap, HelpableActionMap
-from Components.config import config, ConfigSubsection, ConfigSelection, ConfigText, ConfigNumber, NoSave
+from Components.ActionMap import ActionMap, NumberActionMap
+from Components.config import config, getConfigListEntry
+from Components.ConfigList import ConfigListScreen
 from Components.Console import Console
 from Components.Label import Label
 from Components.MenuList import MenuList
@@ -20,39 +15,26 @@ from Components.MultiContent import MultiContentEntryText, MultiContentEntryPixm
 from Components.ScrollLabel import ScrollLabel
 from Components.Sources.StaticText import StaticText
 from Screens.HelpMenu import HelpableScreen
-#from Screens.InfoBar import InfoBar
+
 from Screens.LocationBox import LocationBox
 from Screens.MessageBox import MessageBox
 from Screens.Screen import Screen
-from Screens.Setup import Setup
 from Screens.VirtualKeyBoard import VirtualKeyBoard
-from Tools.Directories import fileExists, SCOPE_GUISKIN, resolveFilename, fileReadLines, fileWriteLines
+from Tools.Directories import fileExists, SCOPE_CURRENT_SKIN, resolveFilename
+from Tools.LoadPixmap import LoadPixmap
+import requests
+from urllib.parse import urlparse, urlunparse # raises ImportError in Python 2
 
-#TOGGLE_SHOW = InfoBar.toggleShow
 
-VERSION = "V3"
+VERSION = "V3 Python 3"
 DATE = "01.12.2021"
 CFG = "/etc/CCcam.cfg"
-CFG_path = '/etc'
 global Counter
 Counter = 0
 AuthHeaders = {
     "User-Agent": "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36",
 }
 #############################################################
-
-###global
-sf = getSkinFactor()
-###global
-
-
-def searchConfig():
-	global CFG, CFG_path
-	files = glob("/etc/**/CCcam.cfg", recursive=True)
-	if files:
-		CFG = files[0]
-		CFG_path = dirname(CFG)
-	print("[CCcamInfo] searchConfig CFG=%s" % CFG)
 
 
 def _parse(url):
@@ -72,7 +54,7 @@ def _parse(url):
 		if ':' in username:
 			username, password = username.split(':')
 			base64string = "%s:%s" % (username, password)
-			base64string = b64encode(base64string.encode('utf-8'))
+			base64string = (b64encode(base64string.encode('utf-8'))).decode()
 			authHeader = "Basic " + base64string
 			AuthHeaders["Authorization"] = authHeader
 	if ':' in host:
@@ -103,9 +85,9 @@ def getPage(url, callback, errback):
 			callback(data)
 	else:
 		try:
-			data = response.content.decode(encoding='UTF-8')
+			data = response.content.decode(encoding = 'UTF-8')
 		except:
-			data = response.content.decode(encoding='latin-1')
+			data = response.content.decode(encoding = 'latin-1')
 		callback(data)
 #############################################################
 
@@ -160,11 +142,11 @@ def translateBlock(block):
 
 
 def getConfigValue(l):
-	lst = l.split(":")
+	list = l.split(":")
 	ret = ""
 
-	if len(lst) > 1:
-		ret = (lst[1]).replace("\n", "").replace("\r", "")
+	if len(list) > 1:
+		ret = (list[1]).replace("\n", "").replace("\r", "")
 		if ret.__contains__("#"):
 			idx = ret.index("#")
 			ret = ret[:idx]
@@ -183,7 +165,7 @@ def notBlackListed(entry):
 		f = open(config.cccaminfo.blacklist.value, "r")
 		content = f.read().split("\n")
 		f.close()
-	except OSError:
+	except:
 		content = []
 	ret = True
 	for x in content:
@@ -195,7 +177,6 @@ def notBlackListed(entry):
 
 
 menu_list = [
-	_("CCcam.cfg Basic Line Editor"),
 	_("General"),
 	_("Clients"),
 	_("Active clients"),
@@ -215,15 +196,15 @@ menu_list = [
 
 #############################################################
 
-if exists(resolveFilename(SCOPE_GUISKIN, "icons/lock_on.png")):
-	lock_on = loadPNG(resolveFilename(SCOPE_GUISKIN, "icons/lock_on.png"))
+if path.exists(resolveFilename(SCOPE_CURRENT_SKIN, "icons/lock_on.png")):
+	lock_on = LoadPixmap(resolveFilename(SCOPE_CURRENT_SKIN, "icons/lock_on.png"))
 else:
-	lock_on = loadPNG("/usr/share/enigma2/skin_default/icons/lock_on.png")
+	lock_on = LoadPixmap("/usr/share/enigma2/skin_default/icons/lock_on.png")
 
-if exists(resolveFilename(SCOPE_GUISKIN, "icons/lock_off.png")):
-	lock_off = loadPNG(resolveFilename(SCOPE_GUISKIN, "icons/lock_off.png"))
+if path.exists(resolveFilename(SCOPE_CURRENT_SKIN, "icons/lock_off.png")):
+	lock_off = LoadPixmap(resolveFilename(SCOPE_CURRENT_SKIN, "icons/lock_off.png"))
 else:
-	lock_off = loadPNG("/usr/share/enigma2/skin_default/icons/lock_off.png")
+	lock_off = LoadPixmap("/usr/share/enigma2/skin_default/icons/lock_off.png")
 
 
 def getConfigNameAndContent(fileName):
@@ -231,7 +212,7 @@ def getConfigNameAndContent(fileName):
 		f = open(fileName, "r")
 		content = f.read()
 		f.close()
-	except OSError:
+	except:
 		content = ""
 
 	if content.startswith("#CONFIGFILE NAME="):
@@ -240,115 +221,47 @@ def getConfigNameAndContent(fileName):
 		idx = name.index("\n")
 		name = name[:idx]
 	else:
-		name = fileName.replace(CFG_path + "/", "")
+		name = fileName.replace("/var/etc/", "")
 
 	return name, content
 
 #############################################################
 
 
-config.cccamlineedit = ConfigSubsection()
-config.cccamlineedit.protocol = NoSave(ConfigSelection(default="C:", choices=[("C:", _("CCcam")), ("N:", _("NewCamd"))]))
-config.cccamlineedit.domain = NoSave(ConfigText(fixed_size=False))
-config.cccamlineedit.port = NoSave(ConfigNumber())
-config.cccamlineedit.username = NoSave(ConfigText(fixed_size=False))
-config.cccamlineedit.password = NoSave(ConfigText(fixed_size=False))
-config.cccamlineedit.deskey = NoSave(ConfigNumber())
-
-
-class CCcamLineEdit(Setup):
-	def __init__(self, session, line):
-		self.line = line
-		self.extras = []
-		self.deskey = "0102030405060708091011121314"
-		self.domain = "address.dyndns.org"
-		self.username = "username"
-		self.password = "password"
-		self.port = 12000
-		if line == "newC":
-			self.protocol = "C:"
-		elif line == "newN":
-			self.protocol = "N:"
-		else:
-			mysel = self.line.split()
-			self.protocol = mysel[0]
-			self.domain = mysel[1]
-			self.port = int(mysel[2])
-			self.username = mysel[3]
-			self.password = mysel[4]
-			if mysel[0] == "N:":
-				#self.deskey = mysel[5] + mysel[6] + mysel[7] + mysel[8] + mysel[9] + mysel[10] + mysel[11] + mysel[12] + mysel[13] + mysel[14] + mysel[15] + mysel[16] + mysel[17] + mysel[18]
-				self.deskey = "".join(mysel[5:19])
-			self.extras = mysel[19:]
-
-		config.cccamlineedit.protocol.value = self.protocol
-		config.cccamlineedit.domain.value = self.domain
-		config.cccamlineedit.port.value = self.port
-		config.cccamlineedit.username.value = self.username
-		config.cccamlineedit.password.value = self.password
-		config.cccamlineedit.deskey.value = int(self.deskey)
-
-		Setup.__init__(self, session=session, setup="CCcamLineEdit")
-		self.setTitle(_("CCcam Line Editor"))
-		if "new" not in self.line:
-			self["key_yellow"] = StaticText(_("Remove"))
-			self["cccameditactions"] = HelpableActionMap(self, ["ColorActions"], {
-				"yellow": (self.keyRemove, _("Remove the Line from CCcam.cfg"))
-			}, prio=1, description=_("CCcam Line Edit Actions"))
-
-	def keySave(self):
-		# TODO isChanged is always true
-		if "new" in self.line or self["config"].isChanged():
-			elements = [
-				config.cccamlineedit.protocol.value,
-				config.cccamlineedit.domain.value,
-				str(config.cccamlineedit.port.value),
-				config.cccamlineedit.username.value,
-				config.cccamlineedit.password.value
-			]
-			newline = " ".join(elements)
-			if config.cccamlineedit.protocol.value == "N:":
-				des = "%028d" % config.cccamlineedit.deskey.value
-				des = " ".join([des[x:x + 2] for x in range(0, len(des), 2)])
-				# N: 127.0.0.1 10000 dummy dummy 01 02 03 04 05 06 07 08 09 10 11 12 13 14
-				# des = des[0] + des[1] + " " + des[2] + des[3] + " " + des[4] + des[5] + " " + des[6] + des[7] + " " + des[8] + des[9] + " " + des[10] + des[11] + " " + des[12] + des[13] + " " + des[14] + des[15] + " " + des[16] + des[17] + " " + des[18] + des[19] + " " + des[20] + des[21] + " " + des[22] + des[23] + " " + des[24] + des[25] + " " + des[26] + des[27]
-				newline = "%s %s" % (newline, des)
-				if self.extras:
-					newline = "%s %s" % (newline, " ".join(self.extras))
-
-			lines = fileReadLines(CFG)
-			if lines:
-				if "new" in self.line:
-					lines = [x.strip() for x in lines]
-					# add new line at the beginning
-					lines.insert(0, newline)
-				else:
-					destlines = []
-					for line in lines:
-						if line == self.line:
-							destlines.append(newline)
-						else:
-							destlines.append(line)
-					lines = destlines
-				fileWriteLines(CFG, lines)
-		self.close()
-
-	def keyRemove(self):
-		if "new" not in self.line:
-			lines = fileReadLines(CFG)
-			if lines:
-				lines = [line for line in lines if line != self.line]
-				fileWriteLines(CFG, lines)
-		self.close()
-
-
-class CCcamMenuList(MenuList):
+class CCcamList(MenuList):
 	def __init__(self, list):
-		MenuList.__init__(self, list, content=eListboxPythonMultiContent)
-		self.l.setFont(0, gFont("Regular", int(20 * sf)))
+		MenuList.__init__(self, list, False, eListboxPythonMultiContent)
+		self.l.setItemHeight(25)
+		self.l.setFont(0, gFont("Regular", 20))
+		self.l.setFont(1, gFont("Regular", 32))
+
+
+class CCcamShareList(MenuList):
+	def __init__(self, list):
+		MenuList.__init__(self, list, False, eListboxPythonMultiContent)
+		self.l.setItemHeight(60)
+		self.l.setFont(0, gFont("Regular", 18))
+		self.l.setFont(1, gFont("Regular", 32))
+
+
+class CCcamConfigList(MenuList):
+	def __init__(self, list):
+		MenuList.__init__(self, list, False, eListboxPythonMultiContent)
+		self.l.setItemHeight(30)
+		self.l.setFont(0, gFont("Regular", 20))
+		self.l.setFont(1, gFont("Regular", 32))
+
+
+class CCcamShareViewList(MenuList):
+	def __init__(self, list):
+		MenuList.__init__(self, list, False, eListboxPythonMultiContent)
+		self.l.setItemHeight(20)
+		self.l.setFont(0, gFont("Regular", 18))
+		self.l.setFont(1, gFont("Regular", 32))
 
 
 def CCcamListEntry(name, idx):
+	screenwidth = getDesktop(0).size().width()
 	res = [name]
 	if idx == 10:
 		idx = "red"
@@ -362,88 +275,118 @@ def CCcamListEntry(name, idx):
 		idx = "menu"
 	elif idx == 15:
 		idx = "info"
-	if exists(resolveFilename(SCOPE_GUISKIN, "buttons/key_%s.png" % str(idx))):
-		png = resolveFilename(SCOPE_GUISKIN, "buttons/key_%s.png" % str(idx))
+	if path.exists(resolveFilename(SCOPE_CURRENT_SKIN, "buttons/key_%s.png" % str(idx))):
+		png = resolveFilename(SCOPE_CURRENT_SKIN, "buttons/key_%s.png" % str(idx))
 	else:
 		png = "/usr/share/enigma2/skin_default/buttons/key_%s.png" % str(idx)
-	if fileExists(png):
-		x, y, w, h = parameters.get("ChoicelistIcon", (5 * sf, 0, 35 * sf, 25 * sf))
-		res.append((eListboxPythonMultiContent.TYPE_PIXMAP_ALPHATEST, int(x), int(y), int(w), int(h), loadPNG(png)))
-	x, y, w, h = parameters.get("ChoicelistName", (45 * sf, 2 * sf, 550 * sf, 25 * sf))
-	res.append((eListboxPythonMultiContent.TYPE_TEXT, int(x), int(y), int(w), int(h), 0, RT_HALIGN_LEFT | RT_VALIGN_CENTER, name))
+	if screenwidth and screenwidth == 1920:
+		if fileExists(png):
+			res.append(MultiContentEntryPixmapAlphaBlend(pos=(10, 7), size=(67, 48), png=LoadPixmap(png)))
+		res.append(MultiContentEntryText(pos=(90, 8), size=(900, 40), font=1, text=name))
+	else:
+		if fileExists(png):
+			res.append(MultiContentEntryPixmapAlphaBlend(pos=(0, 0), size=(35, 25), png=LoadPixmap(png)))
+		res.append(MultiContentEntryText(pos=(40, 3), size=(500, 25), font=0, text=name))
 	return res
 
 
 def CCcamServerListEntry(name, color):
+	screenwidth = getDesktop(0).size().width()
 	res = [name]
-	if exists(resolveFilename(SCOPE_GUISKIN, "buttons/key_%s.png" % color)):
-		png = resolveFilename(SCOPE_GUISKIN, "buttons/key_%s.png" % color)
+	if path.exists(resolveFilename(SCOPE_CURRENT_SKIN, "buttons/key_%s.png" % color)):
+		png = resolveFilename(SCOPE_CURRENT_SKIN, "buttons/key_%s.png" % color)
 	else:
 		png = "/usr/share/enigma2/skin_default/buttons/key_%s.png" % color
-	if fileExists(png):
-		x, y, w, h = parameters.get("ChoicelistIcon", (5 * sf, 0, 35 * sf, 25 * sf))
-		res.append((eListboxPythonMultiContent.TYPE_PIXMAP_ALPHATEST, int(x), int(y), int(w), int(h), loadPNG(png)))
-	x, y, w, h = parameters.get("ChoicelistName", (45 * sf, 2 * sf, 550 * sf, 25 * sf))
-	res.append((eListboxPythonMultiContent.TYPE_TEXT, int(x), int(y), int(w), int(h), 0, RT_HALIGN_LEFT | RT_VALIGN_CENTER, name))
+	if screenwidth and screenwidth == 1920:
+		if fileExists(png):
+			res.append(MultiContentEntryPixmapAlphaBlend(pos=(10, 7), size=(67, 48), png=LoadPixmap(png)))
+		res.append(MultiContentEntryText(pos=(90, 8), size=(900, 40), font=1, text=name))
+	else:
+		if fileExists(png):
+			res.append(MultiContentEntryPixmapAlphaBlend(pos=(0, 0), size=(35, 25), png=LoadPixmap(png)))
+		res.append(MultiContentEntryText(pos=(40, 3), size=(500, 25), font=0, text=name))
 	return res
 
 
 def CCcamShareListEntry(hostname, type, caid, system, uphops, maxdown):
-	res = [(hostname, type, caid, system, uphops, maxdown),
-			MultiContentEntryText(pos=(0, 0), size=(300 * sf, 25 * sf), font=0, text=hostname),
-			MultiContentEntryText(pos=(300 * sf, 0), size=(300 * sf, 25 * sf), font=0, text=_("Type: ") + type, flags=RT_HALIGN_RIGHT),
-			MultiContentEntryText(pos=(0, 20 * sf), size=(300 * sf, 25 * sf), font=0, text=_("CaID: ") + caid),
-			MultiContentEntryText(pos=(300 * sf, 20 * sf), size=(300 * sf, 25 * sf), font=0, text=_("System: ") + system, flags=RT_HALIGN_RIGHT),
-			MultiContentEntryText(pos=(0, 40 * sf), size=(300 * sf, 25 * sf), font=0, text=_("Uphops: ") + uphops),
-			MultiContentEntryText(pos=(300 * sf, 40 * sf), size=(300 * sf, 25 * sf), font=0, text=_("Maxdown: ") + maxdown, flags=RT_HALIGN_RIGHT)]
-	return res
+	screenwidth = getDesktop(0).size().width()
+	if screenwidth and screenwidth == 1920:
+		res = [(hostname, type, caid, system, uphops, maxdown),
+				MultiContentEntryText(pos=(10, 0), size=(550, 35), font=1, text=hostname),
+				MultiContentEntryText(pos=(650, 0), size=(500, 35), font=1, text=_("Type: ") + type, flags=RT_HALIGN_RIGHT),
+				MultiContentEntryText(pos=(10, 40), size=(250, 35), font=1, text=_("CaID: ") + caid),
+				MultiContentEntryText(pos=(230, 40), size=(250, 35), font=1, text=_("System: ") + system, flags=RT_HALIGN_RIGHT),
+				MultiContentEntryText(pos=(520, 40), size=(250, 35), font=1, text=_("Uphops: ") + uphops, flags=RT_HALIGN_RIGHT),
+				MultiContentEntryText(pos=(900, 40), size=(250, 35), font=1, text=_("Maxdown: ") + maxdown, flags=RT_HALIGN_RIGHT)]
+		return res
+	else:
+		res = [(hostname, type, caid, system, uphops, maxdown),
+				MultiContentEntryText(pos=(0, 0), size=(250, 20), font=0, text=hostname),
+				MultiContentEntryText(pos=(250, 0), size=(250, 20), font=0, text=_("Type: ") + type, flags=RT_HALIGN_RIGHT),
+				MultiContentEntryText(pos=(0, 20), size=(250, 20), font=0, text=_("CaID: ") + caid),
+				MultiContentEntryText(pos=(250, 20), size=(250, 20), font=0, text=_("System: ") + system, flags=RT_HALIGN_RIGHT),
+				MultiContentEntryText(pos=(0, 40), size=(250, 20), font=0, text=_("Uphops: ") + uphops),
+				MultiContentEntryText(pos=(250, 40), size=(250, 20), font=0, text=_("Maxdown: ") + maxdown, flags=RT_HALIGN_RIGHT)]
+		return res
 
 
 def CCcamShareViewListEntry(caidprovider, providername, numberofcards, numberofreshare):
-	res = [(caidprovider, providername, numberofcards),
-			MultiContentEntryText(pos=(0, 0), size=(500 * sf, 25 * sf), font=0, text=providername),
-			MultiContentEntryText(pos=(500 * sf, 0), size=(50 * sf, 25 * sf), font=0, text=numberofcards, flags=RT_HALIGN_RIGHT),
-			MultiContentEntryText(pos=(550 * sf, 0), size=(50 * sf, 25 * sf), font=0, text=numberofreshare, flags=RT_HALIGN_RIGHT)]
-	return res
+	screenwidth = getDesktop(0).size().width()
+	if screenwidth and screenwidth == 1920:
+		res = [(caidprovider, providername, numberofcards),
+				MultiContentEntryText(pos=(10, 5), size=(800, 35), font=1, text=providername),
+				MultiContentEntryText(pos=(1050, 5), size=(50, 35), font=1, text=numberofcards, flags=RT_HALIGN_RIGHT),
+				MultiContentEntryText(pos=(1100, 5), size=(50, 35), font=1, text=numberofreshare, flags=RT_HALIGN_RIGHT)]
+		return res
+	else:
+		res = [(caidprovider, providername, numberofcards),
+				MultiContentEntryText(pos=(0, 0), size=(430, 20), font=0, text=providername),
+				MultiContentEntryText(pos=(430, 0), size=(50, 20), font=0, text=numberofcards, flags=RT_HALIGN_RIGHT),
+				MultiContentEntryText(pos=(480, 0), size=(50, 20), font=0, text=numberofreshare, flags=RT_HALIGN_RIGHT)]
+		return res
 
 
 def CCcamConfigListEntry(file):
+	screenwidth = getDesktop(0).size().width()
 	res = [file]
 
 	try:
 		f = open(CFG, "r")
 		org = f.read()
 		f.close()
-	except OSError:
+	except:
 		org = ""
 
 	(name, content) = getConfigNameAndContent(file)
 
 	if content == org:
 		png = lock_on
-		x, y, w, h = parameters.get("SelectionListLock", (5 * sf, 0, 25 * sf, 25 * sf))
 	else:
 		png = lock_off
-		x, y, w, h = parameters.get("SelectionListLockOff", (5 * sf, 0, 25 * sf, 25 * sf))
-	res.append(MultiContentEntryPixmapAlphaBlend(pos=(x, y), size=(w, h), png=png))
-	x, y, w, h = parameters.get("SelectionListDescr", (45 * sf, 2 * sf, 550 * sf, 25 * sf))
-	res.append(MultiContentEntryText(pos=(x, y), size=(w, h), font=0, text=name))
+	if screenwidth and screenwidth == 1920:
+		res.append(MultiContentEntryPixmapAlphaBlend(pos=(5, 5), size=(50, 50), png=png))
+		res.append(MultiContentEntryText(pos=(85, 0), size=(800, 40), font=1, text=name))
+	else:
+		res.append(MultiContentEntryPixmapAlphaBlend(pos=(2, 2), size=(25, 25), png=png))
+		res.append(MultiContentEntryText(pos=(35, 2), size=(550, 25), font=0, text=name))
 
 	return res
 
 
 def CCcamMenuConfigListEntry(name, blacklisted):
+	screenwidth = getDesktop(0).size().width()
 	res = [name]
 
 	if blacklisted:
 		png = lock_off
-		x, y, w, h = parameters.get("SelectionListLockOff", (5 * sf, 0, 25 * sf, 25 * sf))
 	else:
 		png = lock_on
-		x, y, w, h = parameters.get("SelectionListLock", (5 * sf, 0, 25 * sf, 25 * sf))
-	res.append(MultiContentEntryPixmapAlphaBlend(pos=(x, y), size=(w, h), png=png))
-	x, y, w, h = parameters.get("SelectionListDescr", (45 * sf, 2 * sf, 550 * sf, 25 * sf))
-	res.append(MultiContentEntryText(pos=(x, y), size=(w, h), font=0, text=name))
+	if screenwidth and screenwidth == 1920:
+		res.append(MultiContentEntryPixmapAlphaBlend(pos=(5, 5), size=(50, 50), png=png))
+		res.append(MultiContentEntryText(pos=(85, 0), size=(800, 40), font=1, text=name))
+	else:
+		res.append(MultiContentEntryPixmapAlphaBlend(pos=(2, 2), size=(25, 25), png=png))
+		res.append(MultiContentEntryText(pos=(35, 2), size=(550, 25), font=0, text=name))
 
 	return res
 
@@ -455,13 +398,12 @@ class CCcamInfoMain(Screen):
 		Screen.__init__(self, session)
 		self.setTitle(_("CCcam Info"))
 
-		self["menu"] = CCcamMenuList([])
+		self.session = session
+
+		self["menu"] = CCcamList([])
 
 		self.working = False
 		self.Console = Console()
-		if not isfile(CFG):
-			print("[CCcamInfo] %s not found" % CFG)
-			searchConfig()
 
 		if config.cccaminfo.profile.value == "":
 			self.readConfig()
@@ -503,15 +445,15 @@ class CCcamInfoMain(Screen):
 		for x in self.menu_list:
 			del self.menu_list[0]
 
-		items = []
+		list = []
 		idx = 0
 		for x in menu_list:
 			if notBlackListed(x):
-				items.append(CCcamListEntry(x, idx))
+				list.append(CCcamListEntry(x, idx))
 				self.menu_list.append(x)
 				idx += 1
 
-		self["menu"].setList(items)
+		self["menu"].setList(list)
 		self.working = False
 
 	def readConfig(self):
@@ -536,7 +478,7 @@ class CCcamInfoMain(Screen):
 					password = getConfigValue(l)
 
 			f.close()
-		except OSError:
+		except:
 			pass
 
 		if (username is not None) and (password is not None) and (username != "") and (password != ""):
@@ -608,36 +550,8 @@ class CCcamInfoMain(Screen):
 			elif sel == _("Switch config"):
 				self.session.openWithCallback(self.workingFinished, CCcamInfoConfigSwitcher)
 
-			elif sel == _("CCcam.cfg Basic Line Editor"):
-				if isfile(CFG):
-					self.showCfgSelection()
-				else:
-					self.showInfo(_("Could not open the file %s!") % CFG, _("Error"))
-
 			else:
 				self.showInfo(_("CCcam Info %s\nby AliAbdul %s\n\nThis screen shows you the status of CCcam.") % (VERSION, DATE), _("About"))
-
-	def showCfgSelection(self):
-		cfgLines = []
-		lines = fileReadLines(CFG)
-		if lines:
-			lines = [x.strip() for x in lines]
-			lines = [x for x in lines if x.startswith('C:') or x.startswith('N:')]
-			for line in lines:
-				lineElements = line.split(" ")
-				lineDescription = "%s %s %s" % (lineElements[0], lineElements[1], lineElements[2])
-				cfgLines.append((lineDescription, line))
-			cfgLines.append((_("Add new CCcam line"), "newC"))
-			cfgLines.append((_("Add new NewCamd line"), "newN"))
-			self.session.openWithCallback(self.showCfgSelectionCallback, MessageBox, _("Please select a line to edit or select add to create new line."), list=cfgLines, windowTitle=_("CCcam - Lines"))
-		else:
-			self.workingFinished()
-
-	def showCfgSelectionCallback(self, line):
-		if line:
-			self.session.openWithCallback(self.workingFinished, CCcamLineEdit, line)
-		else:
-			self.workingFinished()
 
 	def red(self):
 		self.keyNumberGlobal(10)
@@ -679,13 +593,15 @@ class CCcamInfoMain(Screen):
 	def getWebpageError(self, error=""):
 		print("CCcamInfo] WEB page error=%s" % error)
 		self.session.openWithCallback(self.workingFinished, MessageBox, _("Error reading webpage!"), MessageBox.TYPE_ERROR)
+		self.workingFinished()
+
 
 	def showFile(self, file):
 		try:
 			f = open(file, "r")
 			content = f.read()
 			f.close()
-		except OSError:
+		except:
 			content = _("Could not open the file %s!") % file
 
 		self.showInfo(translateBlock(content), " ")
@@ -801,26 +717,13 @@ class CCcamInfoMain(Screen):
 						hostname = list[1].replace(" ", "")
 						if hostname != "":
 							type = list[2].replace(" ", "")
-							caid = list[3].replace(" ", "")
+							caid = list[3].replace(" ", "").zfill(4)
 							system = list[4].replace(" ", "")
 
-							tempstr = list[6]
-							while tempstr.startswith(" "):
-								tempstr = tempstr[1:]
-
-							while tempstr.endswith(" "):
-								tempstr = tempstr[:-1]
-
-							idx = tempstr.index(" ")
-							uphops = tempstr[:idx]
-							tempstr = tempstr[idx + 1:]
-
-							while tempstr.startswith(" "):
-								tempstr = tempstr[1:]
-							maxdown = tempstr
-
-							if len(caid) == 3:
-								caid = "0" + caid
+							string = list[6].strip()
+							idx = string.index(' ')
+							uphops = string[:idx].strip()
+							maxdown = string[idx:].strip()
 
 							infoList.append([hostname, _("Type: ") + type, _("CaID: ") + caid, _("System: ") + system, _("Uphops: ") + uphops, _("Maxdown: ") + maxdown])
 							sharesList.append(hostname + " - " + _("CaID: ") + caid)
@@ -843,6 +746,7 @@ class CCcamInfoMain(Screen):
 					if len(list) > 5:
 						caid = list[1].replace(" ", "")
 						if caid != "":
+							caid = caid.zfill(4)
 							provider = list[2].replace(" ", "")
 							providername = list[3].replace(" ", "")
 							system = list[4].replace(" ", "")
@@ -878,13 +782,14 @@ class CCcamInfoMain(Screen):
 			if result.__contains__("Total:"):
 				idx = result.index("Total:")
 				result = result[idx + 6:]
+
 				tmpList = result.split(" ")
-				items = []
+				list = []
 				for x in tmpList:
 					if x != "":
-						items.append(x)
+						list.append(x)
 
-				self.showInfo("%s\n\n  %s %s\n  %s %s\n  %s %s" % (_("Free memory:"), _("Total:"), items[0], _("Used:"), items[1], _("Free:"), items[2]), _("Free memory"))
+				self.showInfo("%s\n\n  %s %s\n  %s %s\n  %s %s" % (_("Free memory:"), _("Total:"), list[0], _("Used:"), list[1], _("Free:"), list[2]), _("Free memory"))
 			else:
 				self.showInfo(result, _("Free memory"))
 		else:
@@ -896,13 +801,13 @@ class CCcamInfoMain(Screen):
 class CCcamInfoEcmInfoSelection(Screen):
 	def __init__(self, session):
 		Screen.__init__(self, session)
-		self.setTitle(_("CCcam ECM Info"))
-		items = []
+		Screen.setTitle(self, _("CCcam ECM Info"))
+		list = []
 		tmp = listdir("/tmp/")
 		for x in tmp:
 			if x.endswith('.info') and x.startswith('ecm'):
-				items.append(x)
-		self["list"] = MenuList(items)
+				list.append(x)
+		self["list"] = MenuList(list)
 
 		self["actions"] = ActionMap(["CCcamInfoActions"], {"ok": self.ok, "cancel": self.close}, -1)
 
@@ -915,7 +820,7 @@ class CCcamInfoEcmInfoSelection(Screen):
 class CCcamInfoInfoScreen(Screen):
 	def __init__(self, session, info, set_title):
 		Screen.__init__(self, session)
-		self.setTitle(set_title)
+		Screen.setTitle(self, set_title)
 		self["text"] = ScrollLabel(info)
 
 		self["actions"] = ActionMap(["CCcamInfoActions"],
@@ -928,6 +833,12 @@ class CCcamInfoInfoScreen(Screen):
 				"right": self["text"].pageDown,
 			}, -1)
 
+		self["key_red"] = Label(_("Cancel"))
+		self["shortcuts"] = ActionMap(["ShortcutActions"],
+		{
+			"red": self.close,
+		})
+
 #############################################################
 
 
@@ -935,14 +846,15 @@ class CCcamShareViewMenu(Screen, HelpableScreen):
 	def __init__(self, session, url):
 		Screen.__init__(self, session)
 		HelpableScreen.__init__(self)
-		self.setTitle(_("CCcam Share Info"))
+		self.session = session
+		Screen.setTitle(self, _("CCcam Share Info"))
 		self.url = url
 		self.list = []
 		self.providers = {}
 		self.uphop = -1
 		self.working = True
 
-		self["list"] = CCcamMenuList([])
+		self["list"] = CCcamShareViewList([])
 		self["uphops"] = Label()
 		self["cards"] = Label()
 		self["providers"] = Label()
@@ -969,6 +881,8 @@ class CCcamShareViewMenu(Screen, HelpableScreen):
 			}, -1)
 
 		self.onLayoutFinish.append(self.getProviders)
+		self["key_red"] = Label(_("Cancel"))
+		self["actions"] = ActionMap(["CCcamInfoActions"], {"cancel": self.close, "red": self.close}, -1)
 
 	def exit(self):
 		if not self.working:
@@ -978,7 +892,7 @@ class CCcamShareViewMenu(Screen, HelpableScreen):
 		getPage(self.url + "/providers", self.readProvidersCallback, self.readError)
 
 	def readError(self, error=None):
-		self.session.open(MessageBox, _("Error reading webpage!"), MessageBox.TYPE_ERROR)
+#		self.session.open(MessageBox, _("Error reading webpage!"), MessageBox.TYPE_ERROR)
 		self.working = False
 
 	def readSharesCallback(self, html):
@@ -1006,30 +920,15 @@ class CCcamShareViewMenu(Screen, HelpableScreen):
 					if len(list) > 7:
 						hostname = list[1].replace(" ", "")
 						if hostname != "":
-
-							updown = list[6]
-							while updown.startswith(" "):
-								updown = updown[1:]
-
-							while updown.endswith(" "):
-								updown = updown[:-1]
-
-							idx = updown.index(" ")
-
-							maxdown = updown[idx + 1:]
-
-							while maxdown.startswith(" "):
-								maxdown = maxdown[1:]
-								down = maxdown
-
-							ulevel = str(self.uphop) if self.uphop != -1 else _("All")
-							up = updown[:idx] if self.uphop != -1 else self.uphop
-
-							if int(up) == self.uphop:
+							if self.uphop == -1:
 								caid = list[3].replace(" ", "")
 								provider = list[5].replace(" ", "")
 
 								caidprovider = self.formatCaidProvider(caid, provider)
+
+								string = list[6].strip()
+								idx = string.index(' ')
+								down = string[idx:].strip()
 
 								if caidprovider not in providerList:
 									providerList.append(caidprovider)
@@ -1074,6 +973,82 @@ class CCcamShareViewMenu(Screen, HelpableScreen):
 								self.caidList.append(caidprovider)
 
 								totalcards += 1
+
+								ulevel = _("All")
+
+							else:
+								updown = list[6]
+								while updown.startswith(" "):
+									updown = updown[1:]
+
+								while updown.endswith(" "):
+									updown = updown[:-1]
+
+								idx = updown.index(" ")
+								up = updown[:idx]
+
+								maxdown = updown[idx + 1:]
+
+								while maxdown.startswith(" "):
+									maxdown = maxdown[1:]
+									down = maxdown
+
+								ulevel = str(self.uphop)
+
+								if int(up) == self.uphop:
+									caid = list[3].replace(" ", "").zfill(4)
+									provider = list[5].replace(" ", "")
+									caidprovider = self.formatCaidProvider(caid, provider)
+									if caidprovider not in providerList:
+										providerList.append(caidprovider)
+										count = 1
+										countList.append(count)
+										numberofcards = count
+										providername = self.providers.get(caidprovider, 'Multiple Providers given')
+										#if providername == 'Multiple Providers given':
+										#	print caidprovider
+
+										numberofreshare = 0
+										if int(down) > 0:
+											resharecards += 1
+											numberofreshare = 1
+										reshareList.append(numberofreshare)
+
+										shareList.append(CCcamShareViewListEntry(caidprovider, providername, str(numberofcards), str(numberofreshare)))
+										self.list.append([caidprovider, providername, numberofcards, numberofreshare])
+
+										totalproviders += 1
+									elif caidprovider in providerList:
+										i = providerList.index(caidprovider)
+										count = countList[i]
+										count += 1
+										countList[i] = count
+										numberofcards = count
+
+										if int(down) > 0:
+											reshare = reshareList[i]
+											reshare += 1
+											#if caidprovider == "05021700":
+											#	print "re: %d" %(reshare)
+											reshareList[i] = reshare
+											numberofreshare = 0
+											numberofreshare = reshare
+											resharecards += 1
+										elif int(down) == 0:
+											numberofreshare = reshareList[i]
+
+										providername = self.providers.get(caidprovider, 'Multiple Providers given')
+										shareList[i] = CCcamShareViewListEntry(caidprovider, providername, str(numberofcards), str(numberofreshare))
+
+									self.hostList.append(hostname)
+									self.caidList.append(caidprovider)
+									totalcards += 1
+									#maxdown = list[6]
+									#while maxdown.startswith(" "):
+										#maxdown = maxdown[1:]
+										#down = maxdown
+									#if int(down)>0:
+										#resharecards +=1
 
 		self.instance.setTitle("%s (%s %d) %s %s" % (_("Share View"), _("Total cards:"), totalcards, _("Hops:"), ulevel))
 		self["title"].setText("%s (%s %d) %s %s" % (_("Share View"), _("Total cards:"), totalcards, _("Hops:"), ulevel))
@@ -1177,13 +1152,14 @@ class CCcamShareViewMenu(Screen, HelpableScreen):
 class CCcamInfoSubMenu(Screen):
 	def __init__(self, session, list, infoList, set_title):
 		Screen.__init__(self, session)
-		self.setTitle(_(set_title))
+		self.session = session
+		Screen.setTitle(self, _(set_title))
 		self.infoList = infoList
 		self["list"] = MenuList(list)
 		self["info"] = Label()
-
-		self["actions"] = ActionMap(["CCcamInfoActions"], {"ok": self.okClicked, "cancel": self.close}, -1)
-
+		self["key_green"] = Label(_("info"))
+		self["key_red"] = Label(_("Cancel"))
+		self["actions"] = ActionMap(["CCcamInfoActions"], {"ok": self.okClicked, "cancel": self.close, "red": self.close, "green": self.okClicked}, -1)
 		self["list"].onSelectionChanged.append(self.showInfo)
 		self.onLayoutFinish.append(self.showInfo)
 
@@ -1215,23 +1191,23 @@ class CCcamInfoSubMenu(Screen):
 class CCcamInfoServerMenu(Screen):
 	def __init__(self, session, infoList, url):
 		Screen.__init__(self, session)
-
-		self.setTitle(_("CCcam Server Info"))
+		self.session = session
+		Screen.setTitle(self, _("CCcam Server Info"))
 		self.infoList = infoList
 		self.url = url
 
-		items = []
+		list = []
 		for x in self.infoList:
-			if x[5].replace(_("Connected: "), "") == "":  # offline - red
-				items.append(CCcamServerListEntry(x[0], "red"))
-			elif x[1] == _("Cards: 0"):  # online with no card - blue
-				items.append(CCcamServerListEntry(x[0], "blue"))
-			else:  # online with cards - green
-				items.append(CCcamServerListEntry(x[0], "green"))
-		self["list"] = CCcamMenuList(items)
+			if x[5].replace(_("Connected: "), "") == "": #offline - red
+				list.append(CCcamServerListEntry(x[0], "red"))
+			elif x[1] == _("Cards: 0"): #online with no card - blue
+				list.append(CCcamServerListEntry(x[0], "blue"))
+			else: #online with cards - green
+				list.append(CCcamServerListEntry(x[0], "green"))
+		self["list"] = CCcamList(list)
 		self["info"] = Label()
-
-		self["actions"] = ActionMap(["CCcamInfoActions"], {"ok": self.okClicked, "cancel": self.close}, -1)
+		self["key_red"] = Label(_("Cancel"))
+		self["actions"] = ActionMap(["CCcamInfoActions"], {"ok": self.okClicked, "cancel": self.close, "red": self.close, "green": self.okClicked}, -1)
 
 		self["list"].onSelectionChanged.append(self.showInfo)
 		self.onLayoutFinish.append(self.showInfo)
@@ -1272,19 +1248,29 @@ class CCcamInfoRemoteBox:
 #############################################################
 
 
-class CCcamInfoProfileSetup(Setup):
+class CCcamInfoConfigMenu(ConfigListScreen, Screen):
 	def __init__(self, session, profile):
+		Screen.__init__(self, session)
+		Screen.setTitle(self, _("CCcam Info Setup"))
 		config.cccaminfo.name.value = profile.name
 		config.cccaminfo.ip.value = profile.ip
 		config.cccaminfo.username.value = profile.username
 		config.cccaminfo.password.value = profile.password
 		config.cccaminfo.port.value = profile.port
-		Setup.__init__(self, session=session, setup="CCcamProfile")
 
-	def keySave(self):
+		ConfigListScreen.__init__(self, [
+			getConfigListEntry(_("Name:"), config.cccaminfo.name),
+			getConfigListEntry(_("IP:"), config.cccaminfo.ip),
+			getConfigListEntry(_("Username:"), config.cccaminfo.username),
+			getConfigListEntry(_("Password:"), config.cccaminfo.password),
+			getConfigListEntry(_("Port:"), config.cccaminfo.port)])
+
+		self["actions"] = ActionMap(["CCcamInfoActions"], {"ok": self.okClicked, "cancel": self.exit}, -2)
+
+	def okClicked(self):
 		self.close(CCcamInfoRemoteBox(config.cccaminfo.name.value, config.cccaminfo.ip.value, config.cccaminfo.username.value, config.cccaminfo.password.value, config.cccaminfo.port.value))
 
-	def keyCancel(self):
+	def exit(self):
 		self.close(None)
 
 #############################################################
@@ -1293,7 +1279,8 @@ class CCcamInfoProfileSetup(Setup):
 class CCcamInfoRemoteBoxMenu(Screen):
 	def __init__(self, session):
 		Screen.__init__(self, session)
-		self.setTitle(_("CCcam Remote Info"))
+		self.session = session
+		Screen.setTitle(self, _("CCcam Remote Info"))
 		self.list = []
 		self.profiles = []
 
@@ -1320,7 +1307,7 @@ class CCcamInfoRemoteBoxMenu(Screen):
 			f = open(config.cccaminfo.profiles.value, "r")
 			content = f.read()
 			f.close()
-		except OSError:
+		except:
 			content = ""
 		profiles = content.split("\n")
 		for profile in profiles:
@@ -1344,7 +1331,7 @@ class CCcamInfoRemoteBoxMenu(Screen):
 			f = open(config.cccaminfo.profiles.value, "w")
 			f.write(content)
 			f.close()
-		except OSError:
+		except:
 			pass
 
 	def exit(self):
@@ -1373,7 +1360,7 @@ class CCcamInfoRemoteBoxMenu(Screen):
 			self["list"].setList(self.list)
 
 	def new(self):
-		self.session.openWithCallback(self.newCallback, CCcamInfoProfileSetup, CCcamInfoRemoteBox("Profile", "192.168.2.12", "", "", 16001))  # NOSONAR
+		self.session.openWithCallback(self.newCallback, CCcamInfoConfigMenu, CCcamInfoRemoteBox("Profile", "192.168.2.12", "", "", 16001))
 
 	def newCallback(self, callback):
 		if callback:
@@ -1397,7 +1384,7 @@ class CCcamInfoRemoteBoxMenu(Screen):
 	def edit(self):
 		if len(self.list) > 0:
 			idx = self["list"].getSelectionIndex()
-			self.session.openWithCallback(self.editCallback, CCcamInfoProfileSetup, self.profiles[idx])
+			self.session.openWithCallback(self.editCallback, CCcamInfoConfigMenu, self.profiles[idx])
 
 	def editCallback(self, callback):
 		if callback:
@@ -1414,7 +1401,8 @@ class CCcamInfoRemoteBoxMenu(Screen):
 class CCcamInfoShareInfo(Screen):
 	def __init__(self, session, hostname, url):
 		Screen.__init__(self, session)
-		self.setTitle(_("CCcam Share Info"))
+		self.session = session
+		Screen.setTitle(self, _("CCcam Share Info"))
 		self.hostname = hostname
 		self.url = url
 		self.list = []
@@ -1426,7 +1414,7 @@ class CCcamInfoShareInfo(Screen):
 		self["key_green"] = Label(_("Uphops -"))
 		self["key_yellow"] = Label(_("Maxdown +"))
 		self["key_blue"] = Label(_("Maxdown -"))
-		self["list"] = CCcamMenuList([])
+		self["list"] = CCcamShareList([])
 
 		self["actions"] = ActionMap(["CCcamInfoActions"],
 			{
@@ -1469,20 +1457,10 @@ class CCcamInfoShareInfo(Screen):
 							caid = list[3].replace(" ", "").zfill(4)
 							system = list[4].replace(" ", "")
 
-							tempstr = list[6]
-							while tempstr.startswith(" "):
-								tempstr = tempstr[1:]
-
-							while tempstr.endswith(" "):
-								tempstr = tempstr[:-1]
-
-							idx = tempstr.index(" ")
-							uphops = tempstr[:idx]
-							tempstr = tempstr[idx + 1:]
-
-							while tempstr.startswith(" "):
-								tempstr = tempstr[1:]
-							maxdown = tempstr
+							string = list[6].strip()
+							idx = string.index(' ')
+							uphops = string[:idx].strip()
+							maxdown = string[idx:].strip()
 
 							shareList.append(CCcamShareListEntry(hostname, type, caid, system, uphops, maxdown))
 							self.list.append([hostname, type, caid, system, uphops, maxdown])
@@ -1561,12 +1539,13 @@ class CCcamInfoShareInfo(Screen):
 class CCcamInfoConfigSwitcher(Screen):
 	def __init__(self, session):
 		Screen.__init__(self, session)
-		self.setTitle(_("CCcam Config Switcher"))
+		self.session = session
+		Screen.setTitle(self, _("CCcam Config Switcher"))
 		self["key_red"] = Label(_("Delete"))
 		self["key_green"] = Label(_("Activate"))
 		self["key_yellow"] = Label(_("Rename"))
 		self["key_blue"] = Label(_("Content"))
-		self["list"] = CCcamMenuList([])
+		self["list"] = CCcamConfigList([])
 
 		self["actions"] = ActionMap(["CCcamInfoActions"],
 			{
@@ -1581,18 +1560,18 @@ class CCcamInfoConfigSwitcher(Screen):
 		self.onLayoutFinish.append(self.showConfigs)
 
 	def showConfigs(self):
-		items = []
+		list = []
 
 		try:
-			files = listdir(CFG_path)
-		except OSError:
+			files = listdir("/var/etc")
+		except:
 			files = []
 
 		for file in files:
 			if file.startswith("CCcam_") and file.endswith(".cfg"):
-				items.append(CCcamConfigListEntry(CFG_path + "/" + file))
+				list.append(CCcamConfigListEntry("/var/etc/" + file))
 
-		self["list"].setList(items)
+		self["list"].setList(list)
 
 	def delete(self):
 		fileName = self["list"].getCurrent()
@@ -1636,7 +1615,7 @@ class CCcamInfoConfigSwitcher(Screen):
 				f = open(self.fileToRename, "r")
 				content = f.read()
 				f.close()
-			except OSError:
+			except:
 				content = None
 
 			if content is not None:
@@ -1653,7 +1632,7 @@ class CCcamInfoConfigSwitcher(Screen):
 					f.close()
 					self.session.open(MessageBox, _("Renamed %s!") % self.fileToRename, MessageBox.TYPE_INFO)
 					self.showConfigs()
-				except OSError:
+				except:
 					self.session.open(MessageBox, _("Rename failed!"), MessageBox.TYPE_ERROR)
 			else:
 				self.session.open(MessageBox, _("Rename failed!"), MessageBox.TYPE_ERROR)
@@ -1665,7 +1644,7 @@ class CCcamInfoConfigSwitcher(Screen):
 				f = open(fileName[0], "r")
 				content = f.read()
 				f.close()
-			except OSError:
+			except:
 				content = _("Could not open the file %s!") % fileName[0]
 			self.session.open(CCcamInfoInfoScreen, content, _("CCcam Config Switcher"))
 
@@ -1675,11 +1654,12 @@ class CCcamInfoConfigSwitcher(Screen):
 class CCcamInfoMenuConfig(Screen):
 	def __init__(self, session):
 		Screen.__init__(self, session)
-		self.setTitle(_("CCcam Info Config"))
+		self.session = session
+		Screen.setTitle(self, _("CCcam Info Config"))
 		self["key_red"] = Label(_("Cancel"))
 		self["key_green"] = Label(_("Save"))
 		self["key_yellow"] = Label(_("Location"))
-		self["list"] = CCcamMenuList([])
+		self["list"] = CCcamConfigList([])
 		self.getBlacklistedMenuEntries()
 
 		self["actions"] = ActionMap(["CCcamInfoActions"],
@@ -1699,7 +1679,7 @@ class CCcamInfoMenuConfig(Screen):
 			content = f.read()
 			f.close()
 			self.blacklisted = content.split("\n")
-		except OSError:
+		except:
 			self.blacklisted = []
 
 	def changeState(self):
@@ -1718,14 +1698,14 @@ class CCcamInfoMenuConfig(Screen):
 		self.showConfigs()
 
 	def showConfigs(self):
-		items = []
+		list = []
 		for x in menu_list:
 			if x != _("Menu config"):
 				if x in self.blacklisted:
-					items.append(CCcamMenuConfigListEntry(x, True))
+					list.append(CCcamMenuConfigListEntry(x, True))
 				else:
-					items.append(CCcamMenuConfigListEntry(x, False))
-		self["list"].setList(items)
+					list.append(CCcamMenuConfigListEntry(x, False))
+		self["list"].setList(list)
 
 	def save(self):
 		content = ""
@@ -1736,9 +1716,9 @@ class CCcamInfoMenuConfig(Screen):
 			f = open(config.cccaminfo.blacklist.value, "w")
 			f.write(content)
 			f.close()
-			self.session.open(MessageBox, _("Config file %s saved.") % config.cccaminfo.blacklist.value, MessageBox.TYPE_INFO)
-		except OSError:
-			self.session.open(MessageBox, _("Could not save configuration file %s!") % config.cccaminfo.blacklist.value, MessageBox.TYPE_ERROR)
+			self.session.open(MessageBox, _("Configfile %s saved.") % config.cccaminfo.blacklist.value, MessageBox.TYPE_INFO)
+		except:
+			self.session.open(MessageBox, _("Could not save configfile %s!") % config.cccaminfo.blacklist.value, MessageBox.TYPE_ERROR)
 
 	def location(self):
 		self.session.openWithCallback(self.locationCallback, LocationBox)

@@ -1,172 +1,62 @@
-import os
-from time import time
-from enigma import eDVBVolumecontrol, eTimer, eDVBLocalTimeHandler, eServiceReference, eStreamServer, quitMainloop, iRecordableService
+from os import path
+from gettext import dgettext
+from time import localtime, time
+from enigma import eDVBVolumecontrol, eTimer, eDVBLocalTimeHandler, eServiceReference, eStreamServer
+from boxbranding import getMachineBrand, getMachineName, getBoxType, getBrandOEM, getMachineBuild
+from GlobalActions import globalActionMap
 
 from Components.ActionMap import ActionMap
 from Components.AVSwitch import AVSwitch
 from Components.config import config
 from Components.Console import Console
-from Components.Harddisk import harddiskmanager
-from Components.Label import Label
-import Components.RecordingConfig
+import Components.ParentalControl
+from Components.SystemInfo import SystemInfo
+from Components.Sources.StaticText import StaticText
 from Components.Sources.StreamService import StreamServiceList
-from Components.SystemInfo import BoxInfo, getBoxDisplayName
-from Components.Task import job_manager
-from GlobalActions import globalActionMap
 import Screens.InfoBar
-from Screens.MessageBox import MessageBox
-from Screens.Screen import Screen
-from Tools.Directories import mediaFilesInUse
+from Screens.Screen import Screen, ScreenSummary
 import Tools.Notifications
 
-
 inStandby = None
-TVinStandby = None
 
 QUIT_SHUTDOWN = 1
 QUIT_REBOOT = 2
 QUIT_RESTART = 3
 QUIT_UPGRADE_FP = 4
 QUIT_ERROR_RESTART = 5
-QUIT_DEBUG_RESTART = 6
+QUIT_ANDROID = 12
 QUIT_MAINT = 16
 QUIT_UPGRADE_PROGRAM = 42
 QUIT_IMAGE_RESTORE = 43
-QUIT_UPGRADE_FRONTPANEL = 44
-QUIT_WOLSHUTDOWN = 45
 
 
-class TVstate:  # load in Navigation
-	def __init__(self):
-		global TVinStandby
-		if TVinStandby is not None:
-			print("[Standby] only one TVstate instance is allowed!")
-		TVinStandby = self
-
-		try:
-			import Components.HdmiCec
-			self.hdmicec_instance = Components.HdmiCec.hdmi_cec.instance
-			self.hdmicec_ok = self.hdmicec_instance and config.hdmicec.enabled.value
-		except ImportError:
-			self.hdmicec_ok = False
-
-		if not self.hdmicec_ok:
-			print('[Standby] HDMI-CEC is not enabled or unavailable !!!')
-
-	def skipHdmiCecNow(self, value):
-		if self.hdmicec_ok:
-			if value is True or value is False:
-				self.hdmicec_instance.tv_skip_messages = value
-			elif 'zaptimer' in value:
-				self.hdmicec_instance.tv_skip_messages = config.hdmicec.control_tv_wakeup.value and not config.hdmicec.tv_wakeup_zaptimer.value and inStandby
-			elif 'zapandrecordtimer' in value:
-				self.hdmicec_instance.tv_skip_messages = config.hdmicec.control_tv_wakeup.value and not config.hdmicec.tv_wakeup_zapandrecordtimer.value and inStandby
-			elif 'wakeuppowertimer' in value:
-				self.hdmicec_instance.tv_skip_messages = config.hdmicec.control_tv_wakeup.value and not config.hdmicec.tv_wakeup_wakeuppowertimer.value and inStandby
-
-	def getTVstandby(self, value):
-		if self.hdmicec_ok:
-			if 'zaptimer' in value:
-				return config.hdmicec.control_tv_wakeup.value and not config.hdmicec.tv_wakeup_zaptimer.value
-			elif 'zapandrecordtimer' in value:
-				return config.hdmicec.control_tv_wakeup.value and not config.hdmicec.tv_wakeup_zapandrecordtimer.value
-			elif 'wakeuppowertimer' in value:
-				return config.hdmicec.control_tv_wakeup.value and not config.hdmicec.tv_wakeup_wakeuppowertimer.value
-			elif 'waitfortimesync' in value:
-				return config.hdmicec.control_tv_wakeup.value and not (config.hdmicec.deepstandby_waitfortimesync.value and config.workaround.deeprecord.value)
-		return False
-
-	def getTVstate(self, value):
-		if self.hdmicec_ok:
-			if not config.hdmicec.check_tv_state.value or self.hdmicec_instance.sendMessagesIsActive():
-				return False
-			elif value == 'on':
-				return value in self.hdmicec_instance.tv_powerstate and config.hdmicec.control_tv_standby.value
-			elif value == 'standby':
-				return value in self.hdmicec_instance.tv_powerstate and config.hdmicec.control_tv_wakeup.value
-			elif value == 'active':
-				return 'on' in self.hdmicec_instance.tv_powerstate and self.hdmicec_instance.activesource
-			elif value == 'notactive':
-				return 'standby' in self.hdmicec_instance.tv_powerstate or not self.hdmicec_instance.activesource
-		return False
-
-	def setTVstate(self, value):
-		if self.hdmicec_ok:
-			if value == 'on' or (value == 'power' and config.hdmicec.handle_deepstandby_events.value and not self.hdmicec_instance.handleTimer.isActive()):
-				self.hdmicec_instance.wakeupMessages()
-			elif value == 'standby':
-				self.hdmicec_instance.standbyMessages()
-
-
-def setLCDModeMinitTV(value):
+def setLCDMiniTVMode(value):
 	try:
 		f = open("/proc/stb/lcd/mode", "w")
 		f.write(value)
 		f.close()
-	except OSError:
+	except:
 		pass
 
 
 class Standby2(Screen):
 	def Power(self):
-		print("[Standby] leave standby")
-		BoxInfo.setItem("StandbyState", False)
-
-		if os.path.exists("/usr/script/StandbyLeave.sh"):
-			Console().ePopen("/usr/script/StandbyLeave.sh &")
-
-		if BoxInfo.getItem("hdmistandbymode") == 1:
+		if getBrandOEM() in ('dinobot') or SystemInfo["HasHiSi"] or getBoxType() in ("sfx6008", "sfx6018"):
 			try:
 				open("/proc/stb/hdmi/output", "w").write("on")
-			except OSError:
+			except:
 				pass
-		#set input to encoder
-		self.avswitch.setInput("ENCODER")
-		#restart last played service
-		#unmute adc
-		self.leaveMute()
-		# set LCDminiTV
-		if BoxInfo.getItem("Display") and BoxInfo.getItem("LCDMiniTV"):
-			setLCDModeMinitTV(config.lcd.modeminitv.value)
-		#kill me
+		print("[Standby] leave standby")
 		self.close(True)
 
-	# normally handle only key's 'make' event
-	def Power_make(self):
-		if (config.usage.on_short_powerpress.value != "standby_noTVshutdown"):
-			self.Power()
-
-	# with the option "standby_noTVshutdown", use 'break' event / allow turning off the TV by a 'long' key press in standby
-	# avoid waking from standby by ignoring the key's 'break' event after the 'long' and subsequent 'repeat' events.
-	def Power_long(self):
-		if (config.usage.on_short_powerpress.value == "standby_noTVshutdown"):
-			self.TVoff()
-			self.ignoreKeyBreakTimer.start(250, 1)
-
-	def Power_repeat(self):
-		if (config.usage.on_short_powerpress.value == "standby_noTVshutdown") and self.ignoreKeyBreakTimer.isActive():
-			self.ignoreKeyBreakTimer.start(250, 1)
-
-	def Power_break(self):
-		if (config.usage.on_short_powerpress.value == "standby_noTVshutdown") and not self.ignoreKeyBreakTimer.isActive():
-			self.Power()
-
-	def TVoff(self):
-		print("[Standby] TVoff")
-		TVinStandby.skipHdmiCecNow(False)
-		TVinStandby.setTVstate('standby')
-
 	def setMute(self):
-		if eDVBVolumecontrol.getInstance().isMuted():
-			self.wasMuted = 1
-			print("[Standby] mute already active")
-		else:
-			self.wasMuted = 0
-			eDVBVolumecontrol.getInstance().volumeToggleMute()
+		self.wasMuted = eDVBVolumecontrol.getInstance().isMuted()
+		if not self.wasMuted:
+			eDVBVolumecontrol.getInstance().volumeMute()
 
 	def leaveMute(self):
-		if self.wasMuted == 0:
-			eDVBVolumecontrol.getInstance().volumeToggleMute()
+		if not self.wasMuted:
+			eDVBVolumecontrol.getInstance().volumeUnMute()
 
 	def __init__(self, session):
 		Screen.__init__(self, session)
@@ -174,43 +64,41 @@ class Standby2(Screen):
 		self.avswitch = AVSwitch()
 
 		print("[Standby] enter standby")
-		BoxInfo.setItem("StandbyState", True)
 
-		if os.path.exists("/usr/script/StandbyEnter.sh"):
-			Console().ePopen("/usr/script/StandbyEnter.sh &")
+		if path.exists("/usr/scripts/standby_enter.sh"):
+			Console().ePopen("/usr/scripts/standby_enter.sh")
 
 		self["actions"] = ActionMap(["StandbyActions"],
 		{
-			"power": self.Power_make,
-			"power_break": self.Power_break,
-			"power_long": self.Power_long,
-			"power_repeat": self.Power_repeat,
+			"power": self.Power,
 			"discrete_on": self.Power
 		}, -1)
 
 		globalActionMap.setEnabled(False)
 
-		self.ignoreKeyBreakTimer = eTimer()
+		from Screens.InfoBar import InfoBar
+		self.infoBarInstance = InfoBar.instance
 		self.standbyStopServiceTimer = eTimer()
 		self.standbyStopServiceTimer.callback.append(self.stopService)
 		self.timeHandler = None
 
-		#mute adc
 		self.setMute()
 
-		if BoxInfo.getItem("Display") and BoxInfo.getItem("LCDMiniTV"):
+		if SystemInfo["Display"] and SystemInfo["LCDMiniTV"]:
 			# set LCDminiTV off
-			setLCDModeMinitTV("0")
+			setLCDMiniTVMode("0")
 
-		self.paused_service = None
-		self.prev_running_service = None
+		self.paused_service = self.paused_action = False
 
 		self.prev_running_service = self.session.nav.getCurrentlyPlayingServiceOrGroup()
+		if Components.ParentalControl.parentalControl.isProtected(self.prev_running_service):
+			self.prev_running_service = eServiceReference(config.tv.lastservice.value)
 		service = self.prev_running_service and self.prev_running_service.toString()
 		if service:
-			if service.startswith("1:") and service.rsplit(":", 1)[1].startswith("/"):
-				self.paused_service = self.session.current_dialog
-				self.paused_service.pauseService()
+			if service.rsplit(":", 1)[1].startswith("/"):
+				self.paused_service = hasattr(self.session.current_dialog, "pauseService") and hasattr(self.session.current_dialog, "unPauseService") and self.session.current_dialog or self.infoBarInstance
+				self.paused_action = hasattr(self.paused_service, "seekstate") and hasattr(self.paused_service, "SEEK_STATE_PLAY") and self.paused_service.seekstate == self.paused_service.SEEK_STATE_PLAY
+				self.paused_action and self.paused_service.pauseService()
 		if not self.paused_service:
 			self.timeHandler = eDVBLocalTimeHandler.getInstance()
 			if self.timeHandler.ready():
@@ -223,23 +111,17 @@ class Standby2(Screen):
 				self.timeHandler.m_timeUpdated.get().append(self.stopService)
 
 		if self.session.pipshown:
-			from Screens.InfoBar import InfoBar
-			InfoBar.instance and hasattr(InfoBar.instance, "showPiP") and InfoBar.instance.showPiP()
+			self.infoBarInstance and hasattr(self.infoBarInstance, "showPiP") and self.infoBarInstance.showPiP()
 
-		#set input to vcr scart
-		if BoxInfo.getItem("ScartSwitch"):
+		if SystemInfo["ScartSwitch"]:
 			self.avswitch.setInput("SCART")
 		else:
 			self.avswitch.setInput("AUX")
-		if BoxInfo.getItem("hdmistandbymode") == 1:
+		if getBrandOEM() in ('dinobot') or SystemInfo["HasHiSi"] or getBoxType() in ("sfx6008", "sfx6018"):
 			try:
 				open("/proc/stb/hdmi/output", "w").write("off")
-			except OSError:
+			except:
 				pass
-
-		if int(config.usage.hdd_standby_in_standby.value) != -1:  # HDD standby timer value (box in standby) / -1 = same as when box is active
-			for hdd in harddiskmanager.HDDList():
-				hdd[1].setIdleTime(int(config.usage.hdd_standby_in_standby.value))
 
 		self.onFirstExecBegin.append(self.__onFirstExecBegin)
 		self.onClose.append(self.__onClose)
@@ -250,7 +132,7 @@ class Standby2(Screen):
 		self.standbyStopServiceTimer.stop()
 		self.timeHandler and self.timeHandler.m_timeUpdated.get().remove(self.stopService)
 		if self.paused_service:
-			self.paused_service.unPauseService()
+			self.paused_action and self.paused_service.unPauseService()
 		elif self.prev_running_service:
 			service = self.prev_running_service.toString()
 			if config.servicelist.startupservice_onstandby.value:
@@ -261,8 +143,10 @@ class Standby2(Screen):
 				self.session.nav.playService(self.prev_running_service)
 		self.session.screen["Standby"].boolean = False
 		globalActionMap.setEnabled(True)
-		for hdd in harddiskmanager.HDDList():
-			hdd[1].setIdleTime(int(config.usage.hdd_standby.value))  # HDD standby timer value (box active)
+		self.avswitch.setInput("ENCODER")
+		self.leaveMute()
+		if path.exists("/usr/scripts/standby_leave.sh"):
+			Console().ePopen("/usr/scripts/standby_leave.sh")
 
 	def __onFirstExecBegin(self):
 		global inStandby
@@ -275,6 +159,8 @@ class Standby2(Screen):
 
 	def stopService(self):
 		self.prev_running_service = self.session.nav.getCurrentlyPlayingServiceOrGroup()
+		if Components.ParentalControl.parentalControl.isProtected(self.prev_running_service):
+			self.prev_running_service = eServiceReference(config.tv.lastservice.value)
 		self.session.nav.stopService()
 
 
@@ -287,7 +173,7 @@ class Standby(Standby2):
 			self.onHide.append(self.close)
 		else:
 			Standby2.__init__(self, session)
-			self.skinName = "Standby"
+		self.setTitle(_("Standby"))
 
 	def showMessageBox(self):
 		Screens.InfoBar.InfoBar.checkTimeshiftRunning(Screens.InfoBar.InfoBar.instance, self.showMessageBoxcallback)
@@ -300,7 +186,7 @@ class Standby(Standby2):
 		Tools.Notifications.AddNotification(Screens.Standby.Standby2)
 
 
-class StandbySummary(Screen):
+class StandbySummary(ScreenSummary):
 	skin = """
 	<screen position="0,0" size="132,64">
 		<widget source="global.CurrentTime" render="Label" position="0,0" size="132,64" font="Regular;40" halign="center">
@@ -313,73 +199,67 @@ class StandbySummary(Screen):
 	</screen>"""
 
 
+from enigma import quitMainloop, iRecordableService
+from Screens.MessageBox import MessageBox
+from time import time
+from Components.Task import job_manager
+
+
 class QuitMainloopScreen(Screen):
-	def __init__(self, session, retvalue=QUIT_SHUTDOWN):
+	def __init__(self, session, retvalue=1):
 		self.skin = """<screen name="QuitMainloopScreen" position="fill" flags="wfNoBorder">
-			<ePixmap pixmap="icons/input_info.png" position="c-27,c-60" size="53,53" alphatest="on" />
-			<widget name="text" position="center,c+5" size="720,100" font="Regular;22" halign="center" />
-		</screen>"""
+				<ePixmap pixmap="icons/input_info.png" position="c-27,c-60" size="53,53" alphatest="on" />
+				<widget name="text" position="center,c+5" size="720,100" font="Regular;22" halign="center" />
+			</screen>"""
 		Screen.__init__(self, session)
+		from Components.Label import Label
 		text = {
-			QUIT_SHUTDOWN: _("Your %s %s is shutting down") % getBoxDisplayName(),
-			QUIT_REBOOT: _("Your %s %s is rebooting") % getBoxDisplayName(),
-			QUIT_RESTART: _("The user interface of your %s %s is restarting") % getBoxDisplayName(),
-			QUIT_UPGRADE_FP: _("Your front panel processor will be upgraded\nPlease wait until your %s %s reboots\nThis may take a few minutes") % getBoxDisplayName(),
-			QUIT_ERROR_RESTART: _("The user interface of your %s %s is restarting\ndue to an error in StartEnigma.py") % getBoxDisplayName(),
-			QUIT_MAINT: _("Your %s %s is rebooting into Recovery Mode") % getBoxDisplayName(),
-			QUIT_UPGRADE_PROGRAM: _("Upgrade in progress\nPlease wait until your %s %s reboots\nThis may take a few minutes") % getBoxDisplayName(),
-			QUIT_IMAGE_RESTORE: _("Reflash in progress\nPlease wait until your %s %s reboots\nThis may take a few minutes") % getBoxDisplayName(),
-			QUIT_UPGRADE_FRONTPANEL: _("Your front panel will be upgraded\nThis may take a few minutes"),
-			QUIT_WOLSHUTDOWN: _("Your %s %s goes to WOL") % getBoxDisplayName()
-			}.get(retvalue)
+			QUIT_SHUTDOWN: _("Your %s %s is shutting down") % (getMachineBrand(), getMachineName()),
+			QUIT_REBOOT: _("Your %s %s is rebooting") % (getMachineBrand(), getMachineName()),
+			QUIT_RESTART: _("The user interface of your %s %s is restarting") % (getMachineBrand(), getMachineName()),
+			QUIT_ANDROID: _("Your %s %s is rebooting into Android Mode") % (getMachineBrand(), getMachineName()),
+			QUIT_MAINT: _("Your %s %s is rebooting into Recovery Mode") % (getMachineBrand(), getMachineName()),
+			QUIT_UPGRADE_FP: _("Your frontprocessor will be upgraded\nPlease wait until your %s %s reboots\nThis may take a few minutes") % (getMachineBrand(), getMachineName()),
+			QUIT_ERROR_RESTART: _("The user interface of your %s %s is restarting\ndue to an error in StartEnigma.py") % (getMachineBrand(), getMachineName()),
+			QUIT_UPGRADE_PROGRAM: _("Upgrade in progress\nPlease wait until your %s %s reboots\nThis may take a few minutes") % (getMachineBrand(), getMachineName()),
+			QUIT_IMAGE_RESTORE: _("Reflash in progress\nPlease wait until your %s %s reboots\nThis may take a few minutes") % (getMachineBrand(), getMachineName())
+		}.get(retvalue)
 		self["text"] = Label(text)
 
 
 inTryQuitMainloop = False
-quitMainloopCode = 1
 
 
 class TryQuitMainloop(MessageBox):
-	def __init__(self, session, retvalue=QUIT_SHUTDOWN, timeout=-1, default_yes=True):
+	def __init__(self, session, retvalue=1, timeout=-1, default_yes=True):
 		self.retval = retvalue
 		self.ptsmainloopvalue = retvalue
-		recordings = session.nav.getRecordings(False, Components.RecordingConfig.recType(config.recording.warn_box_restart_rec_types.getValue()))
-		jobs = len(job_manager.getPendingJobs())
+		recordings = session.nav.getRecordings()
+		jobs = []
+		for job in job_manager.getPendingJobs():
+			if job.name != dgettext('vix', 'SoftcamCheck'):
+				jobs.append(job)
+
 		inTimeshift = Screens.InfoBar.InfoBar and Screens.InfoBar.InfoBar.instance and Screens.InfoBar.InfoBar.ptsGetTimeshiftStatus(Screens.InfoBar.InfoBar.instance)
 		self.connected = False
 		reason = ""
 		next_rec_time = -1
 		if not recordings:
 			next_rec_time = session.nav.RecordTimer.getNextRecordingTime()
-#		if jobs:
-#			reason = (ngettext("%d job is running in the background!", "%d jobs are running in the background!", jobs) % jobs) + '\n'
-#			if jobs == 1:
-#				job = job_manager.getPendingJobs()[0]
-#				if job.name == "VFD Checker":
-#					reason = ""
-#				else:
-#					reason += "%s: %s (%d%%)\n" % (job.getStatustext(), job.name, int(100*job.progress/float(job.end)))
-#			else:
-#				reason += (_("%d jobs are running in the background!") % jobs) + '\n'
+		if config.usage.task_warning.value and len(jobs):
+			reason = (ngettext("%d job is running in the background!", "%d jobs are running in the background!", len(jobs)) % len(jobs)) + '\n'
+			if len(jobs) == 1:
+				job = jobs[0]
+				reason += "%s: %s (%d%%)\n" % (job.getStatustext(), job.name, int(100 * job.progress / float(job.end)))
+			else:
+				reason += (_("%d jobs are running in the background!") % len(jobs)) + '\n'
 		if inTimeshift:
-			reason = _("You seem to be in time shift!") + '\n'
-			default_yes = True
-			timeout = 30
-		elif recordings or (next_rec_time > 0 and (next_rec_time - time()) < 360):
+			reason = _("You seem to be in timeshift!") + '\n'
+		if recordings or (next_rec_time > 0 and (next_rec_time - time()) < 360):
+			default_yes = False
 			reason = _("Recording(s) are in progress or coming up in few seconds!") + '\n'
-			default_yes = False
-			timeout = 30
-		elif eStreamServer.getInstance().getConnectedClients() or StreamServiceList:
-			reason = _("Client is streaming from this box!")
-			default_yes = False
-			timeout = 30
-			clients = eStreamServer.getInstance().getConnectedClients()
-			if len(clients) == 1 and len(clients[0]) == 3 and clients[0][0] == "::ffff:127.0.0.1":  # ignore internal streams
-				reason = ""
-		elif mediaFilesInUse(session) and retvalue in (QUIT_SHUTDOWN, QUIT_REBOOT, QUIT_RESTART, QUIT_UPGRADE_FP, QUIT_UPGRADE_PROGRAM, QUIT_UPGRADE_FRONTPANEL):
-			reason = _("A file from media is in use!")
-			default_yes = False
-			timeout = 30
+		if eStreamServer.getInstance().getConnectedClients() or StreamServiceList:
+			reason += _("A client is streaming from this box!") + '\n'
 
 		if reason and inStandby:
 			session.nav.record_event.append(self.getRecordEvent)
@@ -389,15 +269,14 @@ class TryQuitMainloop(MessageBox):
 				QUIT_SHUTDOWN: _("Really shutdown now?"),
 				QUIT_REBOOT: _("Really reboot now?"),
 				QUIT_RESTART: _("Really restart now?"),
-				QUIT_UPGRADE_FP: _("Really upgrade the front panel processor and reboot now?"),
+				QUIT_ANDROID: _("Really reboot into Android Mode?"),
 				QUIT_MAINT: _("Really reboot into Recovery Mode?"),
-				QUIT_UPGRADE_PROGRAM: _("Really upgrade your %s %s and reboot now?") % getBoxDisplayName(),
-				QUIT_IMAGE_RESTORE: _("Really reflash your %s %s and reboot now?") % getBoxDisplayName(),
-				QUIT_UPGRADE_FRONTPANEL: _("Really upgrade the front panel and reboot now?"),
-				QUIT_WOLSHUTDOWN: _("Really WOL now?")
-				}.get(retvalue)
+				QUIT_UPGRADE_FP: _("Really upgrade the frontprocessor and reboot now?"),
+				QUIT_UPGRADE_PROGRAM: _("Really upgrade your %s %s and reboot now?") % (getMachineBrand(), getMachineName()),
+				QUIT_IMAGE_RESTORE: _("Really reflash your %s %s and reboot now?") % (getMachineBrand(), getMachineName())
+			}.get(retvalue)
 			if text:
-				MessageBox.__init__(self, session, reason + text, type=MessageBox.TYPE_YESNO, timeout=timeout, default=default_yes)
+				MessageBox.__init__(self, session, "%s\n%s" % (reason, text), type=MessageBox.TYPE_YESNO, timeout=timeout, default=default_yes)
 				self.skinName = "MessageBoxSimple"
 				session.nav.record_event.append(self.getRecordEvent)
 				self.connected = True
@@ -413,38 +292,61 @@ class TryQuitMainloop(MessageBox):
 			return
 		else:
 			if event == iRecordableService.evEnd:
-				recordings = self.session.nav.getRecordings(False, Components.RecordingConfig.recType(config.recording.warn_box_restart_rec_types.getValue()))
-				if not recordings:  # no more recordings exist
+				recordings = self.session.nav.getRecordings()
+				if not recordings: # no more recordings exist
 					rec_time = self.session.nav.RecordTimer.getNextRecordingTime()
 					if rec_time > 0 and (rec_time - time()) < 360:
-						self.timer.start(360)  # wait for next starting timer
+						self.initTimeout(360) # wait for next starting timer
+						self.startTimer()
 					else:
-						self.close(True)  # immediate shutdown
+						self.close(True) # immediate shutdown
 			elif event == iRecordableService.evStart:
-				self.stopTimer("getRecordEvent")
+				self.stopTimer()
+
+	def sendCEC(self):
+			print("[Standby][sendCEC] entered ")
+			import struct
+			from enigma import eHdmiCEC
+			physicaladdress = eHdmiCEC.getInstance().getPhysicalAddress()
+			msgaddress = 0x0f # use broadcast for active source command
+			cmd0 = 0x9d	# 157 sourceinactive
+			data0 = struct.pack("BB", int(physicaladdress // 256), int(physicaladdress % 256))
+			data0 = data0.decode("UTF-8", "ignore")
+			cmd1 = 0x44	# 68 keypoweroff
+			data1 = struct.pack("B", 0x6c)
+			data1 = data1.decode("UTF-8", "ignore")
+			cmd2 = 0x36	# 54 standby
+			data2 = ""
+			eHdmiCEC.getInstance().sendMessage(msgaddress, cmd0, data0, len(data0))
+			eHdmiCEC.getInstance().sendMessage(msgaddress, cmd1, data1, len(data1))
+			eHdmiCEC.getInstance().sendMessage(msgaddress, cmd2, data2, len(data2))
+			print("[Standby][sendCEC] departed ")
 
 	def close(self, value):
-		global quitMainloopCode
 		if self.connected:
 			self.connected = False
 			self.session.nav.record_event.remove(self.getRecordEvent)
+		if config.hdmicec.enabled.value and self.retval == 1:
+			self.sendCEC()
 		if value:
 			self.hide()
-			if self.retval == QUIT_SHUTDOWN:
+			if self.retval == 1:
 				config.misc.DeepStandby.value = True
+				if path.exists("/usr/scripts/standby_enter.sh"):
+					Console().ePopen("/usr/scripts/standby_enter.sh")
 			self.session.nav.stopService()
 			self.quitScreen = self.session.instantiateDialog(QuitMainloopScreen, retvalue=self.retval)
 			self.quitScreen.show()
 			print("[Standby] quitMainloop #1")
 			quitMainloopCode = self.retval
-			if BoxInfo.getItem("Display") and BoxInfo.getItem("LCDMiniTV"):
+			if SystemInfo["Display"] and SystemInfo["LCDMiniTV"]:
 				# set LCDminiTV off / fix a deep-standby-crash on some boxes / gb4k
 				print("[Standby] LCDminiTV off")
-				setLCDModeMinitTV("0")
-			if BoxInfo.getItem("machinebuild") == "vusolo4k":  #workaround for white display flash
-				open("/proc/stb/fp/oled_brightness", "w").write("0")
-			if BoxInfo.getItem("machinebuild") == "pulse4k":
-				open("/proc/stb/lcd/oled_brightness", "w").write("0")
+				setLCDMiniTVMode("0")
+			if getBoxType() == "vusolo4k":  #workaround for white display flash
+				f = open("/proc/stb/fp/oled_brightness", "w")
+				f.write("0")
+				f.close()
 			quitMainloop(self.retval)
 		else:
 			MessageBox.close(self, True)
@@ -456,6 +358,3 @@ class TryQuitMainloop(MessageBox):
 	def __onHide(self):
 		global inTryQuitMainloop
 		inTryQuitMainloop = False
-
-	def createSummary(self):  # Suppress the normal MessageBox ScreenSummary screen.
- 		return None
