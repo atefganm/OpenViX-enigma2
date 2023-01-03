@@ -37,9 +37,9 @@
 # Run this script from within the po folder.
 #
 remote="origin"
-branch="Developer"
+branch="develop"
 python="python"
-localgsed="sed"
+localgsed="gsed"
 xml2po="xml2po.py"
 findoptions=""
 delete=1
@@ -110,6 +110,10 @@ done
 #
 command -v "$python" >/dev/null 2>&1 || { printf >&2 "Script requires python but it's not installed.  Aborting."; \
 		 printf "Please download latest version and install it from: https://www.python.org/\n"; exit 1; }
+ver=$("$python" -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')
+if [ "$ver" -ge "30" ]; then
+   xml2po="xml2po-python3.py"
+fi
 printf "Python used [%s] script used [%s]: " "$python" "$xml2po"
 "$python" --version
 #
@@ -127,7 +131,7 @@ if [[ "$OSTYPE" == "darwin"* ]]
     	findoptions=" -s -X "
 fi
 #
-# Script only run with sed but on some distro normal sed is already sed so checking it.
+# Script only run with gsed but on some distro normal sed is already gsed so checking it.
 #
 sed --version 2> /dev/null | grep -q "GNU"
 if [ $? -eq 0 ]; then
@@ -149,9 +153,13 @@ git config core.eol lf
 git config core.autocrlf input
 git config core.safecrlf true
 #
-# Git commands to sync with origin.
+# Git commands to sync with origin and create the branch MyTranslation to work on.
 #
+git reset HEAD --hard
+git checkout -B $branch $remote/$branch
 git pull
+git branch -D MyTranslation
+git checkout -B MyTranslation
 #
 # Retrieve languages from Makefile.am LANGS variable for backward compatibility
 #
@@ -192,7 +200,7 @@ for lang in "${languages[@]}" ; do
 	fi
 done
 if [ $delete -eq 1 ]; then \
-	rm enigma2-py.pot enigma2-xml.pot; \
+	rm enigma2-py.pot enigma2-xml.pot enigma2.pot; \
 fi
 IFS=$OLDIFS
 printf "Po files update/creation from script finished!\n"

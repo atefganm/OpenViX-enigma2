@@ -1,14 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-from __future__ import print_function
-
 import sys
 import os
 import string
 import re
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler, property_lexical_handler
-
 try:
 	from _xmlplus.sax.saxlib import LexicalHandler
 	no_comments = False
@@ -32,8 +29,7 @@ class parseXML(ContentHandler, LexicalHandler):
 	def startElement(self, name, attrs):
 		for x in ["text", "title", "value", "caption", "description"]:
 			try:
-				ktmp = attrs[x].encode('utf-8')
-				k = ktmp.decode()
+				k = attrs[x]
 				if k.strip() != "" and not self.ishex.match(k):
 					attrlist.add((k, self.last_comment))
 					self.last_comment = None
@@ -70,7 +66,7 @@ for arg in sys.argv[1:]:
 		k.replace("\\n", "\"\n\"")
 		if c:
 			for l in c.split('\n'):
-				print("#. ", l)
+				print(("#. ", l))
 		print('msgid "' + k + '"')
 		print('msgstr ""')
 
