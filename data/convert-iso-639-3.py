@@ -1,6 +1,5 @@
-import sys
 import pickle
-
+import sys
 infilename = "iso-639-3.tab"
 outfilename = "iso-639-3.pck"
 
