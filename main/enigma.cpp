@@ -1,4 +1,7 @@
 #include <unistd.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -13,6 +16,7 @@
 #include <lib/base/ebase.h>
 #include <lib/base/eenv.h>
 #include <lib/base/eerror.h>
+#include <lib/base/esimpleconfig.h>
 #include <lib/base/init.h>
 #include <lib/base/init_num.h>
 #include <lib/gdi/gmaindc.h>
@@ -34,6 +38,8 @@
 
 #include "bsod.h"
 #include "version_info.h"
+
+#include <gst/gst.h>
 
 #ifdef OBJECT_DEBUG
 int object_total_remaining;
@@ -97,7 +103,7 @@ void keyEvent(const eRCKey &key)
 #include <lib/dvb/epgtransponderdatareader.h>
 
 /* Defined in eerror.cpp */
-void setDebugTime(bool enable);
+void setDebugTime(int level);
 
 class eMain: public eApplication, public sigc::trackable
 {
@@ -133,6 +139,35 @@ public:
 		e2avahi_close();
 	}
 };
+
+bool replace(std::string& str, const std::string& from, const std::string& to) 
+{
+	size_t start_pos = str.find(from);
+	if(start_pos == std::string::npos)
+		return false;
+	str.replace(start_pos, from.length(), to);
+	return true;
+}
+
+static const std::string getConfigCurrentSpinner(const char* key)
+{
+	auto value = eSimpleConfig::getString(key);
+
+	 // if value is NOT empty, means config.skin.primary_skin exists in settings file, so return SCOPE_CURRENT_SKIN + "/spinner"
+	 // ( /usr/share/enigma2/MYSKIN/spinner ) BUT check if /usr/share/enigma2/MYSKIN/spinner/wait1.png exist
+	if (!value.empty())
+	{
+		replace(value, "skin.xml", "spinner");
+		std::string png_location = eEnv::resolve("${datadir}/enigma2/" + value + "/wait1.png");
+		std::ifstream png(png_location.c_str());
+		if (png.good()) {
+			png.close();
+			return value; 
+		}
+	}
+
+	return "spinner"; // fallback on default system spinner
+} 
 
 int exit_code;
 
@@ -190,6 +225,7 @@ void catchTermSignal()
 
 int main(int argc, char **argv)
 {
+
 #ifdef MEMLEAK_CHECK
 	atexit(DumpUnfreed);
 #endif
@@ -198,18 +234,23 @@ int main(int argc, char **argv)
 	atexit(object_dump);
 #endif
 
+	// Clear LD_PRELOAD so that shells and processes launched by Enigma2 can pass on file handles and pipes
+	unsetenv("LD_PRELOAD");
+
+	gst_init(&argc, &argv);
+
 	// set pythonpath if unset
 	setenv("PYTHONPATH", eEnv::resolve("${libdir}/enigma2/python").c_str(), 0);
-	printf("PYTHONPATH: %s\n", getenv("PYTHONPATH"));
-	printf("DVB_API_VERSION %d DVB_API_VERSION_MINOR %d\n", DVB_API_VERSION, DVB_API_VERSION_MINOR);
+	printf("[Enigma2] PYTHONPATH: %s\n", getenv("PYTHONPATH"));
+	printf("[Enigma2] DVB_API_VERSION %d DVB_API_VERSION_MINOR %d\n", DVB_API_VERSION, DVB_API_VERSION_MINOR);
 
 	// get enigma2 debug level settings
-	debugLvl = getenv("ENIGMA_DEBUG_LVL") ? atoi(getenv("ENIGMA_DEBUG_LVL")) : 4;
+	debugLvl = getenv("ENIGMA_DEBUG_LVL") ? atoi(getenv("ENIGMA_DEBUG_LVL")) : eSimpleConfig::getInt("config.crash.e2_debug_level", 4);
 	if (debugLvl < 0)
 		debugLvl = 0;
 	printf("ENIGMA_DEBUG_LVL=%d\n", debugLvl);
 	if (getenv("ENIGMA_DEBUG_TIME"))
-		setDebugTime(atoi(getenv("ENIGMA_DEBUG_TIME")) != 0);
+		setDebugTime(atoi(getenv("ENIGMA_DEBUG_TIME")));
 
 	ePython python;
 	eMain main;
@@ -223,8 +264,8 @@ int main(int argc, char **argv)
 	gLCDDC::getInstance(my_lcd_dc);
 
 
-		/* ok, this is currently hardcoded for arabic. */
-			/* some characters are wrong in the regular font, force them to use the replacement font */
+	/* ok, this is currently hardcoded for arabic. */
+	/* some characters are wrong in the regular font, force them to use the replacement font */
 	for (int i = 0x60c; i <= 0x66d; ++i)
 		eTextPara::forceReplacementGlyph(i);
 	eTextPara::forceReplacementGlyph(0xfdf2);
@@ -235,7 +276,7 @@ int main(int argc, char **argv)
 	eWidgetDesktop dsk_lcd(my_lcd_dc->size());
 
 	dsk.setStyleID(0);
-	dsk_lcd.setStyleID(1);
+	dsk_lcd.setStyleID(my_lcd_dc->size().width() == 96 ? 2 : 1);
 
 /*	if (double_buffer)
 	{
@@ -255,35 +296,53 @@ int main(int argc, char **argv)
 	dsk.setRedrawTask(main);
 	dsk_lcd.setRedrawTask(main);
 
+	std::string active_skin = getConfigCurrentSpinner("config.skin.primary_skin");
+	std::string spinnerPostion = eSimpleConfig::getString("config.misc.spinnerPosition", "25,25");
+	int spinnerPostionX,spinnerPostionY;
+	if (sscanf(spinnerPostion.c_str(), "%d,%d", &spinnerPostionX, &spinnerPostionY) != 2)
+	{
+		spinnerPostionX = spinnerPostionY = 25;
+	}
 
 	eDebug("[MAIN] Loading spinners...");
-
 	{
-		int i;
 #define MAX_SPINNER 64
+		int i = 0;
+		std::string skinpath = "${datadir}/enigma2/" + active_skin;
+		std::string defpath = "${datadir}/enigma2/spinner";
+		bool def = (skinpath.compare(defpath) == 0);
 		ePtr<gPixmap> wait[MAX_SPINNER];
-		for (i=0; i<MAX_SPINNER; ++i)
+		while(i < MAX_SPINNER)
 		{
 			char filename[64] = {};
 			std::string rfilename;
-			snprintf(filename, sizeof(filename), "${datadir}/enigma2/skin_default/spinner/wait%d.png", i + 1);
+			snprintf(filename, sizeof(filename), "%s/wait%d.png", skinpath.c_str(), i + 1);
 			rfilename = eEnv::resolve(filename);
+			loadPNG(wait[i], rfilename.c_str());
 
-			if (::access(rfilename.c_str(), R_OK) < 0)
-				break;
-
-			loadImage(wait[i], rfilename.c_str());
-			if (!wait[i])
+			if (!wait[i]) 
 			{
-				eDebug("[MAIN] failed to load %s: %m", rfilename.c_str());
+				// spinner failed
+				if (i==0)
+				{
+					// retry default spinner only once
+					if (!def)
+					{
+						def = true;
+						skinpath = defpath;
+						continue;
+					}
+				}
+				// exit loop because of no more spinners
 				break;
 			}
+			i++;
 		}
-		eDebug("[MAIN] found %d spinner!", i);
-		if (i)
-			my_dc->setSpinner(eRect(ePoint(100, 100), wait[0]->size()), wait, i);
+		eDebug("[MAIN] Found %d spinners.", i);
+		if (i==0)
+			my_dc->setSpinner(eRect(spinnerPostionX, spinnerPostionY, 0, 0), wait, 1);
 		else
-			my_dc->setSpinner(eRect(100, 100, 0, 0), wait, 1);
+			my_dc->setSpinner(eRect(ePoint(spinnerPostionX, spinnerPostionY), wait[0]->size()), wait, i);
 	}
 
 	gRC::getInstance()->setSpinnerDC(my_dc);
@@ -342,27 +401,37 @@ void runMainloop()
 
 const char *getEnigmaVersionString()
 {
-	return enigma2_version;
+	return enigma2_date;
 }
 
-const char *getBoxType()
+const char *getGStreamerVersionString()
 {
-	return BOXTYPE;
+	return gst_version_string();
 }
 
 #include <malloc.h>
 
 void dump_malloc_stats(void)
 {
-#ifdef __GLIBC__
-#if __GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 33)
 	struct mallinfo2 mi = mallinfo2();
 	eDebug("MALLOC: %zu total", mi.uordblks);
-#else
-	struct mallinfo mi = mallinfo();
-	eDebug("MALLOC: %d total", mi.uordblks);
-#endif
-#else
-	eDebug("MALLOC: info not exposed");
-#endif
 }
+
+#ifdef USE_LIBVUGLES2
+#include <vuplus_gles.h>
+
+void setAnimation_current(int a)
+{
+	gles_set_animation_func(a);
+}
+
+void setAnimation_speed(int speed)
+{
+	gles_set_animation_speed(speed);
+}
+#else
+#ifndef HAVE_OSDANIMATION
+void setAnimation_current(int a) {}
+void setAnimation_speed(int speed) {}
+#endif
+#endif
