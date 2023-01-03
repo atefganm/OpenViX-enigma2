@@ -1,4 +1,3 @@
-from __future__ import print_function
 # fake-enigma
 
 
@@ -277,9 +276,6 @@ class eDBoxLCD:
 	def setLCDContrast(self, value):
 		print("[eDBoxLCD] set contrast to %d" % value)
 
-	def setLED(self, value):
-		print("[eDBoxLCD] set led button to %d" % value)
-
 	def setInverted(self, value):
 		print("[eDBoxLCD] set inverted to %d" % value)
 
@@ -381,6 +377,9 @@ def init_all():
 
 	import Components.Lcd
 	Components.Lcd.InitLcd()
+
+	import Components.SetupDevices
+	Components.SetupDevices.InitSetupDevices()
 
 	import Components.RFmod
 	Components.RFmod.InitRFmod()
