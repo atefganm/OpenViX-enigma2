@@ -62,6 +62,11 @@ def getIsBroadcom():
 		return False
 
 
+def getModelString():
+	model = getBoxType()
+	return model
+
+
 def getChipSetString():
 	if getMachineBuild() in ('dm7080', 'dm820'):
 		return "7435"

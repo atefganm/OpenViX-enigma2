@@ -11,9 +11,7 @@ profile("PYTHON_START")
 # Don't remove this line. It may seem to do nothing, but if removed,
 # it will break output redirection for crash logs.
 import Tools.RedirectOutput
-from boxbranding import getBoxType, getBrandOEM, getMachineBuild, getImageArch, getMachineBrand
-boxtype = getBoxType()
-
+from boxbranding import getImageVersion, getImageBuild, getImageDevBuild, getImageType, getImageArch
 print("[Image Type] %s" % getImageType())
 print("[Image Version] %s" % getImageVersion())
 print("[Image Build] %s" % getImageBuild())
@@ -684,22 +682,21 @@ Components.HdmiCec.HdmiCec()
 profile("LCD")
 import Components.Lcd
 Components.Lcd.InitLcd()
+# ------------------>Components.Lcd.IconCheck()
 
-if boxtype in ('dm7080', 'dm820', 'dm900', 'dm920', 'gb7252'):
-	f = open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor", "r")
-	check = f.read()
-	f.close()
+from Tools.HardwareInfo import HardwareInfo
+if HardwareInfo().get_device_model() in ('dm7080', 'dm820', 'dm900', 'dm920', 'dreamone', 'dreamtwo'):
+	print("[StartEnigma] Read /proc/stb/hdmi-rx/0/hdmi_rx_monitor")
+	check = open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor", "r").read()
 	if check.startswith("on"):
-		f = open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor", "w")
-		f.write("off")
-		f.close()
-	f = open("/proc/stb/audio/hdmi_rx_monitor", "r")
-	check = f.read()
-	f.close()
-	if check.startswith("on"):
-		f = open("/proc/stb/audio/hdmi_rx_monitor", "w")
-		f.write("off")
-		f.close()
+		print("[StartEnigma] Write to /proc/stb/hdmi-rx/0/hdmi_rx_monitor")
+		open("/proc/stb/hdmi-rx/0/hdmi_rx_monitor", "w").write("off")
+	print("[StartEnigma] Read /proc/stb/audio/hdmi_rx_monitor")
+	checkaudio = open("/proc/stb/audio/hdmi_rx_monitor", "r").read()
+	if checkaudio.startswith("on"):
+		print("[StartEnigma] Write to /proc/stb/audio/hdmi_rx_monitor")
+		open("/proc/stb/audio/hdmi_rx_monitor", "w").write("off")
+
 
 profile("UserInterface")
 import Screens.UserInterfacePositioner

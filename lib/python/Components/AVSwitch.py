@@ -4,7 +4,7 @@ from Components.config import config, ConfigSlider, ConfigSelection, ConfigSubDi
 from Components.About import about
 from Tools.CList import CList
 from Tools.HardwareInfo import HardwareInfo
-from enigma import eAVSwitch, eDVBVolumecontrol, getDesktop
+from enigma import eAVSwitch, getDesktop
 from boxbranding import getBrandOEM
 from Components.SystemInfo import BoxInfo
 import os
@@ -1033,13 +1033,6 @@ def InitAVSwitch():
 			open("/proc/stb/audio/multichannel_pcm", "w").write(configElement.value and "enable" or "disable")
 		config.av.pcm_multichannel = ConfigYesNo(default=False)
 		config.av.pcm_multichannel.addNotifier(setPCMMultichannel)
-
-	def setVolumeStepsize(configElement):
-		eDVBVolumecontrol.getInstance().setVolumeSteps(int(configElement.value))
-	config.av.volume_stepsize = ConfigSelectionNumber(1, 10, 1, default=5)
-	config.av.volume_stepsize_fastmode = ConfigSelectionNumber(1, 10, 1, default=5)
-	config.av.volume_hide_mute = ConfigYesNo(default=True)
-	config.av.volume_stepsize.addNotifier(setVolumeStepsize)
 
 	try:
 		f = open("/proc/stb/audio/ac3_choices", "r")
