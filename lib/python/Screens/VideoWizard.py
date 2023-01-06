@@ -1,3 +1,4 @@
+from __future__ import print_function
 from Screens.Wizard import WizardSummary
 from Screens.WizardLanguage import WizardLanguage
 from Screens.Rc import Rc
@@ -6,7 +7,7 @@ from Screens.Screen import Screen
 
 from Components.Pixmap import Pixmap
 from Components.config import config, ConfigBoolean, configfile
-from Components.SystemInfo import SystemInfo
+from Components.SystemInfo import BoxInfo
 
 from Tools.Directories import resolveFilename, SCOPE_SKIN, SCOPE_CURRENT_SKIN
 from Tools.HardwareInfo import HardwareInfo
