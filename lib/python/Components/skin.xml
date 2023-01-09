@@ -1,0 +1,7 @@
+<skin>
+	<output id="0"><!-- set resolution first before anything loads -->
+		<resolution bpp="32" xres="1280" yres="720"/>
+	</output>
+	<include filename="../skin_default.xml"/><!-- must be included first because it contains the font definitions and colours -->
+	<include filename="../skin_default_windowstyle.xml"/>
+</skin>
