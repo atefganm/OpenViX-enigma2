@@ -2,6 +2,8 @@ from keyids import KEYIDS
 from Components.config import config
 from Components.SystemInfo import SystemInfo
 
+keyBindings = {}
+
 keyDescriptions = [{  # id=0 - dmm0 remote directory, DM8000.
 	# However, the dmm0 rcpositions.xml file should define
 	# an <rc id=0 /> element, but it does not, it only has
@@ -337,8 +339,33 @@ keyDescriptions = [{  # id=0 - dmm0 remote directory, DM8000.
 }]
 
 
+def addKeyBinding(domain, key, context, action, flags):
+	keyBindings.setdefault((context, action), []).append((key, domain, flags))
+
+
+def removeKeyBinding(key, context, action, wild=True):
+	if wild and action == "*":
+		for ctx, action in keyBindings.keys():
+			if ctx == context:
+				removeKeyBinding(key, context, action, False)
+		return
+	contextAction = (context, action)
+	if contextAction in keyBindings:
+		bind = [x for x in keyBindings[contextAction] if x[0] != key]
+		if bind:
+			keyBindings[contextAction] = bind
+		else:
+			del keyBindings[contextAction]
+
 # Returns a list of (key, flags) for a specified action.
 #
+
+
+def queryKeyBinding(context, action):
+	if (context, action) in keyBindings:
+		return [(x[0], x[2]) for x in keyBindings[(context, action)]]
+	else:
+		return []
 
 
 def getKeyDescription(key):
@@ -354,6 +381,18 @@ def getKeyDescription(key):
 		else:
 			idx = 2
 	return keyDescriptions[idx].get(key)
+
+
+def getKeyBindingKeys(filterfn=lambda key: True):
+	return filter(filterfn, keyBindings)
+
+# Remove all entries of domain "domain".
+#
+
+
+def removeKeyBindings(domain):
+	for x in keyBindings:
+		keyBindings[x] = [e for e in keyBindings[x] if e[1] != domain]
 
 
 def getFpAndKbdKeys(): # used by HelpMenuList
