@@ -154,7 +154,7 @@ class ActionMap:
 		self.execActive = False
 		self.enabled = True
 		undefinedAction = list(self.actions.keys())
-		for action in undefinedAction:
+		for action in undefinedAction[:]:
 			for context in self.contexts:
 				if queryKeyBinding(context, action):
 					undefinedAction.remove(action)
@@ -246,7 +246,7 @@ class HelpableActionMap(ActionMap):
 		actionDict = {}
 		for context in contexts:
 			actionList = []
-			for (action, response) in six.iteritems(actions):
+			for (action, response) in actions.items():
 				# Check if this is a tuple.
 				if isinstance(response, tuple):
 					if queryKeyBinding(context, action):
