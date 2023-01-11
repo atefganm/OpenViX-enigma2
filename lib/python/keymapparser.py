@@ -5,6 +5,7 @@
 from Components.ActionMap import loadKeymap, parseKeymap, removeKeymap as removeKeymapNew
 
 
+def parseKeys(context, filename, actionmap, device, keys):
 	return parseKeymap(filename, context, actionmap, device, keys)
 
 
