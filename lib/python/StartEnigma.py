@@ -165,35 +165,35 @@ profile("Screen")
 Screen.globalScreen = Globals()
 
 # Session.open:
-# * push current active dialog ('current_dialog') onto stack
-# * call execEnd for this dialog
-#   * clear in_exec flag
-#   * hide screen
-# * instantiate new dialog into 'current_dialog'
-#   * create screens, components
-#   * read, apply skin
-#   * create GUI for screen
-# * call execBegin for new dialog
-#   * set in_exec
-#   * show gui screen
-#   * call components' / screen's onExecBegin
-# ... screen is active, until it calls 'close'...
+# * Push current active dialog ("current_dialog") onto stack.
+# * Call execEnd for this dialog.
+#   * Clear in_exec flag.
+#   * Hide screen.
+# * Instantiate new dialog into "current_dialog".
+#   * Create screens, components.
+#   * Read and apply skin.
+#   * Create GUI for screen.
+# * Call execBegin for new dialog.
+#   * Set in_exec.
+#   * Show GUI screen.
+#   * Call components' / screen's onExecBegin.
+# ... Screen is active, until it calls "close"...
+#
 # Session.close:
-# * assert in_exec
-# * save return value
-# * start deferred close handler ('onClose')
-# * execEnd
-#   * clear in_exec
-#   * hide screen
+# * Assert in_exec.
+# * Save return value.
+# * Start deferred close handler ("onClose").
+# * Call execEnd.
+#   * Clear in_exec.
+#   * Hide screen.
 # .. a moment later:
 # Session.doClose:
-# * destroy screen
-
-
+# * Destroy screen.
+#
 class Session:
-	def __init__(self, desktop=None, summary_desktop=None, navigation=None):
+	def __init__(self, desktop=None, summaryDesktop=None, navigation=None):
 		self.desktop = desktop
-		self.summary_desktop = summary_desktop
+		self.summaryDesktop = summaryDesktop
 		self.nav = navigation
 		self.delay_timer = enigma.eTimer()
 		self.delay_timer.callback.append(self.processDelay)
@@ -203,39 +203,41 @@ class Session:
 		self.summary = None
 		self.in_exec = False
 		self.screen = SessionGlobals(self)
-		for p in plugins.getPlugins(PluginDescriptor.WHERE_SESSIONSTART):
+		for plugin in plugins.getPlugins(PluginDescriptor.WHERE_SESSIONSTART):
 			try:
-				p(reason=0, session=self)
-			except Exception:
-				print("StartEnigma] Plugin raised exception at WHERE_SESSIONSTART")
-				print_exc()
+				plugin.__call__(reason=0, session=self)
+			except:
+				print("[StartEnigma] Error: Plugin raised exception at WHERE_SESSIONSTART!")
+				import traceback
+				traceback.print_exc()
 
 	def processDelay(self):
 		callback = self.current_dialog.callback
-		retval = self.current_dialog.returnValue
+		retVal = self.current_dialog.returnValue
 		if self.current_dialog.isTmp:
 			self.current_dialog.doClose()
-#			dump(self.current_dialog)
+			# dump(self.current_dialog)
 			del self.current_dialog
 		else:
 			del self.current_dialog.callback
 		self.popCurrent()
 		if callback is not None:
-			callback(*retval)
+			callback(*retVal)
 
 	def execBegin(self, first=True, do_show=True):
-		assert not self.in_exec
+		if self.in_exec:
+			raise AssertionError("[StartEnigma] Error: Already in exec!")
 		self.in_exec = True
-		c = self.current_dialog
-		# when this is an execbegin after a execend of a "higher" dialog,
+		currentDialog = self.current_dialog
+		# When this is an execbegin after a execEnd of a "higher" dialog,
 		# popSummary already did the right thing.
 		if first:
-			self.instantiateSummaryDialog(c)
-		c.saveKeyboardMode()
-		c.execBegin()
-		# when execBegin opened a new dialog, don't bother showing the old one.
-		if c == self.current_dialog and do_show:
-			c.show()
+			self.instantiateSummaryDialog(currentDialog)
+		currentDialog.saveKeyboardMode()
+		currentDialog.execBegin()
+		# When execBegin opened a new dialog, don't bother showing the old one.
+		if currentDialog == self.current_dialog and do_show:
+			currentDialog.show()
 
 	def execEnd(self, last=True):
 		assert self.in_exec
@@ -254,32 +256,29 @@ class Session:
 		screen.hide()
 		screen.doClose()
 
-	def deleteDialogWithCallback(self, callback, screen, *retval):
+	def deleteDialogWithCallback(self, callback, screen, *retVal):
 		screen.hide()
 		screen.doClose()
 		if callback is not None:
-			callback(*retval)
+			callback(*retVal)
 
 	def instantiateSummaryDialog(self, screen, **kwargs):
-		if self.summary_desktop is not None:
+		if self.summaryDesktop is not None:
 			self.pushSummary()
-			summary = screen.createSummary() or ScreenSummary
+			summary = screen.createSummary() or SimpleSummary
 			arguments = (screen,)
-			self.summary = self.doInstantiateDialog(summary, arguments, kwargs, self.summary_desktop)
+			self.summary = self.doInstantiateDialog(summary, arguments, kwargs, self.summaryDesktop)
 			self.summary.show()
 			screen.addSummary(self.summary)
 
 	def doInstantiateDialog(self, screen, arguments, kwargs, desktop):
-		# create dialog
-		dlg = screen(self, *arguments, **kwargs)
-		if dlg is None:
+		dialog = screen(self, *arguments, **kwargs)  # Create dialog.
+		if dialog is None:
 			return
-		# read skin data
-		readSkin(dlg, None, dlg.skinName, desktop)
-		# create GUI view of this dialog
-		dlg.setDesktop(desktop)
-		dlg.applySkin()
-		return dlg
+		readSkin(dialog, None, dialog.skinName, desktop)  # Read skin data.
+		dialog.setDesktop(desktop)  # Create GUI view of this dialog.
+		dialog.applySkin()
+		return dialog
 
 	def pushCurrent(self):
 		if self.current_dialog is not None:
@@ -297,40 +296,46 @@ class Session:
 		self.pushCurrent()
 		self.current_dialog = dialog
 		self.current_dialog.isTmp = False
-		self.current_dialog.callback = None # would cause re-entrancy problems.
+		self.current_dialog.callback = None  # Would cause re-entrancy problems.
 		self.execBegin()
 
 	def openWithCallback(self, callback, screen, *arguments, **kwargs):
-		dlg = self.open(screen, *arguments, **kwargs)
-		dlg.callback = callback
-		return dlg
+		dialog = self.open(screen, *arguments, **kwargs)
+		if dialog != 'config.crash.bsodpython.value=True':
+			dialog.callback = callback
+			return dialog
 
 	def open(self, screen, *arguments, **kwargs):
 		if self.dialog_stack and not self.in_exec:
-			raise RuntimeError("modal open are allowed only from a screen which is modal!")
-			# ...unless it's the very first screen.
-
+			raise RuntimeError("[StartEnigma] Error: Modal open are allowed only from a screen which is modal!")  # ...unless it's the very first screen.
 		self.pushCurrent()
-		dlg = self.current_dialog = self.instantiateDialog(screen, *arguments, **kwargs)
-		dlg.isTmp = True
-		dlg.callback = None
+		if config.crash.bsodpython.value:
+			try:
+				dialog = self.current_dialog = self.instantiateDialog(screen, *arguments, **kwargs)
+			except:
+				self.popCurrent()
+				raise
+				return 'config.crash.bsodpython.value=True'
+		else:
+			dialog = self.current_dialog = self.instantiateDialog(screen, *arguments, **kwargs)
+		dialog.isTmp = True
+		dialog.callback = None
 		self.execBegin()
-		return dlg
+		return dialog
 
-	def close(self, screen, *retval):
+	def close(self, screen, *retVal):
 		if not self.in_exec:
-			print("StartEnigma] close after exec!")
+			print("[StartEnigma] Close after exec!")
 			return
-
-		# be sure that the close is for the right dialog!
-		# if it's not, you probably closed after another dialog
-		# was opened. this can happen if you open a dialog
-		# onExecBegin, and forget to do this only once.
-		# after close of the top dialog, the underlying will
-		# gain focus again (for a short time), thus triggering
-		# the onExec, which opens the dialog again, closing the loop.
-		assert screen == self.current_dialog
-
+		# Be sure that the close is for the right dialog!  If it's
+		# not, you probably closed after another dialog was opened.
+		# This can happen if you open a dialog onExecBegin, and
+		# forget to do this only once.  After close of the top
+		# dialog, the underlying dialog will gain focus again (for
+		# a short time), thus triggering the onExec, which opens the
+		# dialog again, closing the loop.
+		if not screen == self.current_dialog:
+			raise AssertionError("[StartEnigma] Error: Attempt to close non-current screen!")
 		self.current_dialog.returnValue = retval
 		self.delay_timer.start(0, 1)
 		self.execEnd()
