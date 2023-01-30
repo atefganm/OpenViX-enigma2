@@ -4,7 +4,7 @@ from Components.config import config, ConfigSlider, ConfigSelection, ConfigSubDi
 from Components.About import about
 from Tools.CList import CList
 from Tools.HardwareInfo import HardwareInfo
-from enigma import eAVSwitch, getDesktop
+from enigma import eAVSwitch, eDVBVolumecontrol, getDesktop
 from boxbranding import getBrandOEM
 from Components.SystemInfo import BoxInfo
 import os
@@ -501,7 +501,7 @@ def InitAVSwitch():
 		config.av.yuvenabled = ConfigBoolean(default=False)
 	else:
 		config.av.yuvenabled = ConfigBoolean(default=True)
-	config.av.osd_alpha = ConfigSlider(default=255, increment=5, limits=(20, 255)) # Make openOPD compatible with some plugins who still use config.av.osd_alpha
+	config.av.osd_alpha = ConfigSlider(default=255, increment=5, limits=(20, 255)) # Make openvix compatible with some plugins who still use config.av.osd_alpha
 	colorformat_choices = {"cvbs": _("CVBS"), "rgb": _("RGB"), "svideo": _("S-Video")}
 	# when YUV is not enabled, don't let the user select it
 	if config.av.yuvenabled.value:
@@ -1033,6 +1033,11 @@ def InitAVSwitch():
 			open("/proc/stb/audio/multichannel_pcm", "w").write(configElement.value and "enable" or "disable")
 		config.av.pcm_multichannel = ConfigYesNo(default=False)
 		config.av.pcm_multichannel.addNotifier(setPCMMultichannel)
+
+	def setVolumeStepsize(configElement):
+		eDVBVolumecontrol.getInstance().setVolumeSteps(int(configElement.value))
+	config.av.volume_stepsize = ConfigSelectionNumber(1, 10, 1, default = 5)
+	config.av.volume_stepsize.addNotifier(setVolumeStepsize)
 
 	try:
 		f = open("/proc/stb/audio/ac3_choices", "r")

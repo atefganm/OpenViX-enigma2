@@ -2400,6 +2400,12 @@ msgstr "Audio Sprachwahl 4"
 msgid "Audio options"
 msgstr "Audio Einstellungen"
 
+msgid "Audio volume step size"
+msgstr "Lautstärke Schrittweite"
+
+msgid "Audio volume step size fast mode"
+msgstr "Lautstärke Schrittweite im Schnellmodus"
+
 #, python-format
 msgid "Audio track (%s) format"
 msgstr "Format der Audiospur (%s)"
