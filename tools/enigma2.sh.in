@@ -201,6 +201,11 @@ EOP
 
         new_limit $debugloglimit
 
+# Set time format used to prefix each line in the debug logs.
+DEBUGTIME=`sed -En 's|^config\.crash\.debugTimeFormat=(.+)$|\1|p' "@sysconfdir@/enigma2/settings"`
+[ -n "${DEBUGTIME}" ] || DEBUGTIME="0"
+DEBUG_TIME="${DEBUGTIME}"
+
 # We look for config.crash.debugloglimit in settings
 # (default == /home/root/logs/, see Screens/LogManager.py) and use it:
 #
