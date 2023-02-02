@@ -13,9 +13,9 @@
 
 ## OpenViX python3 is built using oe-alliance build-environment and several git repositories: ##
 
-> [https://github.com/oe-alliance/oe-alliance-core/tree/5.1](https://github.com/oe-alliance/oe-alliance-core/tree/5.1 "OE-Alliance")
+> [https://github.com/oe-alliance/oe-alliance-core/tree/5.2](https://github.com/oe-alliance/oe-alliance-core/tree/5.2 "OE-Alliance")
 > 
-> [https://github.com/OpenViX/enigma2/tree/Release](https://github.com/OpenViX/enigma2/tree/Release "openViX E2")
+> [https://github.com/atefganm/OpenViX-enigma2/tree/Release](https://github.com/atefganm/OpenViX-enigma2/tree/Release "openViX E2")
 
 
 ----------
@@ -76,7 +76,7 @@
 ----------
 10 - Clone oe-alliance git
 
-    git clone https://github.com/oe-alliance/build-enviroment.git -b 5.1
+    git clone https://github.com/oe-alliance/build-enviroment.git -b 5.2
 
 ----------
 11 - Switch to folder build-enviroment
@@ -99,15 +99,15 @@
 ----------
 14 - Building image with feeds  e.g.:- 
 
-	MACHINE=vuultimo4k DISTRO=openvix DISTRO_TYPE=release make image
+	MACHINE=dm920 DISTRO=openvix DISTRO_TYPE=release make image
 
 ----------
 15 - Building an image without feeds (Build time 1-2h)
 
-    MACHINE=zgemmah9combo DISTRO=openvix DISTRO_TYPE=release make enigma2-image
+    MACHINE=dm900 DISTRO=openvix DISTRO_TYPE=release make enigma2-image
 
 ----------
 16 - Building feeds only
 
-    MACHINE=zgemmah9combo DISTRO=openvix DISTRO_TYPE=release make feeds
+    MACHINE=dm820 DISTRO=openvix DISTRO_TYPE=release make feeds
 
