@@ -88,6 +88,10 @@ class PiconLocator:
 			#fallback to 1 for TV services with non-standard service types
 			fields[2] = "1"
 			pngname = self.findPicon("_".join(fields))
+		if not pngname and fields[9] != "0":
+			#fallback to 0 for iptv buffering
+			fields[9] = "0"
+			pngname = self.findPicon('_'.join(fields))
 		if not pngname: # picon by channel name
 			name = sanitizeFilename(eServiceReference(serviceName).getServiceName())			
 			name = re.sub("[^a-z0-9]", "", name.replace("&", "and").replace("+", "plus").replace("*", "star").lower())
