@@ -1,7 +1,7 @@
 from os import listdir
 from os.path import isfile, join as pathjoin
-from boxbranding import getBoxType, getBrandOEM, getDisplayType, getHaveAVJACK, getHaveHDMIinFHD, getHaveHDMIinHD, getHaveRCA, getHaveSCART, getHaveSCARTYUV, getHaveYUV, getImageType, getMachineBrand, getMachineBuild, getMachineMtdRoot, getMachineName, getHaveDVI, getHaveHDMI
-from enigma import Misc_Options, eDVBCIInterfaces, eDVBResourceManager, eGetEnigmaDebugLvl
+from boxbranding import getBoxType, getBrandOEM, getDisplayType, getHaveAVJACK, getHaveHDMIinFHD, getHaveHDMIinHD, getHaveRCA, getHaveSCART, getHaveSCARTYUV, getHaveYUV, getImageType, getMachineBrand, getMachineBuild, getMachineMtdRoot, getMachineName
+from enigma import Misc_Options, eDVBCIInterfaces, eDVBResourceManager
 
 from Components.About import getChipSetString
 from Components.RcModel import rc_model
@@ -9,7 +9,6 @@ from Tools.Directories import fileCheck, fileExists, fileHas, pathExists, resolv
 from Tools.HardwareInfo import HardwareInfo
 
 SystemInfo = {}
-
 
 class BoxInformation:
 	def __init__(self, root=""):
@@ -142,11 +141,11 @@ def setRCFile(source):
 
 SystemInfo["HasRootSubdir"] = False	# This needs to be here so it can be reset by getMultibootslots!
 SystemInfo["RecoveryMode"] = False	# This needs to be here so it can be reset by getMultibootslots!
-SystemInfo["AndroidMode"] = False # This needs to be here so it can be reset by getMultibootslots!	
+SystemInfo["AndroidMode"] = False	# This needs to be here so it can be reset by getMultibootslots!
 SystemInfo["HasMultibootMTD"] = False # This needs to be here so it can be reset by getMultibootslots!
-SystemInfo["HasKexecUSB"] = False # This needs to be here so it can be reset by getMultibootslots!
-SystemInfo["HasKexecMultiboot"] = fileHas("/proc/cmdline", "kexec=1") # This needs to be here so it can be tested by getMultibootslots!
-SystemInfo["HasKexecUSB"] = False # This needs to be here so it can be reset by getMultibootslots!
+SystemInfo["HasKexecUSB"] = False	# This needs to be here so it can be reset by getMultibootslots!
+SystemInfo["HasKexecMultiboot"] = fileHas("/proc/cmdline", "kexec=1")	# This needs to be here so it can be tested by getMultibootslots!
+SystemInfo["HasKexecUSB"] = False	# This needs to be here so it can be reset by getMultibootslots!
 from Tools.Multiboot import getMultibootslots  # This import needs to be here to avoid a SystemInfo load loop!
 SystemInfo["HasHiSi"] = pathExists("/proc/hisi") and getBoxType() not in ("vipertwin", "viper4kv20", "viper4kv40", "sfx6008", "sfx6018")	# This needs to be for later checks
 SystemInfo["canMultiBoot"] = getMultibootslots()
@@ -175,23 +174,6 @@ def hasInitCam():
 		else:
 			pass
 	return False
-
-
-def getModuleLayout():
-	modulePath = BoxInfo.getItem("enigmamodule")
-	if modulePath:
-		process = Popen(("/sbin/modprobe", "--dump-modversions", modulePath), stdout=PIPE, stderr=PIPE, universal_newlines=True)
-		stdout, stderr = process.communicate()
-		if process.returncode == 0:
-			for detail in stdout.split("\n"):
-				if "module_layout" in detail:
-					return detail.split("\t")[0]
-	return None
-
-
-BoxInfo.setItem("DebugLevel", eGetEnigmaDebugLvl())
-BoxInfo.setItem("InDebugMode", eGetEnigmaDebugLvl() >= 4)
-BoxInfo.setItem("ModuleLayout", getModuleLayout(), immutable=True)
 
 SystemInfo["CanKexecVu"] = getBoxType() in ("vusolo4k", "vuduo4k", "vuduo4kse", "vuultimo4k", "vuuno4k", "vuuno4kse", "vuzero4k") and not SystemInfo["HasKexecMultiboot"]
 SystemInfo["HasUsbhdd"] = {}
@@ -297,17 +279,6 @@ SystemInfo["hasRCA"] = getHaveRCA() in ('True',)
 SystemInfo["hasScart"] = getHaveSCART() in ('True',)
 SystemInfo["hasScartYUV"] = getHaveSCARTYUV() in ('True',)
 SystemInfo["hasYUV"] = getHaveYUV() in ('True',)
-SystemInfo["HaveTouchSensor"] = getBoxType() in ("dm520", "dm525", "dm900", "dm920")
-SystemInfo["DefaultDisplayBrightness"] = getBoxType() in ("dm900", "dm920") and 8 or 5
-SystemInfo["HDMIin"] = getMachineBuild() in ("dm7080", "dm820", "dm900", "dm920")
-SystemInfo["HaveRCA"] = getHaveRCA() in ('True',)
-SystemInfo["HaveDVI"] = getHaveDVI() in ('True',)
-SystemInfo["HAVEYUV"] = getHaveYUV() in ('True',)
-SystemInfo["HAVEHDMI"] = getHaveHDMI() in ('True',)
-SystemInfo["HAVESCART"] = getHaveSCART() in ('True',)
-SystemInfo["HAVESCARTYUV"] = getHaveSCARTYUV() in ('True',)
-SystemInfo["HaveAVJACK"] = getHaveAVJACK() in ('True',)
-SystemInfo["RecoveryMode"] = fileCheck("/proc/stb/fp/boot_mode")
 SystemInfo["VideoModes"] = getChipSetString() in (  # 2160p and 1080p capable hardware...
 	"5272s", "7251", "7251s", "7252", "7252s", "7278", "7366", "7376", "7444s", "72604", "3798mv200", "3798cv200", "3798mv200h", "hi3798mv200", "hi3798mv200h", "hi3798mv200advca", "hi3798cv200"
 ) and (
