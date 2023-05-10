@@ -82,6 +82,9 @@ class eDVBServicePMTHandler: public eDVBPMTParser
 	int m_use_decode_demux;
 	uint8_t m_decode_demux_num;
 	ePtr<eTimer> m_no_pat_entry_delay;
+
+	bool m_pmt_ready;
+	bool m_ca_disabled;
 public:
 	eDVBServicePMTHandler();
 	~eDVBServicePMTHandler();
@@ -112,6 +115,7 @@ public:
 		eventHBBTVInfo, /* HBBTV information was detected in the AIT */
 
 		eventStopped,
+		eventChannelAllocated,
 	};
 #ifndef SWIG
 	sigc::signal<void(int)> serviceEvent;
@@ -131,6 +135,9 @@ public:
 	void resetCachedProgram() { m_have_cached_program = false; }
 	void sendEventNoPatEntry();
 	void getHBBTVUrl(std::string &ret) const { ret = m_HBBTVUrl; }
+	void setCaDisable(bool disable) { m_ca_disabled = disable; }
+	void addCaHandler();
+	void removeCaHandler();
 
 	enum serviceType
 	{
