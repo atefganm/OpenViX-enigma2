@@ -193,7 +193,7 @@ int fbClass::SetMode(int nxRes, int nyRes, int nbpp)
 	/* unmap old framebuffer with old size */
 	if (lfb)
 		munmap(lfb, stride * screeninfo.yres_virtual);
-#endi
+#endif
 	if (fbFd < 0) return -1;
 	screeninfo.xres_virtual=screeninfo.xres=nxRes;
 	screeninfo.yres_virtual=(screeninfo.yres=nyRes)*2;
