@@ -58,6 +58,12 @@ AC_ARG_WITH(boxbrand,
 AC_SUBST(BOXBRAND)
 AC_DEFINE_UNQUOTED(BOXBRAND,"$BOXBRAND",[box brand])
 
+AC_ARG_WITH(e2rev,
+	AS_HELP_STRING([--with-e2rev],[value of E2REV, $withval]),
+	[E2REV="$withval"],[E2REV=""])
+AC_SUBST(E2REV)
+AC_DEFINE_UNQUOTED(E2REV,"$E2REV",[enigma2 revision])
+
 AC_ARG_WITH(boxtype,
 	[  --with-boxtype=NAME box type [[none,dm7025,dm800...]]],
 	[BOXTYPE="$withval"],[BOXTYPE="dm800"])
