@@ -1,33 +1,23 @@
 from sys import modules, version_info
-from os import path as ospath
-from time import time
 import socket
 import fcntl
 import struct
 
 from boxbranding import getImageVersion, getMachineBuild, getBoxType
-from Tools.Directories import fileReadLine, fileReadLines
 
-MODULE_NAME = __name__.split(".")[-1]
 
 def getVersionString():
 	return getImageVersion()
 
 
 def getFlashDateString():
-	if ospath.isfile('/etc/install'):
+	try:
 		with open("/etc/install", "r") as f:
 			flashdate = f.read()
-			return flashdate[8:]  + flashdate[4:8] + flashdate[0:4]
-	else:
+			return flashdate
+	except:
 		return _("unknown")
 
-def driversDate(): 
-	string = getDriverDate()
-	year = string[0:4]
-	month = string[4:6]
-	day = string[6:8]
-	return "-".join((year, month, day))
 
 def getEnigmaVersionString():
 	return getImageVersion()
@@ -43,16 +33,16 @@ def getGStreamerVersionString():
 
 
 def getKernelVersionString():
-	if ospath.isfile("/proc/version"):
+	try:
 		with open("/proc/version", "r") as f:
 			kernelversion = f.read().split(" ", 4)[2].split("-", 2)[0]
 			return kernelversion
-	else:
+	except:
 		return _("unknown")
 
 
 def getIsBroadcom():
-	if ospath.isfile("/proc/cpuinfo"):
+	try:
 		with open("/proc/cpuinfo", "r") as file:
 			lines = file.readlines()
 			for x in lines:
@@ -68,7 +58,7 @@ def getIsBroadcom():
 			return True
 		else:
 			return False
-	else:
+	except:
 		return False
 
 
@@ -98,10 +88,9 @@ def getChipSetString():
 			return "unavailable"
 
 
-
 def getCPUSpeedMHzInt():
 	cpu_speed = 0
-	if ospath.isfile("/proc/cpuinfo"):
+	try:
 		with open("/proc/cpuinfo", "r") as file:
 			lines = file.readlines()
 			for x in lines:
@@ -111,11 +100,11 @@ def getCPUSpeedMHzInt():
 					if splitted[0].startswith("cpu MHz"):
 						cpu_speed = float(splitted[1].split(" ")[0])
 						break
-	else:
+	except IOError:
 		print("[About] getCPUSpeedMHzInt, /proc/cpuinfo not available")
 
 	if cpu_speed == 0:
-		if getMachineBuild() in ("h7", "hd51", "sf4008", "osmio4k", "osmio4kplus", "osmini4k"):
+		if getMachineBuild() in ("h7", "hd51", "sf4008"):
 			try:
 				import binascii
 				with open("/sys/firmware/devicetree/base/cpus/cpu@0/clock-frequency", "rb") as f:
@@ -215,7 +204,8 @@ def getCPUString():
 
 
 def getCpuCoresInt():
-	if ospath.isfile("/proc/cpuinfo"):
+	cores = 0
+	try:
 		with open("/proc/cpuinfo", "r") as file:
 			lines = file.readlines()
 			for x in lines:
@@ -224,9 +214,9 @@ def getCpuCoresInt():
 					splitted[1] = splitted[1].replace("\n", "")
 					if splitted[0].startswith("processor"):
 						cores = int(splitted[1]) + 1
-						return cores
-	else:
-		return 0
+	except IOError:
+		pass
+	return cores
 
 
 def getCpuCoresString():
@@ -282,9 +272,11 @@ def getPythonVersionString():
 
 
 def getEnigmaUptime():
+	from time import time
+	import os
 	location = "/etc/enigma2/profile"
 	try:
-		seconds = int(time() - ospath.getmtime(location))
+		seconds = int(time() - os.path.getmtime(location))
 		return formatUptime(seconds)
 	except:
 		return ''
@@ -292,8 +284,9 @@ def getEnigmaUptime():
 
 def getBoxUptime():
 	try:
-		with open("/proc/uptime", "rb") as f:
-			seconds = int(f.readline().split('.')[0])
+		f = open("/proc/uptime", "rb")
+		seconds = int(f.readline().split('.')[0])
+		f.close()
 		return formatUptime(seconds)
 	except:
 		return ''
@@ -316,22 +309,24 @@ def formatUptime(seconds):
 
 
 def getEnigmaUptime():
+	from time import time
+	import os
+	location = "/etc/enigma2/profile"
 	try:
-		seconds = int(time() - ospath.getmtime("/etc/enigma2/profile"))
+		seconds = int(time() - os.path.getmtime(location))
 		return formatUptime(seconds)
 	except:
 		return ''
-
 
 def getBoxUptime():
 	try:
-		with open("/proc/uptime", "rb") as f:
-			seconds = int(f.readline().split('.')[0])
+		f = open("/proc/uptime", "rb")
+		seconds = int(f.readline().split('.')[0])
+		f.close()
 		return formatUptime(seconds)
 	except:
 		return ''
-
-
+		
 def formatUptime(seconds):
 	out = ''
 	if seconds > 86400:
