@@ -4,9 +4,7 @@
 #include <lib/base/init_num.h>
 
 #include <lib/gdi/accel.h>
-#ifdef CONFIG_ION
-#include <lib/gdi/grc.h>
-#endif
+
 #include <time.h>
 
 #ifdef USE_LIBVUGLES2
