@@ -292,6 +292,9 @@ class Harddisk:
 			if os.path.realpath(parts[0]).startswith(self.dev_path):
 				mediapath.append(parts[1])
 		for mpath in mediapath:
+			print("[Harddisk][totalFree]mpath:", mpath)
+			if mpath == "/" and SystemInfo["HasKexecMultiboot"]:
+				continue		
 			free = self.free(mpath)
 			if free > 0:
 				freetot += free
@@ -676,133 +679,6 @@ class Partition:
 		return ""
 
 
-DEVICEDB = \
-	{"dm8000":
-		{
-			"/devices/pci0000:01/0000:01:00.0/host1/target1:0:0/1:0:0:0": _("SATA"),
-			"/devices/platform/brcm-ehci.0/usb1/1-1/1-1.1/1-1.1:1.0": _("Front USB"),
-			"/devices/platform/brcm-ehci.0/usb1/1-1/1-1.1/1-1.1.": _("Front USB"),
-			"/devices/platform/brcm-ehci.0/usb1/1-1/1-1.2/1-1.2:1.0": _("Back, upper USB"),
-			"/devices/platform/brcm-ehci.0/usb1/1-1/1-1.2/1-1.2.": _("Back, upper USB"),
-			"/devices/platform/brcm-ehci.0/usb1/1-1/1-1.3/1-1.3:1.0": _("Back, lower USB"),
-			"/devices/platform/brcm-ehci.0/usb1/1-1/1-1.3/1-1.3.": _("Back, lower USB"),
-			"/devices/platform/brcm-ehci-1.1/usb2/2-1/2-1:1.0/": _("Internal USB"),
-			"/devices/platform/brcm-ohci-1.1/usb4/4-1/4-1:1.0/": _("Internal USB"),
-			"/devices/platform/brcm-ehci.0/usb1/1-1/1-1.4/1-1.4.": _("Internal USB"),
-		},
-	"dm7020hd":
-	{
-		"/devices/pci0000:01/0000:01:00.0/host0/target0:0:0/0:0:0:0": _("SATA"),
-		"/devices/pci0000:01/0000:01:00.0/host1/target1:0:0/1:0:0:0": _("eSATA"),
-		"/devices/platform/brcm-ehci-1.1/usb2/2-1/2-1:1.0": _("Front USB"),
-		"/devices/platform/brcm-ehci-1.1/usb2/2-1/2-1.": _("Front USB"),
-		"/devices/platform/brcm-ehci.0/usb1/1-2/1-2:1.0": _("Back, upper USB"),
-		"/devices/platform/brcm-ehci.0/usb1/1-2/1-2.": _("Back, upper USB"),
-		"/devices/platform/brcm-ehci.0/usb1/1-1/1-1:1.0": _("Back, lower USB"),
-		"/devices/platform/brcm-ehci.0/usb1/1-1/1-1.": _("Back, lower USB"),
-	},
-	"dm7080":
-	{
-		"/devices/pci0000:00/0000:00:00.0/usb9/9-1/": _("Back USB 3.0"),
-		"/devices/pci0000:00/0000:00:00.0/usb9/9-2/": _("Front USB 3.0"),
-		"/devices/platform/ehci-brcm.0/": _("Back, lower USB"),
-		"/devices/platform/ehci-brcm.1/": _("Back, upper USB"),
-		"/devices/platform/ehci-brcm.2/": _("Internal USB"),
-		"/devices/platform/ehci-brcm.3/": _("Internal USB"),
-		"/devices/platform/ohci-brcm.0/": _("Back, lower USB"),
-		"/devices/platform/ohci-brcm.1/": _("Back, upper USB"),
-		"/devices/platform/ohci-brcm.2/": _("Internal USB"),
-		"/devices/platform/ohci-brcm.3/": _("Internal USB"),
-		"/devices/platform/sdhci-brcmstb.0/": _("eMMC"),
-		"/devices/platform/sdhci-brcmstb.1/": _("SD"),
-		"/devices/platform/strict-ahci.0/ata1/": _("SATA"),	# front
-		"/devices/platform/strict-ahci.0/ata2/": _("SATA"),	# back
-	},
-	"dm800":
-	{
-		"/devices/pci0000:01/0000:01:00.0/host0/target0:0:0/0:0:0:0": _("SATA"),
-		"/devices/platform/brcm-ehci.0/usb1/1-2/1-2:1.0": _("Upper USB"),
-		"/devices/platform/brcm-ehci.0/usb1/1-1/1-1:1.0": _("Lower USB"),
-	},
-	"dm820":
-	{
-		"/devices/platform/ehci-brcm.0/": _("Back, lower USB"),
-		"/devices/platform/ehci-brcm.1/": _("Back, upper USB"),
-		"/devices/platform/ehci-brcm.2/": _("Internal USB"),
-		"/devices/platform/ehci-brcm.3/": _("Internal USB"),
-		"/devices/platform/ohci-brcm.0/": _("Back, lower USB"),
-		"/devices/platform/ohci-brcm.1/": _("Back, upper USB"),
-		"/devices/platform/ohci-brcm.2/": _("Internal USB"),
-		"/devices/platform/ohci-brcm.3/": _("Internal USB"),
-		"/devices/platform/sdhci-brcmstb.0/": _("eMMC"),
-		"/devices/platform/sdhci-brcmstb.1/": _("SD"),
-		"/devices/platform/strict-ahci.0/ata1/": _("SATA"),     # front
-		"/devices/platform/strict-ahci.0/ata2/": _("SATA"),     # back
-	},
-	"dm520":
-	{
-		"/devices/platform/ehci-brcm.0/usb1/1-2/": _("Back, outer USB"),
-		"/devices/platform/ohci-brcm.0/usb2/2-2/": _("Back, outer USB"),
-		"/devices/platform/ehci-brcm.0/usb1/1-1/": _("Back, inner USB"),
-		"/devices/platform/ohci-brcm.0/usb2/2-1/": _("Back, inner USB"),
-	},
-	"dm900":
-	{
-		"/devices/platform/brcmstb-ahci.0/ata1/": _("SATA"),
-		"/devices/rdb.4/f03e0000.sdhci/mmc_host/mmc0/": _("eMMC"),
-		"/devices/rdb.4/f03e0200.sdhci/mmc_host/mmc1/": _("SD"),
-		"/devices/rdb.4/f0470600.ohci_v2/usb6/6-0:1.0/port1/": _("Front USB"),
-		"/devices/rdb.4/f0470300.ehci_v2/usb3/3-0:1.0/port1/": _("Front USB"),
-		"/devices/rdb.4/f0471000.xhci_v2/usb2/2-0:1.0/port1/": _("Front USB"),
-		"/devices/rdb.4/f0470400.ohci_v2/usb5/5-0:1.0/port1/": _("Back USB"),
-		"/devices/rdb.4/f0470500.ehci_v2/usb4/4-0:1.0/port1/": _("Back USB"),
-		"/devices/rdb.4/f0471000.xhci_v2/usb2/2-0:1.0/port2/": _("Back USB"),
-	},
-	"dm920":
-	{
-		"/devices/platform/brcmstb-ahci.0/ata1/": _("SATA"),
-		"/devices/rdb.4/f03e0000.sdhci/mmc_host/mmc0/": _("eMMC"),
-		"/devices/rdb.4/f03e0200.sdhci/mmc_host/mmc1/": _("SD"),
-		"/devices/rdb.4/f0470600.ohci_v2/usb6/6-0:1.0/port1/": _("Front USB"),
-		"/devices/rdb.4/f0470300.ehci_v2/usb3/3-0:1.0/port1/": _("Front USB"),
-		"/devices/rdb.4/f0471000.xhci_v2/usb2/2-0:1.0/port1/": _("Front USB"),
-		"/devices/rdb.4/f0470400.ohci_v2/usb5/5-0:1.0/port1/": _("Back USB"),
-		"/devices/rdb.4/f0470500.ehci_v2/usb4/4-0:1.0/port1/": _("Back USB"),
-		"/devices/rdb.4/f0471000.xhci_v2/usb2/2-0:1.0/port2/": _("Back USB"),
-	},
-	"dm800se":
-	{
-		"/devices/pci0000:01/0000:01:00.0/host0/target0:0:0/0:0:0:0": _("SATA"),
-		"/devices/pci0000:01/0000:01:00.0/host1/target1:0:0/1:0:0:0": _("eSATA"),
-		"/devices/platform/brcm-ehci.0/usb1/1-2/1-2:1.0": _("Upper USB"),
-		"/devices/platform/brcm-ehci.0/usb1/1-1/1-1:1.0": _("Lower USB"),
-	},
-	"dm500hd":
-	{
-		"/devices/pci0000:01/0000:01:00.0/host1/target1:0:0/1:0:0:0": _("eSATA"),
-		"/devices/pci0000:01/0000:01:00.0/host0/target0:0:0/0:0:0:0": _("eSATA"),
-	},
-	"dm800sev2":
-	{
-		"/devices/pci0000:01/0000:01:00.0/host0/target0:0:0/0:0:0:0": _("SATA"),
-		"/devices/pci0000:01/0000:01:00.0/host1/target1:0:0/1:0:0:0": _("eSATA"),
-		"/devices/platform/brcm-ehci.0/usb1/1-2/1-2:1.0": _("Upper USB"),
-		"/devices/platform/brcm-ehci.0/usb1/1-1/1-1:1.0": _("Lower USB"),
-	},
-	"dm500hdv2":
-	{
-		"/devices/pci0000:01/0000:01:00.0/host1/target1:0:0/1:0:0:0": _("eSATA"),
-		"/devices/pci0000:01/0000:01:00.0/host0/target0:0:0/0:0:0:0": _("eSATA"),
-	},
-	"dm7025":
-	{
-		"/devices/pci0000:00/0000:00:14.1/ide1/1.0": "Compact Flash", #hdc
-		"/devices/pci0000:00/0000:00:14.1/ide0/0.0": "Internal Harddisk"
-	}
-	}
-
-DEVICEDB["dm525"] = DEVICEDB["dm520"]
-
 class HarddiskManager:
 	def __init__(self):
 		self.hdd = []
@@ -811,65 +687,6 @@ class HarddiskManager:
 		self.on_partition_list_change = CList()
 		self.enumerateBlockDevices()
 		self.enumerateNetworkMounts()
-
-	def getBlockDevInfo(self, blockdev):
-		devpath = "/sys/block/" + blockdev
-		error = False
-		removable = False
-		BLACKLIST=[]
-		if getMachineBuild() in ('gbmv200','multibox','plus','i55se','h9se','h9combo','h9combose','h10','v8plus','hd60','hd61','vuduo4k','ustym4kpro','beyonwizv2','viper4k','dags72604','u51','u52','u53','u532','u533','u54','u56','u57','u5','u5pvr','cc1','sf8008','sf8008m','vuzero4k','et1x000','vuuno4k','vuuno4kse','vuultimo4k','vusolo4k','hd51','hd52','sf4008','dm900','dm7080','dm820', 'gb7252', 'gb72604', 'dags7252', 'vs1500','h7','8100s','et13000','sf5008'):
-			BLACKLIST=["mmcblk0"]
-		elif getMachineBuild() in ('xc7439','osmio4k','osmio4kplus','osmini4k'):
-			BLACKLIST=["mmcblk1"]
-
-		blacklisted = False
-		if blockdev[:7] in BLACKLIST:
-			blacklisted = True
-		if blockdev.startswith("mmcblk") and (re.search(r"mmcblk\dboot", blockdev) or re.search(r"mmcblk\drpmb", blockdev)):
-			blacklisted = True
-		is_cdrom = False
-		partitions = []
-		try:
-			if os.path.exists(devpath + "/removable"):
-				removable = bool(int(readFile(devpath + "/removable")))
-			if os.path.exists(devpath + "/dev"):
-				dev = int(readFile(devpath + "/dev").split(':')[0])
-			else:
-				dev = None
-			devlist = [1, 7, 31, 253, 254] # ram, loop, mtdblock, romblock, ramzswap
-			if dev in devlist:
-				blacklisted = True
-			if blockdev[0:2] == 'sr':
-				is_cdrom = True
-			if blockdev[0:2] == 'hd':
-				try:
-					media = readFile("/proc/ide/%s/media" % blockdev)
-					if "cdrom" in media:
-						is_cdrom = True
-				except IOError:
-					error = True
-			# check for partitions
-			if not is_cdrom and os.path.exists(devpath):
-				for partition in os.listdir(devpath):
-					if partition[0:len(blockdev)] != blockdev:
-						continue
-					if dev == 179 and not re.search(r"mmcblk\dp\d+", partition):
-						continue
-					partitions.append(partition)
-			else:
-				self.cd = blockdev
-		except IOError:
-			error = True
-		# check for medium
-		medium_found = True
-		try:
-			if os.path.exists("/dev/" + blockdev):
-				open("/dev/" + blockdev).close()
-		except IOError as err:
-			if err.errno == 159: # no medium present
-				medium_found = False
-
-		return error, blacklisted, removable, is_cdrom, partitions, medium_found
 
 	def enumerateBlockDevices(self):
 		print("[Harddisk] Enumerating block devices...")
@@ -941,7 +758,10 @@ class HarddiskManager:
 						partitions = [] if len(partitions) > 6 else partitions[4:]
 					print("[Harddisk] len partitions = %s, device = %s" % (len(partitions), device))
 					if len(partitions) != 0:
-						print("[Harddisk] Found storage device '%s' (Removable=%s) NoPartitions = %s." % (device, removable, len(partitions)))
+						if removable:
+							SystemInfo["HasUsbhdd"][device] = len(partitions)
+						print("[Harddisk]2 Found storage device '%s' (Removable=%s) NoPartitions = %s." % (device, removable, len(partitions)))			# [Harddisk] Found storage device 'sdb' (Removable=True) NoPartitions = 1.
+						print("[Harddisk]1 SystemInfo['HasUsbhdd']= %s" % SystemInfo["HasUsbhdd"])
 						self.hdd.append(Harddisk(device, removable))
 						SystemInfo["Harddisk"] = True
 						# self.partitions.append(Partition(mountpoint = self.getMountpoint(device), description = description, force_mounted, device = device))
@@ -949,7 +769,7 @@ class HarddiskManager:
 						for partition in partitions:
 							description = self.getUserfriendlyDeviceName(partition, physicalDevice)
 							print("[Harddisk] Found partition '%s', description='%s', device='%s'." % (partition, description, physicalDevice))
-							part = Partition(mountpoint=self.getMountpoint(partition), description=description, force_mounted=True, device=partition)
+							part = Partition(mountpoint=self.getMountpoint(partition, skiproot = True), description=description, force_mounted=True, device=partition)
 							self.partitions.append(part)
 							# print("[Harddisk] DEBUG: Partition(mountpoint = %s, description = %s, force_mounted = True, device = %s)" % (self.getMountpoint(partition), description, partition))
 							self.on_partition_list_change("add", part)
@@ -1014,10 +834,10 @@ class HarddiskManager:
 			return os.path.join("/media", device)
 		return mnt
 
-	def getMountpoint(self, device):
+	def getMountpoint(self, device, skiproot = None):
 		dev = os.path.join("/dev", device)
 		for item in getProcMounts():
-			if item[0] == dev:
+			if (item[0] == dev and skiproot == None) or (item[0] == dev and skiproot == True and item[1] != "/"):
 				return os.path.join(item[1], "")
 		return None
 
@@ -1061,7 +881,8 @@ class HarddiskManager:
 				if SystemInfo["HasHiSi"] and devMajor == 8 and len(partitions) >= 4:
 					partitions = partitions[4:]
 				if HDDin is False and len(partitions) != 0:
-					print("[Harddisk] Found storage device '%s' (Removable = %s)." % (device, removable))
+					SystemInfo["HasUsbhdd"][device] = len(partitions)
+					print("[Harddisk]2 SystemInfo['HasUsbhdd']= %s" % SystemInfo["HasUsbhdd"])
 					self.hdd.append(Harddisk(hddDev, removable))
 					# print("[Harddisk] DEBUG: Add hotplug HDD device in hddlist. (device = '%s', hdd.device = '%s', hddDev = '%s')" % (device, hdd.device, hddDev))
 					self.hdd.sort()

@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-12-27 23:35+0000\n"
-"PO-Revision-Date: 2023-01-13 16:37+0200\n"
+"PO-Revision-Date: 2023-03-25 11:31+0200\n"
 "Last-Translator: Orlandox\n"
 "Language-Team: timoj/Kojo/Samzam/Orlandox\n"
 "Language: fi\n"
@@ -1132,8 +1132,8 @@ msgid "%s Info - Main Menu"
 msgstr "%s Info - Päävalikko"
 
 #, python-format
-msgid "%s Log ( %s-Version: %s )"
-msgstr "%s Loki ( %s-Versio: %s )"
+msgid "Log %s-%s"
+msgstr "Loki %s-%s"
 
 #, python-format
 msgid "%s files cannot be bulk renamed"
@@ -3073,7 +3073,7 @@ msgid "Cancelled upon user request"
 msgstr "Keskeytetty käyttäjän toimesta"
 
 msgid "Cannot delete current image"
-msgstr "Tiedostoa ei voi poistaa"
+msgstr "Nykyistä imagea ei voi poistaa"
 
 msgid "Cannot determine"
 msgstr "Ei voida määrittää"
@@ -3085,7 +3085,7 @@ msgid "Cannot move to the trash can"
 msgstr "Ei voida siirtää roskakoriin"
 
 msgid "Cannot reboot to deleted image"
-msgstr "Ei voi käynnistää poistettuuun imageen"
+msgstr "Ei voi käynnistää poistettuun imageen"
 
 msgid "Capabilities: "
 msgstr "Kapasiteetit: "
@@ -3472,8 +3472,8 @@ msgid "Clear playlist"
 msgstr "Tyhjennä soittolista"
 
 #, python-format
-msgid "Client Info ( %s-Version: %s )"
-msgstr "Asiakas Info ( %s-Versio: %s )"
+msgid "Client %s-%s"
+msgstr "Asiakas %s-%s"
 
 msgid "Client Mode setup"
 msgstr "Asiakas-tila"
@@ -3937,7 +3937,7 @@ msgid "Connection using the supplied FTP parameters failed. Please recheck the d
 msgstr "Yhdistäminen annetuilla parametreillä epäonnistui. Tarkista asetukset ja yritä uudelleen."
 
 msgid "Constellation & FFT mode"
-msgstr "Konstellaatio & FFT"
+msgstr "Konstellaatio & FFT-tila"
 
 msgid "Consult your SCR device spec sheet for this information."
 msgstr "Katso SCR-laitteen ohjeista tämä tieto."
@@ -4138,6 +4138,9 @@ msgstr "Kroatia"
 
 msgid "Cron Manager"
 msgstr "Cron-manageri"
+
+msgid "Cron Manager Setup"
+msgstr "Cron-managerin asetukset"
 
 msgid "Cron Timers"
 msgstr "Cron-ajastukset"
@@ -5979,10 +5982,10 @@ msgid "Fallback address type"
 msgstr "Etävastaanottimen osoitetyyppi"
 
 msgid "Fallback receiver IP address"
-msgstr "Etälaitteen IP-osoite"
+msgstr "Etävastaanottimen IP-osoite"
 
 msgid "Fallback receiver streaming port"
-msgstr "Etäaitteen striimausportti"
+msgstr "Etävastaanottimen striimausportti"
 
 msgid "Fallback remote receiver URL"
 msgstr "Etävastaanottimen URL-osoite"
@@ -6066,13 +6069,13 @@ msgstr "Fiji"
 #, python-format
 msgid ""
 "File %s.conf not found.\n"
-"Please enter username/password manually."
+"Enter username/password manually."
 msgstr ""
 "Tiedostoa %s.conf ei löytynyt.\n"
 "Syötä käyttäjänimi/salasana manuaalisesti."
 
 msgid "Filename"
-msgstr "Tiedostonnimi"
+msgstr "Tiedostonimi"
 
 msgid "Filesystem Check"
 msgstr "Tiedostojärjestelmän tarkistus"
@@ -6298,7 +6301,7 @@ msgid ""
 "GUI needs a restart to apply a new language\n"
 "Do you want to restart the GUI now?"
 msgstr ""
-"Kieli vaihtuu kun käyttöliittymä on käynnistetty\n"
+"Kieli vaihtuu, kun käyttöliittymä on käynnistetty uudelleen\n"
 "Haluatko käynnistää käyttöliittymän uudelleen nyt?"
 
 msgid ""
@@ -6649,9 +6652,6 @@ msgstr "HDR, 12bit 4:2:0/4:2:2, ei PIP"
 
 msgid "HDR10 Support"
 msgstr "HDR10 Tuki"
-
-msgid "HELP"
-msgstr "APUA"
 
 msgid "HH:mm"
 msgstr "HH:mm"
@@ -8515,6 +8515,9 @@ msgstr "N"
 msgid "N/A"
 msgstr "Ei saatavilla"
 
+msgid "n/a"
+msgstr "Ei saatavilla"
+
 msgid "NEXT"
 msgstr "SEURAAVA"
 
@@ -9614,13 +9617,13 @@ msgstr "Lisää tallenteita kokoelmaan."
 msgid "Please change the recording end time"
 msgstr "Muuta tallennuksen päättymisaika"
 
-msgid "Please choose CCcam-Reader"
+msgid "Choose CCcam-Reader"
 msgstr "Valitse CCcam-lukija"
 
 msgid "Please choose an extension"
 msgstr "Valitse laajennus"
 
-msgid "Please choose reader"
+msgid "Choose reader"
 msgstr "Valitse lukija"
 
 msgid ""
@@ -9877,7 +9880,7 @@ msgid "Plugin manager activity information"
 msgstr "Lisäosien hallinnan asennustiedot"
 
 msgid "Plugin manager help"
-msgstr "Lisäosien hallinan ohje"
+msgstr "Lisäosien hallinnan ohje"
 
 msgid "Plugins"
 msgstr "Plugin-lisäosat"
@@ -10021,7 +10024,7 @@ msgid "PowerControl FrontDisplay Standby Mode"
 msgstr "Etupaneelin virranhallinta valmiustila"
 
 msgid "PowerControl FrontDisplay Suspend Mode"
-msgstr "Etupaneelin virranhallinta jäädytydtila"
+msgstr "Etupaneelin virranhallinta jäädytystila"
 
 msgid "Powerboating"
 msgstr "Moottoriveneily"
@@ -10439,7 +10442,7 @@ msgid "Really reboot into Android Mode?"
 msgstr "Haluatko silti käynnistää uudelleen Android-tilaan?"
 
 msgid "Really reboot into Recovery Mode?"
-msgstr "Haluatko silti käynnistää uudelleen Palautus-tilaan?"
+msgstr "Haluatko silti käynnistää uudelleen Palautustilaan?"
 
 msgid "Really reboot now?"
 msgstr "Haluatko silti käynnistää uudelleen?"
@@ -10554,7 +10557,7 @@ msgid "Recordings, Playback & Timeshift"
 msgstr "Tallennus, toisto ja ajansiirto"
 
 msgid "Recovery Mode"
-msgstr "Palautus-tila"
+msgstr "Palautustila"
 
 msgid "Red"
 msgstr "Punainen"
@@ -11361,7 +11364,7 @@ msgid "Search by first letter of name"
 msgstr "Hae nimen ensimmäisellä kirjaimella"
 
 msgid "Search by name (SMS-style entry on remote)"
-msgstr "Hae nimellä (SMS-tyylinen kaukosäätimen sisääntulo"
+msgstr "Hae nimellä (SMS-tyylinen merkintä kaukosäätimellä)"
 
 msgid "Search channel list, SMS style 2ABC"
 msgstr "Hae kanavalistaa, SMS-tyylinen 2ABC"
@@ -11448,7 +11451,7 @@ msgid "Select 'FBC SCR' if this tuner will connect to a SCR (Unicable/JESS) devi
 msgstr "Valitse 'FBC SCR', jos tämä viritin kytketään SCR (Unicable/JESS) laitteeseen. Kaikille muille kokoonpanoille valitse 'FBC automaattinen'."
 
 msgid "Select 'Standard' to display the standard vertical menu layout, or 'Horizontal' to display the menu items in a row."
-msgstr "Valitsemalla 'Vakio', näkyy vakio pystymallinen valikkosommitelma tai 'Vaakasuora', näkyvät valikon nimikkeet rivissä."
+msgstr "Valitsemalla 'Vakio', näkyy vakio pystymallinen valikkosommitelma tai 'Horisontaali', näkyvät valikon nimikkeet rivissä."
 
 msgid ""
 "Select 'Yes' to delete all languages except English and current language:\n"
@@ -11868,8 +11871,8 @@ msgid "Serious Music"
 msgstr "Vakava Musiikki"
 
 #, python-format
-msgid "Server Info ( %s-Version: %s )"
-msgstr "Palvelin Info ( %s-Versio: %s )"
+msgid "Server %s-%s"
+msgstr "Palvelin %s-%s"
 
 msgid "Server:"
 msgstr "Palvelin:"
@@ -11945,7 +11948,7 @@ msgid "Service off-air"
 msgstr "Kanavalla ei ohjelmaa"
 
 msgid "Service reference"
-msgstr "Referenssi"
+msgstr "Kanavan referenssi"
 
 msgid "Service scan"
 msgstr "Kanavahaku"
@@ -12788,12 +12791,12 @@ msgid "Slot %s / FBC virtual %s"
 msgstr "Korttipaikka %s / FBC virtuaalinen %s"
 
 #, python-format
-msgid "Slot%s %s: %s - %s mode%s"
-msgstr "Paikka%s %s: %s - %s tila%s"
+msgid "Slot%s %s %s: %s - %s mode%s"
+msgstr "Paikka%s %s %s: %s - %s tila%s"
 
 #, python-format
-msgid "Slot%s %s: %s%s"
-msgstr "Paikka%s %s: %s%s"
+msgid "Slot%s %s %s: %s%s"
+msgstr "Paikka%s %s %s: %s%s"
 
 msgid "Slovak"
 msgstr "Slovakia"
@@ -13518,7 +13521,7 @@ msgid "T2MI RAW Mode"
 msgstr "T2MI RAW-tila"
 
 msgid "TB"
-msgstr "Tt"
+msgstr "TB"
 
 msgid "TEXT"
 msgstr "TEKSTI"
@@ -13529,7 +13532,7 @@ msgstr ""
 "Suomenkielinen käännös: timoj, Kojo, Samzam, Orlandox\n"
 "\n"
 "Ylläpito : Orlandox\n"
-"13.01.2022\n"
+"25.03.2023\n"
 "http://www.huoltovalikko.com"
 
 msgid "TS file is too large for ISO9660 level 1!"
@@ -15963,7 +15966,7 @@ msgstr "%s %s käynnistyy uudelleen Android-tilaan"
 
 #, python-format
 msgid "Your %s %s is rebooting into Recovery Mode"
-msgstr "%s %s käynnistyy uudelleen Palautus-tilaan"
+msgstr "%s %s käynnistyy uudelleen Palautustilaan"
 
 #, python-format
 msgid "Your %s %s is shutting down"
@@ -17561,111 +17564,482 @@ msgstr "MAC-liitäntää ei löydy"
 msgid "NetworkInadynSetup"
 msgstr "Inadyn-verkon asetukset"
 
-#~ msgid "10 MB/s"
-#~ msgstr "10 Mt/s"
+msgid "Vu Kexec add USB"
+msgstr "Vu Kexec lisää USB"
 
-#~ msgid "100 MB/s"
-#~ msgstr "100 Mt/s"
+msgid "Initialise a Kexec usb EXT4 slot"
+msgstr "Alusta Kexec USB EXT4 -paikka"
 
-#~ msgid "20 MB/s"
-#~ msgstr "20 Mt/s"
+msgid "[MultiBootSelector][Kexec USB add slot] - No EXT4 USB attached."
+msgstr "[Multiboot valitsin][Kexec USB lisää paikka] - EXT4 USB ei yhdistetty."
 
-#~ msgid "50 MB/s"
-#~ msgstr "50 Mt/s"
+msgid "Size: "
+msgstr "Koko: "
 
-#~ msgid "Background delete option"
-#~ msgstr "Taustalla poistaminen"
+msgid "[MultiBootSelector][Kexec USB add slot] - The USB (%s) must be at least 10MB."
+msgstr "[Multiboot valitsin][Kexec USB lisää paikka] - USB:n (%s) pitää olla vähintään 10MB."
 
-#~ msgid "Background delete speed"
-#~ msgstr "Taustalla poistamisen nopeus"
+msgid "[MultiBootSelector][Kexec USB STARTUP] - created Vu+ Kexec STARTUP slots for %s."
+msgstr "[Multiboot valitsin][Kexec USB käynnistys] - luotu Vu+ Kexec käynnistyspaikat %s:lle."
 
-#~ msgid "Clear HDMI-CEC fixed address"
-#~ msgstr "Tyhjennä HDMI-CEC kiinteä osoite"
+msgid "Vu+ MultiBoot Manager"
+msgstr "Vu+ Multiboot hallinta"
 
-#~ msgid "Clear fixed"
-#~ msgstr "Tyhjennä kiinteä"
+msgid ""
+"Press Green key to enable MultiBoot\n"
+"\n"
+"Will reboot within 10 seconds,\n"
+"unless you have eMMC slots to restore.\n"
+"Restoring eMMC slots can take from 1 -> 5 minutes per slot."
+msgstr ""
+"Paina Vihreää näppäintä ottaaksesi MultiBoot:n käyttöön.\n"
+"\n"
+"Uudelleen käynnistys 10 sekunnin kuluessa, \n"
+"jollei palauteta eMMC-paikkaa.\n"
+"eMMC-paikkojen palautus voi viedä 1 - 5 minuuttia paikkaa kohden."
 
-#~ msgid "Configure on which devices the background delete option should be used."
-#~ msgstr "Määritä millä laitteilla tallenteiden taustalla poistoa käytetään."
+msgid "Init Vu+ MultiBoot"
+msgstr "Alusta Vu+ Multiboot"
 
-#~ msgid "Configure the speed of the background deletion process. Lower speed will consume less hard disk drive performance."
-#~ msgstr "Määrittää taustallatuhoamis-prosessin nopeuden. Matalampi nopeus kuormittaa vähemmän kovalevyä."
+msgid ""
+"Vu+ MultiBoot Initialisation in progress\n"
+"\n"
+"Will reboot after restoring any eMMC slots\n"
+"This can take from 1 -> 5 minutes per slot."
+msgstr ""
+"Vu+ Multiboot alustus käynnissä.\n"
+"\n"
+"Uudelleen käynnistys, kun kaikki eMMC-paikat on palautettu.\n"
+"Tämä voi viedä 1 - 5 minuuttia paikkaa kohden."
 
-#~ msgid "Current CEC address"
-#~ msgstr "Käytettävä CEC-osoite"
+msgid "Enable Vu+ MultiBoot"
+msgstr "Ota Vu+ Multiboot käyttöön"
 
-#, python-format
-#~ msgid "Directory '%s' not valid. Partition not a supported file system."
-#~ msgstr "Hakemisto '%s' ei ole käypä. Partitio ei ole tuettu tiedostomuoto."
+msgid "Add Extra USB slots"
+msgstr "Lisää lisä USB-paikkoja"
 
-#~ msgid "Everywhere"
-#~ msgstr "Kaikkialla"
+msgid "Create USB Multiboot"
+msgstr "Luo USB-Multiboot"
 
-#~ msgid "HDMI-CEC address editing actions"
-#~ msgstr "HDMI-CEC -osoitteen asetukset"
+msgid "[MultiBootSelector][add USB STARTUP slots] - No EXT4 USB attached."
+msgstr "[Multiboot valitsin][lisää USB-Käynnistyspaikkoja] - EXT4 USB ei yhdistetty."
 
-#~ msgid "Internal hdd only"
-#~ msgstr "Vain sisäinen kiintolevy"
+msgid "[MultiBootSelector][add USB STARTUP slots] - The USB (%s) only has %s free. At least 1024MB is required."
+msgstr "[Multiboot valitsin][lisää USB-Käynnistyspaikkoja] - USB (%s), vapaa tila %s. Vapaata pitää olla vähintään 1024MB."
 
-#~ msgid "No data received yet"
-#~ msgstr "Dataa ei ole vielä vastaanotettu"
+msgid "ABOUT"
+msgstr "TIETOJA"
 
-#~ msgid "Select between entering an IP address or a domain."
-#~ msgstr "Valitse syöttämällä IP-osoite tai toimialue."
+msgid "ARROWLEFT"
+msgstr "VASEN NUOLI"
 
-#~ msgid "Select directory for logfile"
-#~ msgstr "Valitse lokitiedoston hakemisto"
+msgid "ARROWRIGHT"
+msgstr "OIKEA NUOLI"
 
-#~ msgid "Service type 4097 incorrect for PiP!"
-#~ msgstr "Palvelun tyyppi 4097 virheellinen PiP:lle!"
+msgid "AUDIO"
+msgstr "AUDIO"
 
-#~ msgid "Set HDMI-CEC fixed address"
-#~ msgstr "Aseta HDMI-CEC:lle kiinteä osoite"
+msgid "AUTOTIMER"
+msgstr "AUTOMAATTIAJASTUS"
 
-#~ msgid "Set fixed"
-#~ msgstr "Aseta kiinteäksi"
+msgid "BACK"
+msgstr "TAKAISIN"
 
-#~ msgid "Set pin code persistent"
-#~ msgstr "Aseta PIN-koodi katselulle"
+msgid "BLUE"
+msgstr "SININEN"
 
-#~ msgid "Skin Setup"
-#~ msgstr "Teeman valinta"
+msgid "BOUQUET+"
+msgstr "SUOSIKKILISTA+"
 
-#~ msgid "There are no items currently available for this screen."
-#~ msgstr "Tälle näytölle ei ole kohteita."
+msgid "BOUQUET-"
+msgstr "SUOSIKKILISTA-"
 
-#~ msgid "Using fixed address"
-#~ msgstr "Käytössä kiinteä osoite"
+msgid "CONTEXT"
+msgstr "KONTEKSTI"
 
-#~ msgid "alpha then oldest"
-#~ msgstr "aakkosjärjestys, vanhin ensin"
+msgid "DOWN"
+msgstr "ALAS"
 
-#~ msgid "alphabetic"
-#~ msgstr "aakkosjärjestys"
+msgid "EJECTCD"
+msgstr "POISTA CD"
 
-#~ msgid "alphabetic reverse"
-#~ msgstr "käänteinen aakkosjärjestys"
+msgid "END"
+msgstr "LOPPU"
 
-#~ msgid "alpharev then newest"
-#~ msgstr "käänteinen aakkosjärjestys, uusin ensin"
+msgid "ENTER"
+msgstr "SYÖTÄ"
 
-#~ msgid "by date"
-#~ msgstr "Aikajärjestys"
+msgid "EPGSETUP"
+msgstr "EPG ASETUKSET"
 
-#~ msgid "flat alphabetic reverse"
-#~ msgstr "Käänteinen aakkosjärjestys, kansionäkymä"
+msgid "EXIT"
+msgstr "EXIT"
 
-#~ msgid "longest"
-#~ msgstr "pisin"
+msgid "FASTFORWARD"
+msgstr "NOPEASTI ETEENPÄIN"
 
-#~ msgid "movie/drama (general)"
-#~ msgstr "elokuva/draama (yleinen)"
+msgid "FAV"
+msgstr "SUOSIKKI"
 
-#~ msgid "recordings by date then other media by name"
-#~ msgstr "Tallennukset päiväyksen mukaan, muu media nimen mukaan"
+msgid "FAVORITES"
+msgstr "SUOSIKIT"
 
-#~ msgid "reverse by date"
-#~ msgstr "Käänteinen aikajärjestys"
+msgid "FORWARD"
+msgstr "ETEENKELAUS"
 
-#~ msgid "shortest"
-#~ msgstr "lyhyin"
+msgid "GREEN"
+msgstr "VIHREÄ"
+
+msgid "HELP"
+msgstr "HELP"
+
+msgid "HISTORY"
+msgstr "HISTORIA"
+
+msgid "HOME"
+msgstr "KOTI"
+
+msgid "HOMEPAGE"
+msgstr "KOTISIVU"
+
+msgid "LAN"
+msgstr "LAN"
+
+msgid "LEFT"
+msgstr "VASEN"
+
+msgid "LIST"
+msgstr "LISTA"
+
+msgid "MEDIA"
+msgstr "MEDIA"
+
+msgid "MUTE"
+msgstr "VAIMENNA"
+
+msgid "NEXTSONG"
+msgstr "SEURAAVA KAPPALE"
+
+msgid "OPTION"
+msgstr "VALINTA"
+
+msgid "PAGEDOWN"
+msgstr "SIVU ALAS"
+
+msgid "PAGEUP"
+msgstr "SIVU YLÖS"
+
+msgid "PAUSE"
+msgstr "TAUKO"
+
+msgid "PLAY"
+msgstr "TOISTA"
+
+msgid "PLAYLIST"
+msgstr "SOITTOLISTA"
+
+msgid "PLAYPAUSE"
+msgstr "TOISTA/TAUKO"
+
+msgid "PLUGIN"
+msgstr "LISÄOSA"
+
+msgid "PORTAL"
+msgstr "PORTAALI"
+
+msgid "POWER"
+msgstr "VIRTA"
+
+msgid "POWER2"
+msgstr "VIRTA2"
+
+msgid "PREVIOUSSONG"
+msgstr "EDELLINEN KAPPALE"
+
+msgid "PVR"
+msgstr "PVR"
+
+msgid "RADIO"
+msgstr "RADIO"
+
+msgid "RECALL"
+msgstr "PALAUTA"
+
+msgid "RECORD"
+msgstr "TALLENNA"
+
+msgid "RED"
+msgstr "PUNAINEN"
+
+msgid "REWIND"
+msgstr "TAKAISINKELAUS"
+
+msgid "RIGHT"
+msgstr "OIKEA"
+
+msgid "SAT"
+msgstr "SAT"
+
+msgid "SCREEN"
+msgstr "NÄYTTÖ"
+
+msgid "SETUP"
+msgstr "ASETUKSET"
+
+msgid "SLEEP"
+msgstr "SAMMUTUS"
+
+msgid "SLOW"
+msgstr "HIDAS"
+
+msgid "STOP"
+msgstr "PYSÄYTÄ"
+
+msgid "SUBTITLE"
+msgstr "TEKSTITYS"
+
+msgid "SUSPEND"
+msgstr "JÄÄDYTYSTILA"
+
+msgid "TIMER"
+msgstr "AJASTIN"
+
+msgid "TIMESHIFT"
+msgstr "AJANSIIRTO"
+
+msgid "UP"
+msgstr "YLÖS"
+
+msgid "VIDEO"
+msgstr "VIDEO"
+
+msgid "VKEY"
+msgstr "VKEY"
+
+msgid "VMODE"
+msgstr "VMODE"
+
+msgid "VOL+"
+msgstr "VOL+"
+
+msgid "VOL-"
+msgstr "VOL-"
+
+msgid "WAKEUP"
+msgstr "HERÄTYS"
+
+msgid "WIZTV"
+msgstr "WIZTV"
+
+msgid "YELLOW"
+msgstr "KELTAINEN"
+
+msgid "ZOOM"
+msgstr "SUURENNA"
+
+msgid "Boot Device%s:\t%s\n"
+msgstr "Boot-laite%s:\t%s\n"
+
+msgid "[MultiBootSelector][Vu+ USB STARTUP] - created STARTUP slots for %s."
+msgstr "[Multiboot valitsin][Vu+ USB Käynnistys] - luotu Käynnistyspaikat %s:lle."
+
+msgid "[VuplusKexec][create Vu Multiboot environment] - Unable to complete, Vu+ Multiboot files missing"
+msgstr "[VuplusKexec][luo Vu Multiboot ympäristö] - Ei saa tehtyä, Vu+ Multiboot -tiedostot puuttuvat"
+
+msgid "Boot Device: \tRecovery Slot\n"
+msgstr "Boot-laite: \tPalautuspaikka\n"
+
+msgid "Add Multiboot USB"
+msgstr "Lisää Multiboot-USB"
+
+msgid "slot %s (%s)"
+msgstr "paikka %s (%s)"
+
+msgid "bootmode = %s"
+msgstr "boot-moodi = %s"
+
+msgid "Image Slot:\tStartup %s - %s %s"
+msgstr "Imagen paikka:\tKäynnistys %s - %s %s"
+
+msgid "Boot Device:\t%s%s\n"
+msgstr "Boot-laite:\t%s%s\n"
+
+msgid "Add 4 more Vu+ Multiboot USB slots after slot %s ?"
+msgstr "Lisää 4 Vu+ Multiboot USB-paikkaa paikan %s jälkeen ?"
+
+msgid "%s%s - Select to access recovery options"
+msgstr "%s%s - Valitse päästäksesi palautusvaihtoehtoihin"
+
+msgid "Cannot delete empty slot"
+msgstr "Tyhjää paikkaa ei voi poistaa"
+
+msgid "Cannot delete slot0 image"
+msgstr "Paikan 0 imagea ei voi poistaa"
+
+msgid "Extended PID info"
+msgstr "Laajennetut PID-tiedot"
+
+msgid "Extended info"
+msgstr "Laajennetut tiedot"
+
+msgid "Basic PID info"
+msgstr "Perus PID-tiedot"
+
+msgid "Basic info"
+msgstr "Perustiedot"
+
+msgid "Tuner setting values"
+msgstr "Virittimen asetusarvot"
+
+msgid "Service info - tuner setting values"
+msgstr "Kanavan tietoja - virittimen asetusarvot"
+
+msgid "Service info"
+msgstr "Kanavan tietoja"
+
+msgid "Service info - service & PIDs"
+msgstr "Kanavan tietoja - kanava & PID:t"
+
+msgid "Codec & lang%s"
+msgstr "Koodekki & kieli%s"
+
+msgid "Namespace & Orbital pos."
+msgstr "Nimiavaruus & kiertoradan sijainti"
+
+msgid "Audio PID%s, codec & lang"
+msgstr "Äänen PID%s, koodekki & kieli"
+
+msgid "Audio PID, codec & lang"
+msgstr "Äänen PID, koodekki & kieli"
+
+msgid "Service info - service & Basic PID Info"
+msgstr "Kanavan tietoja - kanava & perus PID-tiedot"
+
+msgid "Service info - service & Extended PID Info"
+msgstr "Kanavan tietoja - kanava & laajennetut PID-tiedot"
+
+msgid "DVB Subtitles PID & lang"
+msgstr "DVB-tekstityksen PID & kieli"
+
+msgid "TXT Subtitles page & lang"
+msgstr "TXT-tekstityksen sivu & kieli"
+
+msgid "Other Subtitles & lang"
+msgstr "Muut tekstitykset & kieli"
+
+msgid "Service info - tuner live values"
+msgstr "Kanavan tietoja - virittimen tilatiedot"
+
+msgid "Service info - ECM Info"
+msgstr "Kanavan tietoja - ECM-tiedot"
+
+msgid "active"
+msgstr "aktiivinen"
+
+msgid "No ECMPids available (FTA Service)"
+msgstr "ECMPid:jä ei saatavilla (FTA-kanava)"
+
+msgid "Updated: %s"
+msgstr "Päivitetty: %s"
+
+msgid "Oscam/Ncam Info Settings"
+msgstr "OScam/Ncam tietojen asetukset"
+
+msgid "Read Userdata from oscam.conf"
+msgstr "Lue käyttäjätiedot oscam.conf:sta"
+
+msgid "Password (httpuser)"
+msgstr "Salasana (httpuser)"
+
+msgid "Automatically update Client/Server View"
+msgstr "Päivitä asiakas-/palvelinnäkymä automaattisesti"
+
+msgid "Vu+ MultiBoot Initialisation"
+msgstr "Vu+ MultiBoot alustus"
+
+msgid ""
+"Enabling MultiBoot.\n"
+"Note:- restoring eMMC slots takes upto 5 minutes per slot.\n"
+" Receiver will then reboot to setup Wizard.\n"
+" In Wizard finalise Recovery image, or exit and \n"
+" - select restored eMMC image with MultiBootSelector.   \n"
+" or \n"
+" - flash new image into multiboot slot via ImageManager."
+msgstr ""
+"MultiBootin käyttöönotto.\n"
+"Huomautus: - eMMC-paikkojen palauttaminen kestää jopa 5 minuuttia per paikka.\n"
+" Vastaanotin käynnistyy sitten uudelleen ohjatun asennustoiminnon avulla.\n"
+" Viimeistele ohjatussa toiminnossa Palautus-image tai poistu ja \n"
+" - valitse palautettu eMMC-image Multiboot valitsimella. \n"
+" tai \n"
+" - Flashaa uusi image MultiBoot-paikkaan Imagen hallinnoinnin kautta."
+
+msgid "Restoring MultiBoot Slots %s."
+msgstr "MultiBoot-paikkojen palauttaminen %s."
+
+msgid "%s scheduled update"
+msgstr "%s ajoitettu päivitys"
+
+msgid ""
+"%s update is about to start.\n"
+"Do you want to allow this?"
+msgstr ""
+"%s päivitys on alkamassa.\n"
+"Haluatko sallia tämän?"
+
+msgid "Allows you to set a schedule to perform an EPG update."
+msgstr "Voit asettaa ajastuksen EPG-päivityksen suorittamiselle."
+
+msgid "At least one day of the week must be selected"
+msgstr "Vähintään yksi viikonpäivä on valittava"
+
+msgid "Automatic update interval"
+msgstr "Automaattinen päivitysväli"
+
+msgid "Enough Retries, delaying till next schedule."
+msgstr "Riittävästi uudelleenyrityksiä, viivästetään seuraavaan ajastukseen."
+
+msgid "If the receiver was woken from 'Deep Standby' and is currently in 'Standby' and no recordings are in progress return it to 'Deep Standby' once the EPG download has completed."
+msgstr "Jos vastaanotin herätettiin 'Virransäästötilasta' ja se on tällä hetkellä 'Valmiustilassa' eikä tallennuksia ole käynnissä, palauta se 'Virransäästötilaan', kun EPG:n lataus on valmis."
+
+msgid "Label not defined"
+msgstr "Etumerkkiä ei ole määritetty"
+
+msgid "Press OK"
+msgstr "Paina OK"
+
+msgid "Press OK to select which days to perform an EPG download."
+msgstr "Paina OK valitaksesi minä päivinä EPG-lataus suoritetaan."
+
+msgid "Schedule days of the week"
+msgstr "Ajasta viikonpäivät"
+
+msgid "Schedule return to deep standby"
+msgstr "Ajasta paluu virransäästötilaan"
+
+msgid "Schedule scan"
+msgstr "Ajasta skannaus"
+
+msgid "Schedule time of day"
+msgstr "Ajasta kellonaika"
+
+msgid "Schedule wake from deep standby"
+msgstr "Ajasta herätys virransäästötilasta"
+
+msgid "Select days"
+msgstr "Valitse päivät"
+
+msgid "Select provider"
+msgstr "Valitse palveluntarjoaja"
+
+msgid "Set automatic update interval (in hours)."
+msgstr "Aseta automaattinen päivitysväli (tunteina)."
+
+msgid "Set the time of day to perform an EPG download."
+msgstr "Aseta kellonaika EPG-latauksen suoritukselle."
+
+msgid "Vu+ MultiBoot Initialisation - will reboot after 10 seconds."
+msgstr "Vu+ MultiBoot Alustus - käynnistyy uudelleen 10 sekunnin kuluttua."
+
+msgid "Select 'yes' to wake up the receiver from deep standby, or select 'no' to skip the import."
+msgstr "Valitse 'kyllä' herättääksesi vastaanottimen virransäästötilasta tai valitse 'ei' ohittaaksesi tuonnin."

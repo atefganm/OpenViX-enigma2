@@ -54,13 +54,14 @@ class ActionMap:
 
 	def action(self, context, action):
 		if action in self.actions:
-			print("[ActionMap] Keymap '%s' -> Action '%s'." % (context, action))
-			response = self.actions[action]()
-			if response is not None:
-				return response
+			print("[ActionMap] Keymap '%s' -> Action = '%s'." % (context, action))
+			res = self.actions[action]()
+			if res is not None:
+				return res
 			return 1
-		print("[ActionMap] Keymap '%s' -> Unknown action '%s'! (Typo in keymap?)" % (context, action))
-		return 0
+		else:
+			# print("[ActionMap] Keymap '%s' -> Unknown action '%s'! (Typo in keymap?)" % (context, action))
+			return 0
 
 	def destroy(self):
 		pass
@@ -69,11 +70,12 @@ class ActionMap:
 class NumberActionMap(ActionMap):
 	def action(self, contexts, action):
 		if action in ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9") and action in self.actions:
-			response = self.actions[action](int(action))
-			if response is not None:
-				return response
+			res = self.actions[action](int(action))
+			if res is not None:
+				return res
 			return 1
-		return ActionMap.action(self, contexts, action)
+		else:
+			return ActionMap.action(self, contexts, action)
 
 
 class HelpableActionMap(ActionMap):
