@@ -147,29 +147,53 @@ def loadSkin(filename, scope=SCOPE_SKIN, desktop=getDesktop(GUI_SKIN_ID), screen
 	domSkin = fileReadXML(filename)
 	if domSkin:
 		print("[Skin] DEBUG: Extracting non screen blocks from '%s'.  (scope='%s')" % (filename, scope))
-		# For loadSingleSkinData colors, bordersets etc. are applied one after
-		# the other in order of ascending priority.
-		loadSingleSkinData(desktop, screenID, domSkin, filename, scope=scope)
-		for element in domSkin:
-			if element.tag == "screen":  # Process all screen elements.
-				name = element.attrib.get("name", None)
-				if name:  # Without a name, it's useless!
-					scrnID = element.attrib.get("id", None)
-					if scrnID is None or scrnID == screenID:  # If there is a screen ID is it for this display.
-						# print("[Skin] DEBUG: Extracting screen '%s' from '%s'.  (scope='%s')" % (name, filename, scope))
-						domScreens[name] = (element, "%s/" % dirname(filename))
-			elif element.tag == "windowstyle":  # Process the windowstyle element.
-				scrnID = element.attrib.get("id", None)
-				if scrnID is not None:  # Without an scrnID, it is useless!
-					scrnID = int(scrnID)
-					# print("[Skin] DEBUG: Processing a windowstyle ID='%s'." % scrnID)
-					domStyle = ElementTree(Element("skin"))
-					domStyle.getroot().append(element)
-					windowStyles[scrnID] = (desktop, screenID, domStyle.getroot(), filename, scope)
-			# Element is not a screen or windowstyle element so no need for it any longer.
-		reloadWindowStyles()  # Reload the window style to ensure all skin changes are taken into account.
-		print("[Skin] Loading skin file '%s' complete." % filename)
-		return True
+	try:
+		with open(filename, "r") as fd:  # This open gets around a possible file handle leak in Python's XML parser.
+			try:
+				domSkin = xml.etree.cElementTree.parse(fd).getroot()
+				# print("[Skin] DEBUG: Extracting non screen blocks from '%s'.  (scope='%s')" % (filename, scope))
+				# For loadSingleSkinData colors, bordersets etc. are applied one after
+				# the other in order of ascending priority.
+				loadSingleSkinData(desktop, screenID, domSkin, filename, scope=scope)
+				for element in domSkin:
+					if element.tag == "screen":  # Process all screen elements.
+						name = element.attrib.get("name", None)
+						if name:  # Without a name, it's useless!
+							scrnID = element.attrib.get("id", None)
+							if scrnID is None or scrnID == screenID:  # If there is a screen ID is it for this display.
+								# print("[Skin] DEBUG: Extracting screen '%s' from '%s'.  (scope='%s')" % (name, filename, scope))
+								domScreens[name] = (element, "%s/" % dirname(filename))
+					elif element.tag == "windowstyle":  # Process the windowstyle element.
+						scrnID = element.attrib.get("id", None)
+						if scrnID is not None:  # Without an scrnID, it is useless!
+							scrnID = int(scrnID)
+							# print("[Skin] DEBUG: Processing a windowstyle ID='%s'." % scrnID)
+							domStyle = xml.etree.cElementTree.ElementTree(xml.etree.cElementTree.Element("skin"))
+							domStyle.getroot().append(element)
+							windowStyles[scrnID] = (desktop, screenID, domStyle.getroot(), filename, scope)
+					# Element is not a screen or windowstyle element so no need for it any longer.
+				reloadWindowStyles()  # Reload the window style to ensure all skin changes are taken into account.
+				print("[Skin] Loading skin file '%s' complete." % filename)
+				return True
+			except xml.etree.cElementTree.ParseError as err:
+				fd.seek(0)
+				content = fd.readlines()
+				line, column = err.position
+				print("[Skin] XML Parse Error: '%s' in '%s'!" % (err, filename))
+				data = content[line - 1].replace("\t", " ").rstrip()
+				print("[Skin] XML Parse Error: '%s'" % data)
+				print("[Skin] XML Parse Error: '%s^%s'" % ("-" * column, " " * (len(data) - column - 1)))
+			except Exception as err:
+				print("[Skin] Error: Unable to parse skin data in '%s' - %s: '%s'!" % (filename, type(err).__name__, err))
+				import traceback
+				traceback.print_exc()
+	except (IOError, OSError) as err:
+		if err.errno == errno.ENOENT:  # No such file or directory
+			print("[Skin] Warning: Skin file '%s' does not exist!" % filename)
+		else:
+			print("[Skin] Error %d: Opening skin file '%s'! (%s)" % (err.errno, filename, err.strerror))
+	except Exception as err:
+		print("[Skin] Error: Unexpected error opening skin file '%s'! (%s)" % (filename, err))
 	return False
 
 

@@ -15,9 +15,9 @@ class HardwareInfo:
 		try:
 			file = open("/proc/stb/info/model", "r")
 			HardwareInfo.device_name = file.readline().strip()
-			file.close()
 			if getBrandOEM() == "dags":
 				HardwareInfo.device_name = "dm800se"
+			file.close()
 			try:
 				file = open("/proc/stb/info/version", "r")
 				HardwareInfo.device_version = file.readline().strip()
@@ -63,7 +63,7 @@ class HardwareInfo:
 
 	def linux_kernel(self):
 		try:
-			return open("/proc/version","r").read().split(' ', 4)[2].split('-',2)[0]
+			return open("/proc/version", "r").read().split(' ', 4)[2].split('-', 2)[0]
 		except:
 			return "unknown"
 
