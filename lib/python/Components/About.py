@@ -4,7 +4,9 @@ import fcntl
 import struct
 
 from boxbranding import getImageVersion, getMachineBuild, getBoxType
+from Tools.Directories import fileReadLine, fileReadLines
 
+MODULE_NAME = __name__.split(".")[-1]
 
 def getVersionString():
 	return getImageVersion()
@@ -112,6 +114,8 @@ def getCPUSpeedMHzInt():
 					cpu_speed = round(int(binascii.hexlify(clockfrequency), 16) // 1000000, 1)
 			except IOError:
 				cpu_speed = 1700
+		if getMachineBuild() in ("h8", "sfx6008"):
+			cpu_speed = 1200
 		else:
 			try: # Solo4K sf8008
 				with open("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq", "r") as file:
@@ -326,7 +330,7 @@ def getBoxUptime():
 		return formatUptime(seconds)
 	except:
 		return ''
-		
+
 def formatUptime(seconds):
 	out = ''
 	if seconds > 86400:
