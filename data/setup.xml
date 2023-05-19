@@ -312,6 +312,17 @@
 		<item level="2" text="Show CCcam Info in extensions?" description="Allows you to show/hide CCcam Info in extensions -blue button." requires="CCcamInstalled">config.cccaminfo.showInExtensions</item>
 		<item level="2" text="Show OScam/Ncam Info in extensions?" description="Allows you to show/hide OScam/Ncam Info in extensions -blue button." requires="OScamInstalled">config.oscaminfo.showInExtensions</item>
 	</setup>
+	<setup key="oscam/Ncaminfo" title="Oscam/Ncam Info Settings">
+		<item level="0" text="Read Userdata from oscam.conf" description="Read Userdata from oscam.conf">config.oscaminfo.userdatafromconf</item>
+		<if conditional="not config.oscaminfo.userdatafromconf.value">
+			<item level="0" text="Username (httpuser)" description="Username (httpuser)">config.oscaminfo.username</item>
+			<item level="0" text="Password (httpwd)" description="Password (httpuser)">config.oscaminfo.password</item>
+			<item level="0" text="IP address" description="IP address">config.oscaminfo.ip</item>
+			<item level="0" text="Port" description="Port">config.oscaminfo.port</item>
+		</if>
+		<item level="0" text="Automatically update Client/Server View" description="Automatically update Client/Server View">config.oscaminfo.autoupdate</item>
+		<item level="0" text="Update interval (in seconds)" description="Update interval (in seconds)" conditional="config.oscaminfo.autoupdate.value">config.oscaminfo.intervall</item>
+	</setup>	
 	<setup key="softcamscriptsetup" title="">
 		<item level="0" text="SoftcamScript select camscript" description="Select a softcam script from the available list.">config.misc.softcams</item>
 		<item level="0" text="SoftcamScript enable/disable cam restart" description="Allow reinitialisation of selected cam script.">config.misc.softcamrestarts</item>
@@ -324,7 +335,7 @@
 		<item level="2" text="Show Log Manager in extensions list ?" description="Allows you to show/hide Log Manager in extensions (blue button).">config.logmanager.showinextensions</item>
 		<item level="2" text="Maximum number of days" description="Logs older than the specified number of days will be deleted.">config.crash.daysloglimit</item>
 		<item level="2" text="Maximum total space used (MB)" description="When maximum space for all logs is reached, the oldest logs will be deleted.">config.crash.sizeloglimit</item>
-		<item level="2" text="Debug log time format *" description="This sets the prefix for each line in the debug log. The 'Boot time' is the number of seconds since your %s %s was last booted.">config.crash.debugTimeFormat</item>
+		<item level="2" text="Debug log time format *" description="This is the prefix of each entry in the debug log. 'boot time' is the number of seconds since the receiver was last booted.">config.crash.logtimeformat</item>
 	</setup>
 	<setup key="timeshift" title="Timeshift">
 		<item level="0" text="Timeshift location" description="Set the default location for your timeshift files. Press OK to add new locations, LEFT/RIGHT to select any existing locations.">config.usage.timeshift_path</item>
