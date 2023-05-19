@@ -1,5 +1,6 @@
 import errno
 from xml.etree.cElementTree import Element, ElementTree, fromstring
+import xml.etree.cElementTree
 
 from enigma import addFont, eLabel, ePixmap, ePoint, eRect, eSize, eWindow, eWindowStyleManager, eWindowStyleSkinned, getDesktop, gFont, getFontFaces, gMainDC, gRGB, BT_ALPHATEST, BT_ALPHABLEND, BT_HALIGN_CENTER, BT_HALIGN_LEFT, BT_HALIGN_RIGHT, BT_KEEP_ASPECT_RATIO, BT_SCALE, BT_VALIGN_BOTTOM, BT_VALIGN_CENTER, BT_VALIGN_TOP
 from os.path import basename, dirname, isfile, join
@@ -1162,7 +1163,7 @@ def readSkin(screen, skin, names, desktop):
 		print("[Skin] Parsing embedded skin '%s'." % name)
 		if isinstance(skin, tuple):
 			for s in skin:
-				candidate = fromstring(s)
+				candidate = xml.etree.cElementTree.fromstring(s)
 				if candidate.tag == "screen":
 					screenID = candidate.attrib.get("id", None)
 					if (not screenID) or (int(screenID) == DISPLAY_SKIN_ID):
@@ -1171,12 +1172,12 @@ def readSkin(screen, skin, names, desktop):
 			else:
 				print("[Skin] No suitable screen found!")
 		else:
-			myScreen = fromstring(skin)
+			myScreen = xml.etree.cElementTree.fromstring(skin)
 		if myScreen:
 			screen.parsedSkin = myScreen
 	if myScreen is None:
 		print("[Skin] No skin to read or screen to display.")
-		myScreen = screen.parsedSkin = fromstring("<screen></screen>")
+		myScreen = screen.parsedSkin = xml.etree.cElementTree.fromstring("<screen></screen>")
 	screen.skinAttributes = []
 	skinPath = getattr(screen, "skin_path", path)
 	context = SkinContextStack()
