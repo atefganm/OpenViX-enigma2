@@ -18,7 +18,7 @@
 <!-- Define colors -->
 	<colors>
 		<color name="fullred" value="#ff0000" />
-		<color name="yellow" value="#ffff00" />
+		<color name="white" value="#ffffff" />
 		<color name="greenish" value="#04b404" />
 		<color name="lightcyan" value="#7fffff" />
 	</colors>
@@ -35,14 +35,14 @@
 		</widget>
 	</screen>
 
-	<screen name="Yellow_Clock_Panel">
-		<widget source="global.CurrentTime" render="Label" position="140,255" size="200,60" halign="center" font="FdLcD;55" foregroundColor="yellow">
+	<screen name="white_Clock_Panel">
+		<widget source="global.CurrentTime" render="Label" position="140,255" size="200,60" halign="center" font="FdLcD;55" foregroundColor="white">
 			<convert type="ClockToText"></convert>
 		</widget>
 	</screen>
 
 	<screen name="Parent_Title">
-		<widget source="parent.Title" render="Label" position="0,5" size="480,60" font="FdLcD;50" halign="center" valign="center" foregroundColor="yellow" />
+		<widget source="parent.Title" render="Label" position="0,5" size="480,60" font="FdLcD;50" halign="center" valign="center" foregroundColor="white" />
 	</screen>
 
 <!-- main-->
@@ -62,13 +62,13 @@
 
 <!-- setup-->
 	<screen name="SetupSummary" position="0,0" size="480,320">
-		<widget source="SetupTitle" render="Label" position="0,5" size="480,60" font="FdLcD;45" halign="center" valign="center" foregroundColor="yellow" />
+		<widget source="SetupTitle" render="Label" position="0,5" size="480,60" font="FdLcD;45" halign="center" valign="center" foregroundColor="white" />
 		<widget source="SetupEntry" render="Label" position="0,65" size="480,90" font="FdLcD;40" halign="center" valign="center" />
 		<widget source="SetupValue" render="Label" position="0,160" size="480,90" font="FdLcD;35" halign="center" valign="center" />
 	</screen>
 
 	<screen name="InfoBarSummary" position="0,0" size="480,320">
-		<widget source="session.CurrentService" render="Label" position="0,5" size="480,70" font="FdLcD;55" halign="center" valign="center" foregroundColor="yellow" >
+		<widget source="session.CurrentService" render="Label" position="0,5" size="480,70" font="FdLcD;55" halign="center" valign="center" foregroundColor="white" >
 			<convert type="ServiceName">Name</convert>
 		</widget>
 		<widget source="session.Event_Now" render="Label" position="0,70" size="480,90" font="FdLcD;40" halign="center" valign="center" >
@@ -149,7 +149,7 @@
 
 <!-- channelselection-->
 	<screen name="ChannelSelection_summary" position="0,0" size="480,320">
-		<widget source="parent.ServiceEvent" render="Label" position="0,5" size="480,70" font="FdLcD;55" halign="center" valign="center" foregroundColor="yellow" >
+		<widget source="parent.ServiceEvent" render="Label" position="0,5" size="480,70" font="FdLcD;55" halign="center" valign="center" foregroundColor="white" >
 			<convert type="ServiceName">Name</convert>
 		</widget>
 		<widget source="parent.ServiceEvent" render="Label" position="0,70" size="480,90" font="FdLcD;40" halign="center" valign="center" >
@@ -226,7 +226,7 @@
 
 <!-- EPG Screens -->
 	<screen name="EPGSelection_summary" position="0,0" size="480,320">
-		<widget source="parent.Service" render="Label" position="0,5" size="480,70" font="FdLcD;55" halign="center" valign="center" foregroundColor="yellow" >
+		<widget source="parent.Service" render="Label" position="0,5" size="480,70" font="FdLcD;55" halign="center" valign="center" foregroundColor="white" >
 			<convert type="ServiceName">Name</convert>
 		</widget>
 		<widget source="parent.Event" render="Label" position="0,70" size="480,90" font="FdLcD;40" halign="center" valign="center" >
@@ -331,7 +331,7 @@
 
 <!-- standby -->
 	<screen name="StandbySummary" position="0,0" size="480,320">
-		<widget source="global.CurrentTime" render="Label" position="0,5" size="460,80" font="FdLcD;70" noWrap="1" foregroundColor="yellow" halign="center">
+		<widget source="global.CurrentTime" render="Label" position="0,5" size="460,80" font="FdLcD;70" noWrap="1" foregroundColor="white" halign="center">
 			<convert type="ClockToText">ShortDate</convert>
 		</widget>
 		<widget source="global.CurrentTime" render="Label" position="0,105" size="460,220" font="FdLcD;160" noWrap="1" foregroundColor="lightcyan" halign="center">
@@ -341,7 +341,7 @@
 
 <!-- movieplayer-->
 	<screen name="InfoBarMoviePlayerSummary" position="0,0" size="480,320">
-		<widget source="session.CurrentService" render="Label" position="0,5" size="480,120" font="FdLcD;50" halign="center" foregroundColor="yellow">
+		<widget source="session.CurrentService" render="Label" position="0,5" size="480,120" font="FdLcD;50" halign="center" foregroundColor="white">
 			<convert type="ServiceName">Name</convert>
 		</widget>
 		<widget source="session.CurrentService" render="Progress" position="20,170" size="440,20" borderWidth="1">
@@ -354,7 +354,7 @@
 			<convert type="ServicePosition">Remaining</convert>
 		</widget>
 		<widget name="statusicon_summary" position="240,210" zPosition="3" size="50,50" pixmaps="play.png,pause.png,stop.png,forward.png,backward.png,slow.png" />
-		<panel name="Yellow_Clock_Panel" />
+		<panel name="white_Clock_Panel" />
 	</screen>
 
 	<screen name="MovieContextMenuSummary" position="0,0" size="480,320">
@@ -368,7 +368,7 @@
 	</screen>
 
 	<screen name="MovieSelectionSummary" position="0,0" size="480,320">
-		<widget source="parent.Service" render="Label" position="0,5" size="480,160" font="FdLcD;50" halign="center" valign="center" foregroundColor="yellow" >
+		<widget source="parent.Service" render="Label" position="0,5" size="480,160" font="FdLcD;50" halign="center" valign="center" foregroundColor="white" >
 			<convert type="ServiceName">Name</convert>
 		</widget>
 		<widget source="parent.Service" render="Label" position="0,161" size="240,100" font="FdLcD;40" halign="center" valign="bottom" noWrap="0">
@@ -380,7 +380,7 @@
 		</widget>
 		<panel name="SummaryIconsPanel" />
 		<panel name="SummaryTunerStatusPanel" />
-		<panel name="Yellow_Clock_Panel" />
+		<panel name="white_Clock_Panel" />
 	</screen>
 
 <!-- misc-->
@@ -552,21 +552,21 @@
 		<widget source="parent.summary_status" render="Label" position="0,41" size="400,18" font="FdLcD;16" halign="left" noWrap="1" />
 	</screen>
 	<screen name="AutoBouquetsMaker_MenuSummary" position="0,0" size="480,320">
-		<widget source="SetupTitle" render="Label" position="0,5" size="480,70" font="FdLcD;45" halign="center" valign="center" foregroundColor="yellow" />
+		<widget source="SetupTitle" render="Label" position="0,5" size="480,70" font="FdLcD;45" halign="center" valign="center" foregroundColor="white" />
 		<widget source="SetupEntry" render="Label" position="0,71" size="480,90" font="FdLcD;40" halign="center" valign="center" />
 		<widget source="SetupValue" render="Label" position="0,161" size="400,16" font="FdLcD;14" halign="left" transparent="1" />
 	</screen>
 
 <!-- ServiceScanSummary -->
 	<screen name="ServiceScanSummary" position="0,0" size="480,320">
-		<widget name="Title" size="480,70" font="FdLcD;45" halign="center" valign="center" foregroundColor="yellow" />
+		<widget name="Title" size="480,70" font="FdLcD;45" halign="center" valign="center" foregroundColor="white" />
 		<widget name="scan_progress" position="20,75" zPosition="1" borderWidth="2" size="440,20" foregroundColor="#e5b243" />
 		<widget name="Service" position="20,100" size="440,100" font="FdLcD;35" transparent="1" />
 	</screen>
 
 	<!-- NUMBERZAP -->
 	<screen name="NumberZap_summary" position="0,0" size="480,320">
-		<widget source="parent.servicename_summary" render="Label" position="0,5" size="480,70" font="FdLcD;55" halign="center" valign="center" foregroundColor="yellow" />
+		<widget source="parent.servicename_summary" render="Label" position="0,5" size="480,70" font="FdLcD;55" halign="center" valign="center" foregroundColor="white" />
 		<widget source="parent.number_summary" render="Label" position="10,100" size="480,80" foregroundColor="white" font="FdLcD;75" halign="center" valign="center" />
 	</screen>
 
