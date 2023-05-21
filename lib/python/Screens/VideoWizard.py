@@ -195,7 +195,7 @@ class VideoWizard(WizardLanguage, Rc):
 		self.rateSelect(self.selection)
 
 	def rateSelect(self, rate):
-		iAV.setMode(port=self.port, mode=self.mode, rate=rate)
+		self.hw.setMode(port=self.port, mode=self.mode, rate=rate)
 
 	def showTestCard(self, selection=None):
 		if selection is None:
@@ -209,12 +209,12 @@ class VideoWizard(WizardLanguage, Rc):
 	def keyNumberGlobal(self, number):
 		if number in (1, 2, 3):
 			if number == 1:
-				iAV.saveMode("HDMI", "720p", "multi")
+				self.hw.saveMode("HDMI", "720p", "multi")
 			elif number == 2:
-				iAV.saveMode("HDMI", "1080i", "multi")
+				self.hw.saveMode("HDMI", "1080i", "multi")
 			elif number == 3:
-				iAV.saveMode("Scart", "Multi", "multi")
-			iAV.setConfiguredMode()
+				self.hw.saveMode("Scart", "Multi", "multi")
+			self.hw.setConfiguredMode()
 			self.close()
 
 		WizardLanguage.keyNumberGlobal(self, number)
