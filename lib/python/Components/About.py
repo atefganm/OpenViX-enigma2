@@ -4,6 +4,9 @@ import fcntl
 import struct
 
 from boxbranding import getImageVersion, getMachineBuild, getBoxType
+
+from enigma import getEnigmaVersionString
+
 from Tools.Directories import fileReadLine, fileReadLines
 
 MODULE_NAME = __name__.split(".")[-1]
@@ -15,14 +18,19 @@ def getVersionString():
 def getFlashDateString():
 	try:
 		with open("/etc/install", "r") as f:
-			flashdate = f.read()
-			return flashdate
+			Date = f.read()
+			return "%(day)s-%(month)s-%(year)s" % {"year": Date[0:4], "month": Date[4:6], "day": Date[6:8]}
 	except:
 		return _("unknown")
 
 
-def getEnigmaVersionString():
-	return getImageVersion()
+def driversDate(): 
+	Date = getDriverDate()
+	return "%(day)s-%(month)s-%(year)s" % {"year": Date[0:4], "month": Date[4:6], "day": Date[6:8]}
+
+def getLastUpdate():
+	Date = getEnigmaVersionString()
+	return "%(day)s-%(month)s-%(year)s" % {"year": Date[8:], "month": Date[5:7], "day": Date[0:4]}
 
 
 def getGStreamerVersionString():
