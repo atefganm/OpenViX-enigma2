@@ -16,12 +16,11 @@ def getVersionString():
 
 
 def getFlashDateString():
-	try:
+	if ospath.isfile('/etc/install'):
 		with open("/etc/install", "r") as f:
 			return _formatDate(f.read())
 	else:
 		return _("unknown")
-
 
 def driversDate(): 
 	return _formatDate(getDriverDate())
@@ -34,7 +33,6 @@ def _formatDate(Date):
 	from Components.config import config
 	return config.usage.date.dateFormatAbout.value % {"year": Date[0:4], "month": Date[4:6], "day": Date[6:8]}
 
-
 def getGStreamerVersionString():
 	try:
 		from glob import glob
@@ -45,16 +43,16 @@ def getGStreamerVersionString():
 
 
 def getKernelVersionString():
-	try:
+	if ospath.isfile("/proc/version"):
 		with open("/proc/version", "r") as f:
 			kernelversion = f.read().split(" ", 4)[2].split("-", 2)[0]
 			return kernelversion
-	except:
+	else:
 		return _("unknown")
 
 
 def getIsBroadcom():
-	try:
+	if ospath.isfile("/proc/cpuinfo"):
 		with open("/proc/cpuinfo", "r") as file:
 			lines = file.readlines()
 			for x in lines:
@@ -70,7 +68,7 @@ def getIsBroadcom():
 			return True
 		else:
 			return False
-	except:
+	else:
 		return False
 
 
