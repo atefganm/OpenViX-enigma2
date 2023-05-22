@@ -18,22 +18,21 @@ def getVersionString():
 def getFlashDateString():
 	try:
 		with open("/etc/install", "r") as f:
-			Date = f.read()
-			from Components.config import config
-			return config.usage.date.dateFormatAbout.value % {"year": Date[0:4], "month": Date[4:6], "day": Date[6:8]}
-	except:
+			return _formatDate(f.read())
+	else:
 		return _("unknown")
 
 
 def driversDate(): 
-	Date = getDriverDate()
-	from Components.config import config
-	return config.usage.date.dateFormatAbout.value % {"year": Date[0:4], "month": Date[4:6], "day": Date[6:8]}
+	return _formatDate(getDriverDate())
 
 def getLastUpdate():
-	Date = getEnigmaVersionString()
+	return _formatDate(getEnigmaVersionString().replace("-", ""))
+
+def _formatDate(Date):
+	# expected input = "YYYYMMDD"
 	from Components.config import config
-	return config.usage.date.dateFormatAbout.value % {"year": Date[0:4], "month": Date[5:7], "day": Date[8:]}
+	return config.usage.date.dateFormatAbout.value % {"year": Date[0:4], "month": Date[4:6], "day": Date[6:8]}
 
 
 def getGStreamerVersionString():
