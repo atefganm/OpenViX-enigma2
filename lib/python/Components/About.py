@@ -103,7 +103,7 @@ def getChipSetString():
 
 def getCPUSpeedMHzInt():
 	cpu_speed = 0
-	if ospath.isfile("/proc/cpuinfo"):
+	try:
 		with open("/proc/cpuinfo", "r") as file:
 			lines = file.readlines()
 			for x in lines:
@@ -113,11 +113,11 @@ def getCPUSpeedMHzInt():
 					if splitted[0].startswith("cpu MHz"):
 						cpu_speed = float(splitted[1].split(" ")[0])
 						break
-	else:
+	except IOError:
 		print("[About] getCPUSpeedMHzInt, /proc/cpuinfo not available")
 
 	if cpu_speed == 0:
-		if getMachineBuild() in ("h7", "hd51", "sf4008", "osmio4k", "osmio4kplus", "osmini4k"):
+		if getMachineBuild() in ("h7", "hd51", "sf4008"):
 			try:
 				import binascii
 				with open("/sys/firmware/devicetree/base/cpus/cpu@0/clock-frequency", "rb") as f:
@@ -125,6 +125,8 @@ def getCPUSpeedMHzInt():
 					cpu_speed = round(int(binascii.hexlify(clockfrequency), 16) // 1000000, 1)
 			except IOError:
 				cpu_speed = 1700
+		if getMachineBuild() in ("h8", "sfx6008"):
+			cpu_speed = 1200
 		else:
 			try: # Solo4K sf8008
 				with open("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq", "r") as file:
