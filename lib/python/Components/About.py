@@ -94,11 +94,12 @@ def getChipSetString():
 		return "S905D"
 	else:
 		try:
-			if ospath.isfile("/proc/stb/info/chipset"):
-				with open("/proc/stb/info/chipset", "r") as f:
-					return str(f.read().lower().replace("\n", "").replace("brcm", "").replace("bcm", ""))
-			else:
-				return _("unavailable")
+			f = open('/proc/stb/info/chipset', 'r')
+			chipset = f.read()
+			f.close()
+			return str(chipset.lower().replace('\n', '').replace('bcm', '').replace('brcm', '').replace('sti', ''))
+		except IOError:
+			return "unavailable"
 
 
 def getCPUSpeedMHzInt():
