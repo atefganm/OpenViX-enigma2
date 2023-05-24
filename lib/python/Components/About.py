@@ -222,7 +222,8 @@ def getCPUString():
 
 
 def getCpuCoresInt():
-	if ospath.isfile("/proc/cpuinfo"):
+	cores = 0
+	try:
 		with open("/proc/cpuinfo", "r") as file:
 			lines = file.readlines()
 			for x in lines:
@@ -231,9 +232,9 @@ def getCpuCoresInt():
 					splitted[1] = splitted[1].replace("\n", "")
 					if splitted[0].startswith("processor"):
 						cores = int(splitted[1]) + 1
-						return cores
-	else:
-		return 0
+	except IOError:
+		pass
+	return cores
 
 
 def getCpuCoresString():
