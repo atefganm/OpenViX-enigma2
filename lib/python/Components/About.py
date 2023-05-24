@@ -9,6 +9,10 @@ from boxbranding import getDriverDate, getImageVersion, getMachineBuild, getBoxT
 
 from enigma import getEnigmaVersionString
 
+from Tools.Directories import fileReadLine, fileReadLines
+
+MODULE_NAME = __name__.split(".")[-1]
+
 
 def getVersionString():
 	return getImageVersion()
@@ -73,12 +77,27 @@ def getIsBroadcom():
 		return False
 
 
+def getModelString():
+	model = getBoxType()
+	return model
+
+
 def getChipSetString():
-	if ospath.isfile("/proc/stb/info/chipset"):
-		with open("/proc/stb/info/chipset", "r") as f:
-			return str(f.read().lower().replace("\n", "").replace("brcm", "").replace("bcm", ""))
+	if getMachineBuild() in ('dm7080', 'dm820'):
+		return "7435"
+	elif getMachineBuild() in ('dm520', 'dm525'):
+		return "73625"
+	elif getMachineBuild() in ('dm900', 'dm920', 'et13000', 'sf5008'):
+		return "7252S"
+	elif getMachineBuild() in ('hd51', 'vs1500', 'h7'):
+		return "7251S"
+	elif getMachineBuild() in ('alien5',):
+		return "S905D"
 	else:
-		return _("unavailable")
+		chipset = fileReadLine("/proc/stb/info/chipset", source=MODULE_NAME)
+		if chipset is None:
+			return _("Undefined")
+		return str(chipset.lower().replace('\n', '').replace('bcm', '').replace('brcm', '').replace('sti', ''))
 
 
 def getCPUSpeedMHzInt():
