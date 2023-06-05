@@ -499,7 +499,6 @@ void eDBoxLCD::update()
 			write(lcdfd, raw, 64*64);
 		}
 	}
-	dumpLCD2PNG();
 #endif
 }
 
