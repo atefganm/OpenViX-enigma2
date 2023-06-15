@@ -26,7 +26,7 @@ def getFlashDateString():
 		return _("unknown")
 
 
-def driversDate(): 
+def driversDate():
 	return _formatDate(getDriverDate())
 
 
