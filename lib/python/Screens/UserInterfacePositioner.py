@@ -76,26 +76,48 @@ def InitOsdPosition():
 	else:
 		SystemInfo["OsdMenu"] = False
 
+	if getBrandOEM() in ('dreambox'):
+		SystemInfo["CanChangeOsdPosition"] = True
+
 	def setOSDLeft(configElement):
 		if SystemInfo["CanChangeOsdPosition"]:
-			setPositionParameter("left", configElement)
+			if getBrandOEM() in ('dreambox'):
+				f = open("/proc/stb/vmpeg/0/dst_left", "w")
+			else:
+				f = open("/proc/stb/fb/dst_left", "w")
+			f.write('%X' % configElement.value)
+			f.close()
 	config.osd.dst_left.addNotifier(setOSDLeft)
 
 	def setOSDWidth(configElement):
 		if SystemInfo["CanChangeOsdPosition"]:
-			setPositionParameter("width", configElement)
+			if getBrandOEM() in ('dreambox'):
+				f = open("/proc/stb/vmpeg/0/dst_width", "w")
+			else:
+				f = open("/proc/stb/fb/dst_width", "w")
+			f.write('%X' % configElement.value)
+			f.close()
 	config.osd.dst_width.addNotifier(setOSDWidth)
 
 	def setOSDTop(configElement):
 		if SystemInfo["CanChangeOsdPosition"]:
-			setPositionParameter("top", configElement)
+			if getBrandOEM() in ('dreambox'):
+				f = open("/proc/stb/vmpeg/0/dst_top", "w")
+			else:
+				f = open("/proc/stb/fb/dst_top", "w")
+			f.write('%X' % configElement.value)
+			f.close()
 	config.osd.dst_top.addNotifier(setOSDTop)
 
 	def setOSDHeight(configElement):
 		if SystemInfo["CanChangeOsdPosition"]:
-			setPositionParameter("height", configElement)
+			if getBrandOEM() in ('dreambox'):
+				f = open("/proc/stb/vmpeg/0/dst_height", "w")
+			else:
+				f = open("/proc/stb/fb/dst_height", "w")
+			f.write('%X' % configElement.value)
+			f.close()
 	config.osd.dst_height.addNotifier(setOSDHeight)
-	print('[UserInterfacePositioner] Setting OSD position: %s %s %s %s' % (config.osd.dst_left.value, config.osd.dst_width.value, config.osd.dst_top.value, config.osd.dst_height.value))
 
 	def setOSDAlpha(configElement):
 		if SystemInfo["CanChangeOsdAlpha"]:
