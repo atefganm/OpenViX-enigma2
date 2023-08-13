@@ -12,7 +12,7 @@ from enigma import getDesktop
 from os import access, R_OK
 import traceback
 
-from boxbranding import getBoxType
+from boxbranding import getBoxType, getBrandOEM
 
 
 def getFilePath(setting):
