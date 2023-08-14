@@ -21,14 +21,15 @@ def getFilePath(setting):
 	else:
 		return "/proc/stb/fb/dst_%s" % (setting)
 
-# ensure test on SystemInfo["CanChangeOsdPosition"] before calling this
+
 def setPositionParameter(parameter, configElement):
 	f = open(getFilePath(parameter), "w")
 	f.write('%X' % configElement.value)
 	f.close()
-	f = open(getFilePath("apply"), "w")
-	f.write('1')
-	f.close()
+	if fileExists(getFilePath("apply")):
+		f = open(getFilePath("apply"), "w")
+		f.write('1')
+		f.close()
 
 
 def setPositionParameter(parameter, configElement):
