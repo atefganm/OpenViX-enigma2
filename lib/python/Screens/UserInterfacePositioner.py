@@ -63,20 +63,37 @@ def InitOsd():
 	config.osd.show3dextensions = ConfigYesNo(default=False)
 
 	def set3DMode(configElement):
-		if SystemInfo["CanChange3DOsd"] and getBoxType() not in ('spycat'):
-			print('[UserInterfacePositioner] Setting 3D mode:', configElement.value)
-			file3d = fileCheck('/proc/stb/fb/3dmode') or fileCheck('/proc/stb/fb/primary/3d')
-			f = open(file3d, "w")
-			f.write(configElement.value)
-			f.close()
+		if SystemInfo["CanChange3DOsd"]:
+			value = configElement.value
+			print('[UserInterfacePositioner] Setting 3D mode: %s' % str(value))
+			try:
+				if SystemInfo["CanUse3DModeChoices"]:
+					f = open("/proc/stb/fb/3dmode_choices", "r")
+					choices = f.readlines()[0].split()
+					f.close()
+					if value not in choices:
+						if value == "sidebyside":
+							value = "sbs"
+						elif value == "topandbottom":
+							value = "tab"
+						elif value == "auto":
+							value = "off"
+				f = open("/proc/stb/fb/3dmode", "w")
+				f.write(value)
+				f.close()
+			except OSError:
+				pass
 	config.osd.threeDmode.addNotifier(set3DMode)
 
 	def set3DZnorm(configElement):
-		if SystemInfo["CanChange3DOsd"] and getBoxType() not in ('spycat'):
-			print('[UserInterfacePositioner] Setting 3D depth:', configElement.value)
-			f = open("/proc/stb/fb/znorm", "w")
-			f.write('%d' % int(configElement.value))
-			f.close()
+		if SystemInfo["CanChange3DOsd"]:
+			print('[UserInterfacePositioner] Setting 3D depth: %s' % str(configElement.value))
+			try:
+				f = open("/proc/stb/fb/znorm", "w")
+				f.write('%d' % int(configElement.value))
+				f.close()
+			except OSError:
+				pass
 	config.osd.threeDznorm.addNotifier(set3DZnorm)
 
 
@@ -118,12 +135,19 @@ def InitOsdPosition():
 
 	def setOSDAlpha(configElement):
 		if SystemInfo["CanChangeOsdAlpha"]:
-			print('[UserInterfacePositioner] Setting OSD alpha:', str(configElement.value))
+			print('[UserInterfacePositioner] Setting OSD alpha:%s' % str(configElement.value))
 			config.av.osd_alpha.setValue(configElement.value)
-			f = open("/proc/stb/video/alpha", "w")
-			f.write(str(configElement.value))
-			f.close()
+			with open("/proc/stb/video/alpha", "w") as fd:
+				fd.write(str(configElement.value))
 	config.osd.alpha.addNotifier(setOSDAlpha)
+
+	def setOSDPlaneAlpha(configElement):
+		if SystemInfo["CanChangeOsdPlaneAlpha"]:
+			print('[UserInterfacePositioner] Setting OSD plane alpha:%s' % str(configElement.value))
+			config.av.osd_alpha.setValue(configElement.value)
+			with open("/sys/class/graphics/fb0/osd_plane_alpha", "w") as fd:
+				fd.write(hex(int(configElement.value))) # @storm -here int() is required, because of the integer
+	config.osd.alpha.addNotifier(setOSDPlaneAlpha)
 
 
 class UserInterfacePositioner2(Screen, ConfigListScreen):
@@ -359,15 +383,18 @@ class UserInterfacePositioner2(Screen, ConfigListScreen):
 
 	def keyLeft(self):
 		ConfigListScreen.keyLeft(self)
-		self.setPreviewPosition()
+		if SystemInfo["CanChangeOsdPosition"]:
+			self.setPreviewPosition()
 
 	def keyRight(self):
 		ConfigListScreen.keyRight(self)
-		self.setPreviewPosition()
+		if SystemInfo["CanChangeOsdPosition"]:
+			self.setPreviewPosition()
 
 	def keyDefault(self):
 		config.osd.alpha.setValue(255)
 
+	if SystemInfo["CanChangeOsdPosition"]:
 		config.osd.dst_left.setValue(0)
 		config.osd.dst_width.setValue(720)
 		config.osd.dst_top.setValue(0)
@@ -468,15 +495,18 @@ class UserInterfacePositioner(Screen, ConfigListScreen):
 
 	def keyLeft(self):
 		ConfigListScreen.keyLeft(self)
-		self.setPreviewPosition()
+		if SystemInfo["CanChangeOsdPosition"]:
+			self.setPreviewPosition()
 
 	def keyRight(self):
 		ConfigListScreen.keyRight(self)
-		self.setPreviewPosition()
+		if SystemInfo["CanChangeOsdPosition"]:
+			self.setPreviewPosition()
 
 	def keyDefault(self):
 		config.osd.alpha.setValue(255)
 
+	if SystemInfo["CanChangeOsdPosition"]:
 		config.osd.dst_left.setValue(0)
 		config.osd.dst_width.setValue(720)
 		config.osd.dst_top.setValue(0)
