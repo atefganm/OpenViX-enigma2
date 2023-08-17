@@ -394,11 +394,23 @@ class UserInterfacePositioner2(Screen, ConfigListScreen):
 	def keyDefault(self):
 		config.osd.alpha.setValue(255)
 
-	if SystemInfo["CanChangeOsdPosition"]:
-		config.osd.dst_left.setValue(0)
-		config.osd.dst_width.setValue(720)
-		config.osd.dst_top.setValue(0)
-		config.osd.dst_height.setValue(576)
+		if SystemInfo["CanChangeOsdPosition"]:
+			config.osd.dst_width.setValue(720)
+			config.osd.dst_height.setValue(576)
+			config.osd.dst_left.setValue(0)
+			config.osd.dst_top.setValue(0)
+
+			if oldamlmode != amlmode:
+			        config.osd.dst_width.setValue(limits[0])
+			        config.osd.dst_height.setValue(limits[1])
+			        config.osd.dst_left.setValue(limits[2])
+			        config.osd.dst_top.setValue(limits[3])
+			        config.osd.dst_left.save()
+			        config.osd.dst_width.save()
+			        config.osd.dst_top.save()
+			        config.osd.dst_height.save()
+			print("[AVSwitch] Framebuffer mode:%s  stride:%s axis:%s" % (getDesktop(0).size().width(), stride, axis[mode]))
+			return
 		self["config"].l.setList(self.list)
 
 	def setPreviewPosition(self):
@@ -506,14 +518,23 @@ class UserInterfacePositioner(Screen, ConfigListScreen):
 	def keyDefault(self):
 		config.osd.alpha.setValue(255)
 
-	if SystemInfo["CanChangeOsdPosition"]:
-		config.osd.dst_left.setValue(0)
-		config.osd.dst_width.setValue(720)
-		config.osd.dst_top.setValue(0)
-		config.osd.dst_height.setValue(576)
-		for item in self["config"].list:
-			self["config"].invalidate(item)
-		print('[UserInterfacePositioner] Setting default OSD position: %s %s %s %s' % (config.osd.dst_left.value, config.osd.dst_width.value, config.osd.dst_top.value, config.osd.dst_height.value))
+		if SystemInfo["CanChangeOsdPosition"]:
+			config.osd.dst_width.setValue(720)
+			config.osd.dst_height.setValue(576)
+			config.osd.dst_left.setValue(0)
+			config.osd.dst_top.setValue(0)
+			if oldamlmode != amlmode:
+			        config.osd.dst_width.setValue(limits[0])
+			        config.osd.dst_height.setValue(limits[1])
+			        config.osd.dst_left.setValue(limits[2])
+			        config.osd.dst_top.setValue(limits[3])
+			        config.osd.dst_left.save()
+			        config.osd.dst_width.save()
+			        config.osd.dst_top.save()
+			        config.osd.dst_height.save()
+			print("[AVSwitch] Framebuffer mode:%s  stride:%s axis:%s" % (getDesktop(0).size().width(), stride, axis[mode]))
+			return
+		self["config"].l.setList(self.list)
 
 	def setPreviewPosition(self):
 		size_w = getDesktop(0).size().width()
