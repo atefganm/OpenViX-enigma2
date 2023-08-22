@@ -1,15 +1,12 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from Components.config import config, ConfigSlider, ConfigSelection, ConfigSubDict, ConfigYesNo, ConfigEnableDisable, ConfigSubsection, ConfigBoolean, ConfigSelectionNumber, ConfigNothing, NoSave
-from Components.About import about
-from enigma import eAVSwitch, eDVBVolumecontrol, getDesktop
-from boxbranding import getBrandOEM
-from Components.SystemInfo import BoxInfo
-from Tools.Directories import fileReadLine, fileWriteLine
-from Tools.CList import CList
-from Tools.HardwareInfo import HardwareInfo
-import os
+from os.path import exists
+from os import W_OK, access, system
 from time import sleep
+from enigma import eAVControl, eDVBVolumecontrol, getDesktop, iServiceInformation
+from Components.config import ConfigBoolean, ConfigEnableDisable, ConfigInteger, ConfigNothing, ConfigOnOff, ConfigSelection, ConfigSelectionNumber, ConfigSlider, ConfigSubDict, ConfigSubsection, ConfigYesNo, NoSave, config
+from Components.About import about
+from Components.SystemInfo import BoxInfo
+from Tools.CList import CList
+from Tools.Directories import fileReadLine, fileWriteLine
 
 MODULE_NAME = __name__.split(".")[-1]
 BRAND = BoxInfo.getItem("brand")
