@@ -1,7 +1,7 @@
 # shamelessly copied from pliExpertInfo (Vali, Mirakels, Littlesat)
 
 from os import path
-from enigma import iServiceInformation, iPlayableService
+from enigma import eAVControl, iServiceInformation, iPlayableService
 from Components.Converter.Converter import Converter
 from Components.Element import cached
 from Components.config import config
@@ -470,30 +470,14 @@ class PliExtraInfo(Poll, Converter, object):
 		return ""
 
 	def createResolution(self, info):
-		try:
-			yres = int(open("/proc/stb/vmpeg/0/yres", "r").read(), 16)
-			if yres > 4096 or yres == 0:
-				return ""
-		except:
-			return ""
-		try:
-			xres = int(open("/proc/stb/vmpeg/0/xres", "r").read(), 16)
-			if xres > 4096 or xres == 0:
-				return ""
-		except:
-			return ""
-		mode = ""
-		try:
-			mode = "p" if int(open("/proc/stb/vmpeg/0/progressive", "r").read(), 16) else "i"
-		except:
-			pass
-		fps = ""
-		try:
-			fps = str((int(open("/proc/stb/vmpeg/0/framerate", "r").read()) + 500) // 1000)
-		except:
-			pass
-
-		return "%sx%s%s%s" % (xres, yres, mode, fps)
+		avControl = eAVControl.getInstance()
+		video_rate = avControl.getFrameRate(0)
+		video_pol = "p" if avControl.getProgressive() else "i"
+		video_width = avControl.getResolutionX(0)
+		video_height = avControl.getResolutionY(0)
+		fps = str((video_rate + 500) / 1000)
+		gamma = ("SDR", "HDR", "HDR10", "HLG", "")[info.getInfo(iServiceInformation.sGamma)]
+		return str(video_width) + "x" + str(video_height) + video_pol + fps + addspace(gamma)
 
 	def createVideoCodec(self, info):
 		return codec_data.get(info.getInfo(iServiceInformation.sVideoType), _("N/A"))
