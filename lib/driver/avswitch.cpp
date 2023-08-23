@@ -18,6 +18,8 @@ eAVSwitch::eAVSwitch()
 	instance = this;
 	m_video_mode = 0;
 	m_active = false;
+}
+
 
 eAVSwitch::~eAVSwitch()
 {
@@ -30,7 +32,7 @@ eAVSwitch *eAVSwitch::getInstance()
 
 bool eAVSwitch::haveScartSwitch()
 {
-	char tmp[255] = {};
+	char tmp[255];
 	int fd = open("/proc/stb/avs/0/input_choices", O_RDONLY);
 	if(fd < 0) {
 		eDebug("[eAVSwitch] cannot open /proc/stb/avs/0/input_choices: %m");
@@ -39,7 +41,6 @@ bool eAVSwitch::haveScartSwitch()
 	if (read(fd, tmp, 255) < 1)
 	{
 		eDebug("[eAVSwitch] failed to read data from /proc/stb/avs/0/input_choices: %m");
-		return false;
 	}
 	close(fd);
 	return !!strstr(tmp, "scart");
@@ -98,7 +99,7 @@ void eAVSwitch::setColorFormat(int format)
 	if (*fmt == '\0')
 		return; // invalid format
 
-	if ((fd = open("/proc/stb/avs/0/colorformat", O_WRONLY)) < 0) {
+	if ((fd = open("/proc/stb/avs/0/colorformat", O_WRONLY)) < 0) {  //NOSONAR
 		eDebug("[eAVSwitch] cannot open /proc/stb/avs/0/colorformat: %m");
 		return;
 	}
@@ -125,10 +126,18 @@ void eAVSwitch::setAspectRatio(int ratio)
 	const char *policy[] = {"letterbox", "panscan", "bestfit", "panscan", "letterbox", "panscan", "letterbox"};
 
 	int fd;
+#ifdef DREAMNEXTGEN
+	if((fd = open("/sys/class/video/screen_mode", O_WRONLY)) < 0) {
+		eDebug("[eAVSwitch] cannot open /sys/class/video/screen_mode: %m");
+		return;
+	}
+#else
 	if((fd = open("/proc/stb/video/aspect", O_WRONLY)) < 0) {
 		eDebug("[eAVSwitch] cannot open /proc/stb/video/aspect: %m");
 		return;
 	}
+#endif
+
 //	eDebug("set aspect to %s", aspect[ratio]);
 	if (write(fd, aspect[ratio], strlen(aspect[ratio])) < 1)
 	{
@@ -147,6 +156,12 @@ void eAVSwitch::setAspectRatio(int ratio)
 	}
 	close(fd);
 
+//	if((fd = open("/proc/stb/video/policy2", O_WRONLY)) < 0) {
+//		eDebug("cannot open /proc/stb/video/policy2");
+//		return;
+//	}
+//	write(fd, policy[ratio], strlen(policy[ratio]));
+//	close(fd);
 }
 
 void eAVSwitch::setVideomode(int mode)
@@ -183,11 +198,19 @@ void eAVSwitch::setVideomode(int mode)
 	}
 	else
 	{
+#ifdef DREAMNEXTGEN
+		int fd = open("/sys/class/display/mode", O_WRONLY);
+		if(fd < 0) {
+			eDebug("[eAVSwitch] cannot open /sys/class/display/mode: %m");
+			return;
+		}
+#else
 		int fd = open("/proc/stb/video/videomode", O_WRONLY);
 		if(fd < 0) {
 			eDebug("[eAVSwitch] cannot open /proc/stb/video/videomode: %m");
 			return;
 		}
+#endif
 		switch(mode) {
 			case 0:
 				if (write(fd, pal, strlen(pal)) < 1)
