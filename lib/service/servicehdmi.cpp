@@ -53,7 +53,7 @@ RESULT eServiceFactoryHDMI::record(const eServiceReference &ref, ePtr<iRecordabl
 
 RESULT eServiceFactoryHDMI::list(const eServiceReference &, ePtr<iListableService> &ptr)
 {
-	ptr = nullptr;
+	ptr = 0;
 	return -1;
 }
 
@@ -65,7 +65,7 @@ RESULT eServiceFactoryHDMI::info(const eServiceReference &ref, ePtr<iStaticServi
 
 RESULT eServiceFactoryHDMI::offlineOperations(const eServiceReference &, ePtr<iServiceOfflineOperations> &ptr)
 {
-	ptr = nullptr;
+	ptr = 0;
 	return -1;
 }
 
@@ -115,7 +115,7 @@ eServiceHDMI::~eServiceHDMI()
 
 DEFINE_REF(eServiceHDMI);
 
-RESULT eServiceHDMI::connectEvent(const sigc::slot<void(iPlayableService*,int)> &event, ePtr<eConnection> &connection)
+RESULT eServiceHDMI::connectEvent(const sigc::slot2<void,iPlayableService*,int> &event, ePtr<eConnection> &connection)
 {
 	connection = new eConnection((iPlayableService*)this, m_event.connect(event));
 	return 0;
@@ -178,7 +178,14 @@ int eServiceHDMI::getInfo(int w)
 
 std::string eServiceHDMI::getInfoString(int w)
 {
-	return "";
+	switch (w)
+	{
+	case sServiceref:
+		return m_ref.toString();
+	default:
+		break;
+	}
+	return iServiceInformation::getInfoString(w);
 }
 
 ePtr<iServiceInfoContainer> eServiceHDMI::getInfoObject(int w)
@@ -245,8 +252,7 @@ RESULT eServiceHDMIRecord::stop()
 	if (m_state == statePrepared)
 	{
 		m_thread = NULL;
-		if (!m_simulate && eEncoder::getInstance())
-			eEncoder::getInstance()->freeEncoder(m_encoder_fd);
+		if (eEncoder::getInstance()) eEncoder::getInstance()->freeEncoder(m_encoder_fd);
 		m_encoder_fd = -1;
 		m_state = stateIdle;
 	}
@@ -259,9 +265,19 @@ int eServiceHDMIRecord::doPrepare()
 	if (!m_simulate && m_encoder_fd < 0)
 	{
 		if (eEncoder::getInstance())
+		{
+			/*
+			int bitrate = eConfigManager::getConfigIntValue("config.hdmirecord.bitrate", 8 * 1024 * 1024);
+			int width = eConfigManager::getConfigIntValue("config.hdmirecord.width", 1280);
+			int height = eConfigManager::getConfigIntValue("config.hdmirecord.height", 720);
+			int framerate = eConfigManager::getConfigIntValue("config.hdmirecord.framerate", 50000);
+			int interlaced = eConfigManager::getConfigIntValue("config.hdmirecord.interlaced", 0);
+			int aspectratio = eConfigManager::getConfigIntValue("config.hdmirecord.aspectratio", 0);
+			m_encoder_fd = eEncoder::getInstance()->allocateEncoder(m_ref.toString(), m_buffersize, bitrate, width, height, framerate, interlaced, aspectratio);
+			*/
 			m_encoder_fd = eEncoder::getInstance()->allocateHDMIEncoder(m_ref.toString(), m_buffersize);
-		if (m_encoder_fd < 0)
-			return -1;
+		}
+		if (m_encoder_fd < 0) return -1;
 	}
 	m_state = statePrepared;
 	return 0;
@@ -331,7 +347,7 @@ RESULT eServiceHDMIRecord::frontendInfo(ePtr<iFrontendInformation> &ptr)
 	return 0;
 }
 
-RESULT eServiceHDMIRecord::connectEvent(const sigc::slot<void(iRecordableService*,int)> &event, ePtr<eConnection> &connection)
+RESULT eServiceHDMIRecord::connectEvent(const sigc::slot2<void,iRecordableService*,int> &event, ePtr<eConnection> &connection)
 {
 	connection = new eConnection((iRecordableService*)this, m_event.connect(event));
 	return 0;
