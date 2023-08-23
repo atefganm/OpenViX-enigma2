@@ -9,7 +9,7 @@ from Components.config import config, ConfigSubsection, getConfigListEntry, Conf
 from Components.Label import Label
 from Components.Sources.List import List
 from Components.Sources.Boolean import Boolean
-from Components.SystemInfo import SystemInfo
+from Components.SystemInfo import SystemInfo, BoxInfo
 from Components.VolumeControl import VolumeControl
 from Components.PluginComponent import plugins
 from Plugins.Plugin import PluginDescriptor
@@ -215,6 +215,12 @@ class AudioSelection(ConfigListScreen, Screen):
 				self.settings.pcm_multichannel = ConfigOnOff(default=config.av.pcm_multichannel.value)
 				self.settings.pcm_multichannel.addNotifier(self.changePCMMultichannel, initial_call=False)
 				conflist.append(getConfigListEntry(_("PCM multichannel"), self.settings.pcm_multichannel, None))
+
+			if BoxInfo.getItem("Canaudiosource") and BoxInfo.getItem("AmlogicFamily"):
+				choice_list = [("0", _("PCM")), ("1", _("SPDIF")), ("2", _("BLUETOOTH"))]
+				self.settings.audio_source = ConfigSelection(choices=choice_list, default=config.av.audio_source.value)
+				self.settings.audio_source.addNotifier(self.setAudioSource, initial_call=False)
+				conflist.append(getConfigListEntry(_("Audio Source"), self.settings.audio_source, None))
 
 			if SystemInfo["CanBTAudio"]:
 				choice_list = [("off", _("Off")), ("on", _("On"))]
@@ -446,6 +452,10 @@ class AudioSelection(ConfigListScreen, Screen):
 	def changeWMAPro(self, downmix):
 		config.av.wmapro.setValue(downmix.value)
 		config.av.wmapro.save()
+
+	def setAudioSource(self, audiosource):
+		config.av.audio_source.setValue(audiosource.value)
+		config.av.audio_source.save()
 
 	def setAC3plusTranscode(self, transcode):
 		config.av.transcodeac3plus.setValue(transcode.value)
