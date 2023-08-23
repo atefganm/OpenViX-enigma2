@@ -72,13 +72,12 @@ public:
 	int getInfo(int w);
 	std::string getInfoString(int w);
 	ePtr<iServiceInfoContainer> getInfoObject(int w);
-
 	void setQpipMode(bool value, bool audio) { }
 
 private:
 	friend class eServiceFactoryHDMI;
 	eServiceHDMI(eServiceReference ref);
-	sigc::signal2<void,iPlayableService*, int> m_event;
+	sigc::signal<void(iPlayableService*, int)> m_event;
 	eServiceReference m_ref;
 	int m_decoder_index;
 	bool m_noaudio;
@@ -90,7 +89,7 @@ class eServiceHDMIRecord: public eDVBServiceBase, public iRecordableService, pub
 	DECLARE_REF(eServiceHDMIRecord);
 public:
 	eServiceHDMIRecord(const eServiceReference &ref);
-	RESULT connectEvent(const sigc::slot<void,iRecordableService*,int> &event, ePtr<eConnection> &connection);
+	RESULT connectEvent(const sigc::slot<void(iRecordableService*,int)> &event, ePtr<eConnection> &connection);
 	RESULT prepare(const char *filename, time_t begTime, time_t endTime, int eit_event_id, const char *name, const char *descr, const char *tags, bool descramble, bool recordecm, int packetsize);
 	RESULT prepareStreaming(bool descramble = true, bool includeecm = false);
 	RESULT start(bool simulate=false);
@@ -119,7 +118,7 @@ private:
 	int doRecord();
 
 	/* events */
-	sigc::signal2<void,iRecordableService*,int> m_event;
+	sigc::signal<void(iRecordableService*,int)> m_event;
 
 	/* recorder events */
 	void recordEvent(int event);
