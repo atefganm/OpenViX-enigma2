@@ -266,7 +266,6 @@ int eServiceHDMIRecord::doPrepare()
 	if (!m_simulate && m_encoder_fd < 0)
 	{
 		if (eEncoder::getInstance())
-		{
 			m_encoder_fd = eEncoder::getInstance()->allocateHDMIEncoder(m_ref.toString(), m_buffersize);
 		if (m_encoder_fd < 0)
 			return -1;
