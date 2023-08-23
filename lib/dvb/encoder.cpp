@@ -60,12 +60,18 @@ eEncoder::eEncoder()
 
 		for(int index = 0; index < 4; index++) // increase this if machines appear with more than 4 encoding engines
 		{
-			char filename[64];
+			char filename[256];
 
 			snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/decoder", index);
 
 			if (CFile::parseInt(&decoder_index, filename) < 0)
-				break;
+			{
+				// VU+ 
+				snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/demux", index);
+				if (CFile::parseInt(&decoder_index, filename) < 0)
+					break;
+			}
+
 
 			/* the connected video decoder for "Xtrend" transcoding / encoding or for Broadcom HDMI recording */
 			if((navigation_instance_normal = new eNavigation(service_center, decoder_index)) == nullptr)
@@ -130,30 +136,35 @@ int eEncoder::allocateEncoder(const std::string &serviceref, int &buffersize,
 		return(-1);
 	}
 
+	// Fixme : change the encoder parameter for bcm encoding
+
 	if(bcm_encoder)
 	{
 		vcodec_node = "video_codec";
 		acodec_node = "audio_codec";
 		encoder[encoder_index].navigation_instance = encoder[encoder_index].navigation_instance_alternative;
-	}
-	else
-	{
-		vcodec_node = "vcodec";
-		acodec_node = "acodec";
-		encoder[encoder_index].navigation_instance = encoder[encoder_index].navigation_instance_normal;
-	}
 
-	snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/bitrate", encoder_index);
-	CFile::writeInt(filename, bitrate);
+		/*
 
-	snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/width", encoder_index);
-	CFile::writeInt(filename, width);
+		snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/bitrate", encoder_index);
+		CFile::writeInt(filename, bitrate);
 
-	snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/height", encoder_index);
-	CFile::writeInt(filename, height);
+		snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/width", encoder_index);
+		CFile::writeInt(filename, width);
 
-	if(bcm_encoder)
-	{
+		snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/height", encoder_index);
+		CFile::writeInt(filename, height);
+
+		snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/framerate", encoder_index);
+		CFile::writeInt(filename, framerate);
+
+		snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/interlaced", encoder_index);
+		CFile::writeInt(filename, interlaced);
+
+		snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/aspectratio", encoder_index);
+		CFile::writeInt(filename, aspectratio);
+
+
 		snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/display_format", encoder_index);
 
 		if(height > 576)
@@ -163,16 +174,34 @@ int eEncoder::allocateEncoder(const std::string &serviceref, int &buffersize,
 				CFile::write(filename, "576p");
 			else
 				CFile::write(filename, "480p");
+		*/
+
 	}
+	else
+	{
+		vcodec_node = "vcodec";
+		acodec_node = "acodec";
+		encoder[encoder_index].navigation_instance = encoder[encoder_index].navigation_instance_normal;
 
-	snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/framerate", encoder_index);
-	CFile::writeInt(filename, framerate);
+		snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/bitrate", encoder_index);
+		CFile::writeInt(filename, bitrate);
 
-	snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/interlaced", encoder_index);
-	CFile::writeInt(filename, interlaced);
+		snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/width", encoder_index);
+		CFile::writeInt(filename, width);
 
-	snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/aspectratio", encoder_index);
-	CFile::writeInt(filename, aspectratio);
+		snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/height", encoder_index);
+		CFile::writeInt(filename, height);
+
+		snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/framerate", encoder_index);
+		CFile::writeInt(filename, framerate);
+
+		snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/interlaced", encoder_index);
+		CFile::writeInt(filename, interlaced);
+
+		snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/aspectratio", encoder_index);
+		CFile::writeInt(filename, aspectratio);
+
+	}
 
 	if(!vcodec.empty())
 	{
@@ -194,8 +223,12 @@ int eEncoder::allocateEncoder(const std::string &serviceref, int &buffersize,
 		}
 	}
 
-	snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/apply", encoder_index);
-	CFile::writeInt(filename, 1);
+	if(!bcm_encoder) {
+
+		snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/apply", encoder_index);
+		CFile::writeInt(filename, 1);
+
+	}
 
 	if(source_file.empty())
 		encoder[encoder_index].file_fd = -1;
@@ -241,7 +274,6 @@ int eEncoder::allocateEncoder(const std::string &serviceref, int &buffersize,
 				close(encoder[encoder_index].encoder_fd);
 				encoder[encoder_index].encoder_fd = -1;
 				return(-1);
-				break;
 			}
 		}
 	}
@@ -258,85 +290,6 @@ int eEncoder::allocateEncoder(const std::string &serviceref, int &buffersize,
 	}
 
 	return(encoder[encoder_index].encoder_fd);
-}
-
-int eEncoder::allocateHDMIEncoder(const std::string &serviceref, int &buffersize)
-{
-	/* these are hardcoded because they're ignored anyway */
-
-	static const int hdmi_encoding_bitrate = 100000;
-	static const int hdmi_encoding_width = 1280;
-	static const int hdmi_encoding_height = 720;
-	static const int hdmi_encoding_framerate = 25000;
-	static const int hdmi_encoding_interlaced = 0;
-	static const int hdmi_encoding_aspect_ratio = 0;
-	static const char *hdmi_encoding_vcodec = "h264";
-	static const char *hdmi_encoding_acodec = "aac";
-
-	char filename[128];
-	const char *vcodec_node;
-	const char *acodec_node;
-
-	if(bcm_encoder)
-	{
-		vcodec_node = "video_codec";
-		acodec_node = "audio_codec";
-		buffersize = 188 * 256; /* broadcom magic value */
-	}
-	else
-	{
-		vcodec_node = "vcodec";
-		acodec_node = "acodec";
-		buffersize = -1;
-	}
-
-	/* both systems can only use the first encoder for HDMI recording */
-
-	if((encoder.size() < 1) || (encoder[0].state != EncoderContext::state_idle))
-	{
-		eWarning("[eEncoder] no encoders free");
-		return(-1);
-	}
-
-	encoder[0].navigation_instance = encoder[0].navigation_instance_normal;
-
-	CFile::writeInt("/proc/stb/encoder/0/bitrate", hdmi_encoding_bitrate);
-	CFile::writeInt("/proc/stb/encoder/0/width", hdmi_encoding_width);
-	CFile::writeInt("/proc/stb/encoder/0/height", hdmi_encoding_height);
-
-	if(bcm_encoder)
-		CFile::write("/proc/stb/encoder/0/display_format", "720p");
-
-	CFile::writeInt("/proc/stb/encoder/0/framerate", hdmi_encoding_framerate);
-	CFile::writeInt("/proc/stb/encoder/0/interlaced", hdmi_encoding_interlaced);
-	CFile::writeInt("/proc/stb/encoder/0/aspectratio", hdmi_encoding_aspect_ratio);
-
-	snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/%s", 0, vcodec_node);
-	CFile::write(filename, hdmi_encoding_vcodec);
-
-	snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/%s", 0, acodec_node);
-	CFile::write(filename, hdmi_encoding_acodec);
-
-	snprintf(filename, sizeof(filename), "/proc/stb/encoder/%d/apply", 0);
-	CFile::writeInt(filename, 1);
-
-	if(encoder[0].navigation_instance->playService(serviceref) < 0)
-	{
-		eWarning("[eEncoder] navigation->playservice failed");
-		return(-1);
-	}
-
-	snprintf(filename, sizeof(filename), "/dev/%s%d", "encoder", 0);
-
-	if((encoder[0].encoder_fd = open(filename, O_RDONLY)) < 0)
-	{
-		eWarning("[eEncoder] open encoder failed");
-		return(-1);
-	}
-
-	encoder[0].state = EncoderContext::state_running;
-
-	return(encoder[0].encoder_fd);
 }
 
 int eEncoder::allocateHDMIEncoder(const std::string &serviceref, int &buffersize)
