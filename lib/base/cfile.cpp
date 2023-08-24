@@ -28,6 +28,16 @@ int CFile::parseInt(int *result, const char *fileName)
 	return 0;
 }
 
+int CFile::parsePts_t(pts_t *result, const char *filename)
+{
+	CFile f(filename, "r");
+	if (!f)
+		return -1;
+	if (fscanf(f, "%lld", result) != 1)
+		return -2;
+	return 0;
+}
+
 int CFile::writeIntHex(const char *fileName, int value)
 {
 	CFile f(fileName, "w");

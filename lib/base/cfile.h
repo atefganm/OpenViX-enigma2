@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string>
 
+typedef long long pts_t;
+
 /* Wrapper around FILE to prevent leaks and to make your code a bit more OO */
 struct CFile
 {
