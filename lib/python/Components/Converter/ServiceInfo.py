@@ -186,7 +186,6 @@ class ServiceInfo(Poll, Converter):
 			return 0
 		return eAVControl.getInstance().getProgressive()
 
-	def _getProgressiveStr(self, info, convert=lambda x: "" if x else "i"):
 	def _getProgressiveStr(self, info):
 		if self._isHDMIIn(info):
 			return "i"
