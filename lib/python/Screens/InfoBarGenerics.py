@@ -54,7 +54,7 @@ from Tools.KeyBindings import getKeyDescription, getKeyBindingKeys
 
 import NavigationInstance
 
-from enigma import eAVControl, eTimer, eServiceCenter, eDVBServicePMTHandler, iServiceInformation, iPlayableService, eServiceReference, eEPGCache, eActionMap, eDVBVolumecontrol, getDesktop, quitMainloop, eDVBDB
+from enigma import eAVControl, eTimer, eServiceCenter, eDVBServicePMTHandler, iServiceInformation, iPlayableService, iRecordableService, eServiceReference, eEPGCache, eActionMap, eDVBVolumecontrol, getDesktop, quitMainloop, eDVBDB
 from keyids import KEYFLAGS, KEYIDS, KEYIDNAMES
 from Components.AVSwitch import iAVSwitch
 from time import time, localtime, strftime

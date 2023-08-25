@@ -3,7 +3,8 @@ from Screens.Screen import Screen
 from Components.ActionMap import ActionMap
 from Components.config import config, configfile, ConfigSubsection, getConfigListEntry, ConfigSelectionNumber, ConfigSelection, ConfigSlider, ConfigYesNo, NoSave, ConfigNumber, ConfigText
 from Components.ConfigList import ConfigListScreen
-from Components.SystemInfo import BoxInfo
+from Components.Label import Label
+from Components.SystemInfo import SystemInfo, BoxInfo
 from Components.Sources.StaticText import StaticText
 from Components.Pixmap import Pixmap
 from Components.Console import Console
