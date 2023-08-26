@@ -41,7 +41,6 @@ from Screens.ServiceInfo import ServiceInfo
 from Screens.TimerEntry import TimerEntry, addTimerFromEventSilent
 from Screens.VirtualKeyBoard import VirtualKeyBoard
 from ServiceReference import ServiceReference
-from Tools.ServiceReference import service_types_radio_ref, service_types_tv_ref, serviceRefAppendPath, hdmiInServiceRef
 from Tools.Alternatives import GetWithAlternative
 from Tools.BoundFunction import boundFunction
 from Tools.Directories import sanitizeFilename
