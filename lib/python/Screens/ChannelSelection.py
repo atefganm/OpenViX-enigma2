@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-from os import listdir, path, rename, remove
-import os
+from os import listdir, rename, remove, path as os_path
 import re
 from time import localtime, time, strftime
 
-from enigma import eActionMap, eServiceReference, eEPGCache, eServiceCenter, eRCInput, eTimer, ePoint, eDVBDB, iPlayableService, iServiceInformation, getPrevAsciiCode, eEnv, eDVBLocalTimeHandler
+from enigma import eActionMap, eServiceReference, eEPGCache, eServiceCenter, eRCInput, eTimer, ePoint, eDVBDB, iPlayableService, iServiceInformation, getPrevAsciiCode, eDVBLocalTimeHandler
 
 from Tools.Profile import profile
 from Components.ActionMap import ActionMap, HelpableActionMap, HelpableNumberActionMap
@@ -131,7 +130,7 @@ def append_when_current_valid(current, menu, args, level=0, key=""):
 
 
 def removed_userbouquets_available():
-	for file in os.listdir("/etc/enigma2/"):
+	for file in listdir("/etc/enigma2/"):
 		if file.startswith("userbouquet") and file.endswith(".del"):
 			return True
 	return False
@@ -209,7 +208,7 @@ class ChannelContextMenu(Screen):
 						else:
 							_append_when_current_valid(current, menu, actions, (_("Cover dashed flickering line for this service"), self.toggleVBI), level=1)
 						if eDVBDB.getInstance().getCachedPid(eServiceReference(current.toString()), 9) >> 16 not in (-1, eDVBDB.getInstance().getCachedPid(eServiceReference(current.toString()), 2)):
-							#Only show when a DVB subtitle is cached on this service
+							# Only show when a DVB subtitle is cached on this service
 							if eDVBDB.getInstance().getFlag(eServiceReference(current.toString())) & FLAG_CENTER_DVB_SUBS:
 								_append_when_current_valid(current, menu, actions, (_("Do not center DVB subs on this service"), self.removeCenterDVBSubsFlag), level=0, key="bullet")
 							else:
@@ -241,7 +240,7 @@ class ChannelContextMenu(Screen):
 						else:
 							_append_when_current_valid(current, menu, actions, (_("Remove selected satellite"), self.removeSatelliteServices), level=0, key="bullet")
 					if haveBouquets:
-						if not self.inBouquet and not "PROVIDERS" in current_sel_path:
+						if not self.inBouquet and "PROVIDERS" not in current_sel_path:
 							_append_when_current_valid(current, menu, actions, (_("Copy to bouquets"), self.copyCurrentToBouquetList), level=0, key="bullet")
 					if ("flags == %d" % (FLAG_SERVICE_NEW_FOUND)) in current_sel_path:
 						_append_when_current_valid(current, menu, actions, (_("Remove all new found flags"), self.removeAllNewFoundFlags), level=0, key="bullet")
@@ -253,19 +252,19 @@ class ChannelContextMenu(Screen):
 				if current_root and ("flags == %d" % (FLAG_SERVICE_NEW_FOUND)) in current_root.getPath():
 					_append_when_current_valid(current, menu, actions, (_("Remove new found flag"), self.removeNewFoundFlag), level=0, key="bullet")
 			else:
-					if self.parentalControlEnabled:
-						if self.parentalControl.getProtectionLevel(current.toCompareString()) == -1:
-							_append_when_current_valid(current, menu, actions, (_("Add bouquet to parental protection"), boundFunction(self.addParentalProtection, current)), level=0, key="bullet")
-						else:
-							_append_when_current_valid(current, menu, actions, (_("Remove bouquet from parental protection"), boundFunction(self.removeParentalProtection, current)), level=0, key="bullet")
-					menu.append(ChoiceEntryComponent(text=(_("Add bouquet"), self.showBouquetInputBox), key="bullet"))
-					_append_when_current_valid(current, menu, actions, (_("Rename entry"), self.renameEntry), level=0, key="8")
-					_append_when_current_valid(current, menu, actions, (_("Remove entry"), self.removeEntry), level=0, key="9")
-					self.removeFunction = self.removeBouquet
-					if removed_userbouquets_available():
-						_append_when_current_valid(current, menu, actions, (_("Purge deleted user bouquets"), self.purgeDeletedBouquets), level=0, key="bullet")
-						_append_when_current_valid(current, menu, actions, (_("Restore deleted user bouquets"), self.restoreDeletedBouquets), level=0, key="bullet")
-		if self.inBouquet: # current list is editable?
+				if self.parentalControlEnabled:
+					if self.parentalControl.getProtectionLevel(current.toCompareString()) == -1:
+						_append_when_current_valid(current, menu, actions, (_("Add bouquet to parental protection"), boundFunction(self.addParentalProtection, current)), level=0, key="bullet")
+					else:
+						_append_when_current_valid(current, menu, actions, (_("Remove bouquet from parental protection"), boundFunction(self.removeParentalProtection, current)), level=0, key="bullet")
+				menu.append(ChoiceEntryComponent(text=(_("Add bouquet"), self.showBouquetInputBox), key="bullet"))
+				_append_when_current_valid(current, menu, actions, (_("Rename entry"), self.renameEntry), level=0, key="8")
+				_append_when_current_valid(current, menu, actions, (_("Remove entry"), self.removeEntry), level=0, key="9")
+				self.removeFunction = self.removeBouquet
+				if removed_userbouquets_available():
+					_append_when_current_valid(current, menu, actions, (_("Purge deleted user bouquets"), self.purgeDeletedBouquets), level=0, key="bullet")
+					_append_when_current_valid(current, menu, actions, (_("Restore deleted user bouquets"), self.restoreDeletedBouquets), level=0, key="bullet")
+		if self.inBouquet:  # current list is editable?
 			if csel.bouquet_mark_edit == OFF:
 				if csel.movemode:
 					_append_when_current_valid(current, menu, actions, (_("Disable move mode"), self.toggleMoveMode), level=0, key="red")
@@ -417,19 +416,19 @@ class ChannelContextMenu(Screen):
 
 	def purgeDeletedBouquetsCallback(self, answer):
 		if answer:
-			for file in os.listdir("/etc/enigma2/"):
+			for file in listdir("/etc/enigma2/"):
 				if file.startswith("userbouquet") and file.endswith(".del"):
 					file = "/etc/enigma2/" + file
 					print("[ChannelSelection] permantly remove file ", file)
-					os.remove(file)
+					remove(file)
 			self.close()
 
 	def restoreDeletedBouquets(self):
-		for file in os.listdir("/etc/enigma2/"):
+		for file in listdir("/etc/enigma2/"):
 			if file.startswith("userbouquet") and file.endswith(".del"):
 				file = "/etc/enigma2/" + file
 				print("[ChannelSelection] restore file ", file[:-4])
-				os.rename(file, file[:-4])
+				rename(file, file[:-4])
 		eDVBDBInstance = eDVBDB.getInstance()
 		eDVBDBInstance.setLoadUnlinkedUserbouquets(True)
 		eDVBDBInstance.reloadBouquets()
@@ -532,10 +531,10 @@ class ChannelContextMenu(Screen):
 		if self.session.pipshown:
 			del self.session.pip
 			if SystemInfo["LCDMiniTVPiP"] and int(config.lcd.minitvpipmode.value) >= 1:
-				print("[LCDMiniTV] disable PIP")
-				f = open("/proc/stb/lcd/mode", "w")
-				f.write(config.lcd.minitvmode.value)
-				f.close()
+					print("[LCDMiniTV] disable PIP")
+					f = open("/proc/stb/lcd/mode", "w")
+					f.write(config.lcd.minitvmode.value)
+					f.close()
 		self.session.pip = self.session.instantiateDialog(PictureInPicture)
 		self.session.pip.setAnimationMode(0)
 		self.session.pip.show()
@@ -910,7 +909,7 @@ class ChannelSelectionEdit:
 			}, description=_("Menu"))
 
 	def getMutableList(self, root=eServiceReference()):
-		if not self.mutableList is None:
+		if self.mutableList is not None:
 			return self.mutableList
 		serviceHandler = eServiceCenter.getInstance()
 		if not root.valid():
@@ -983,7 +982,7 @@ class ChannelSelectionEdit:
 		if mutableBouquet:
 			servicename = cur_service.getServiceName()
 			name = sanitizeFilename(servicename)
-			while os.path.isfile((self.mode == MODE_TV and '/etc/enigma2/alternatives.%s.tv' or '/etc/enigma2/alternatives.%s.radio') % name):
+			while os_path.isfile((self.mode == MODE_TV and '/etc/enigma2/alternatives.%s.tv' or '/etc/enigma2/alternatives.%s.radio') % name):
 				name = name.rsplit('_', 1)
 				name = ('_').join((name[0], len(name) == 2 and name[1].isdigit() and str(int(name[1]) + 1) or '1'))
 			new_ref = ServiceReference((self.mode == MODE_TV and '1:134:1:0:0:0:0:0:0:0:FROM BOUQUET "alternatives.%s.tv" ORDER BY bouquet' or '1:134:1:0:0:0:0:0:0:0:FROM BOUQUET "alternatives.%s.radio" ORDER BY bouquet') % name)
@@ -1018,7 +1017,7 @@ class ChannelSelectionEdit:
 		if mutableBouquetList:
 			bName += ' ' + (_("(TV)") if self.mode == MODE_TV else _("(Radio)"))
 			name = sanitizeFilename(bName)
-			while os.path.isfile((self.mode == MODE_TV and '/etc/enigma2/userbouquet.%s.tv' or '/etc/enigma2/userbouquet.%s.radio') % name):
+			while os_path.isfile((self.mode == MODE_TV and '/etc/enigma2/userbouquet.%s.tv' or '/etc/enigma2/userbouquet.%s.radio') % name):
 				name = name.rsplit('_', 1)
 				name = ('_').join((name[0], len(name) == 2 and name[1].isdigit() and str(int(name[1]) + 1) or '1'))
 			new_bouquet_ref = eServiceReference((self.mode == MODE_TV and '1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.%s.tv" ORDER BY bouquet' or '1:7:2:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.%s.radio" ORDER BY bouquet') % name)
@@ -1082,9 +1081,9 @@ class ChannelSelectionEdit:
 			self.servicelist.moveUp()
 
 	def removeBouquet(self):
-		refstr = self.getCurrentSelection().toString()
-		pos = refstr.find('FROM BOUQUET "')
-		filename = None
+		# refstr = self.getCurrentSelection().toString()  # this code appears to be dead
+		# pos = refstr.find('FROM BOUQUET "')  # this code appears to be dead
+		# filename = None  # this code appears to be dead
 		self.removeCurrentService(bouquet=True)
 
 	def removeSatelliteService(self):
@@ -1228,7 +1227,7 @@ class ChannelSelectionEdit:
 
 	def addServiceToBouquet(self, dest, service=None):
 		mutableList = self.getMutableList(dest)
-		if not mutableList is None:
+		if mutableList is not None:
 			if service is None: #use current selected service
 				service = self.servicelist.getCurrent()
 			if not mutableList.addService(service):
@@ -1335,7 +1334,7 @@ service_types_radio = '1:7:2:0:0:0:0:0:0:0:(type == 2) || (type == 10)'
 
 class ChannelSelectionBase(Screen, HelpableScreen):
 
-	orbposReStr = "\(satellitePosition *== *(\d+)"
+	orbposReStr = "\(satellitePosition *== *(\d+)"  # noqa: W605
 	orbposRe = None  # Lazy compilation
 
 	def __init__(self, session):
@@ -1408,7 +1407,6 @@ class ChannelSelectionBase(Screen, HelpableScreen):
 	def getBouquetNumOffset(self, bouquet):
 		if not config.usage.multibouquet.value:
 			return 0
-		str = bouquet.toString()
 		offset = 0
 		if 'userbouquet.' in bouquet.toCompareString():
 			serviceHandler = eServiceCenter.getInstance()
@@ -1443,10 +1441,10 @@ class ChannelSelectionBase(Screen, HelpableScreen):
 		self.mode = MODE_TV
 		self.servicePath = self.servicePathTV
 		self.recallBouquetMode()
-#		title = self.maintitle
-#		pos = title.find(" (")
-#		if pos != -1:
-#			title = title[:pos]
+		# title = self.maintitle
+		# pos = title.find(" (")
+		# if pos != -1:
+		# 	title = title[:pos]
 		title = ' ' + _('(TV)')
 		self.setTitle(title)
 
@@ -1454,10 +1452,10 @@ class ChannelSelectionBase(Screen, HelpableScreen):
 		self.mode = MODE_RADIO
 		self.servicePath = self.servicePathRadio
 		self.recallBouquetMode()
-#		title = self.maintitle
-#		pos = title.find(" (")
-#		if pos != -1:
-#			title = title[:pos]
+		# title = self.maintitle
+		# pos = title.find(" (")
+		# if pos != -1:
+		# 	title = title[:pos]
 		title = ' ' + _('(Radio)')
 		self.setTitle(title)
 
@@ -2040,9 +2038,8 @@ class ChannelSelection(ChannelSelectionEdit, ChannelSelectionBase, ChannelSelect
 			})
 
 		self.__event_tracker = ServiceEventTracker(screen=self, eventmap={
-				iPlayableService.evStart: self.__evServiceStart,
-				iPlayableService.evEnd: self.__evServiceEnd
-			})
+			iPlayableService.evStart: self.__evServiceStart,
+			iPlayableService.evEnd: self.__evServiceEnd})
 
 		if type(self) is ChannelSelection:
 			assert ChannelSelection.instance is None, "class InfoBar is a singleton class and just one instance of this class is allowed!"
@@ -2306,7 +2303,7 @@ class ChannelSelection(ChannelSelectionEdit, ChannelSelectionBase, ChannelSelect
 			self.pipzaptimer.stop()
 		self.session.pip.inactive()
 
-	#called from infoBar and channelSelected
+	# called from infoBar and channelSelected
 	def zap(self, enable_pipzap=False, preview_zap=False, checkParentalControl=True, ref=None):
 		self.curRoot = self.startRoot
 		nref = ref or self.getCurrentSelection()
@@ -2704,10 +2701,10 @@ class PiPZapSelection(ChannelSelection):
 					self.session.pipshown = False
 					del self.session.pip
 					if SystemInfo["LCDMiniTVPiP"] and int(config.lcd.minitvpipmode.value) >= 1:
-							print("[LCDMiniTV] disable PIP")
-							f = open("/proc/stb/lcd/mode", "w")
-							f.write(config.lcd.minitvmode.value)
-							f.close()
+						print("[LCDMiniTV] disable PIP")
+						f = open("/proc/stb/lcd/mode", "w")
+						f.write(config.lcd.minitvmode.value)
+						f.close()
 					self.close(None)
 
 	def cancel(self):
@@ -2716,10 +2713,10 @@ class PiPZapSelection(ChannelSelection):
 			self.session.pipshown = False
 			del self.session.pip
 			if SystemInfo["LCDMiniTVPiP"] and int(config.lcd.minitvpipmode.value) >= 1:
-					print("[LCDMiniTV] disable PIP")
-					f = open("/proc/stb/lcd/mode", "w")
-					f.write(config.lcd.minitvmode.value)
-					f.close()
+				print("[LCDMiniTV] disable PIP")
+				f = open("/proc/stb/lcd/mode", "w")
+				f.write(config.lcd.minitvmode.value)
+				f.close()
 		self.correctChannelNumber()
 		self.close(None)
 
