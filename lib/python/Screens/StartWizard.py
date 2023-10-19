@@ -1,3 +1,5 @@
+from boxbranding import getBoxType
+
 from Components.config import config, ConfigBoolean, configfile
 from Components.Pixmap import Pixmap
 from Screens.LanguageSelection import LanguageWizard
