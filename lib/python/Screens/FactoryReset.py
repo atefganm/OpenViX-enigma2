@@ -1,12 +1,10 @@
 import errno
 import shutil
 
-from boxbranding import getMachineBrand, getMachineName
 from os import _exit, listdir, remove, system
 from os.path import isdir, join as pathjoin
 
 from Components.config import ConfigYesNo, config
-from Components.Sources.StaticText import StaticText
 import Components.Task
 from Screens.MessageBox import MessageBox
 from Screens.ParentalControlSetup import ProtectedScreen
@@ -16,12 +14,9 @@ from Tools.Directories import SCOPE_CONFIG, SCOPE_SKIN, resolveFilename
 
 try:
 	from Plugins.SystemPlugins.ViX.BackupManager import BackupFiles, getMountChoices
-	mountOptions = getMountChoices()
-	if not mountOptions:
-		BackupFiles = None
-	print("[FactoryReset] DEBUG: mountOptions", mountOptions)		
 except ImportError:
-	BackupFiles = None
+	BackupFiles, getMountChoices = None
+
 
 class FactoryReset(Setup, ProtectedScreen):
 	def __init__(self, session):
@@ -35,6 +30,7 @@ class FactoryReset(Setup, ProtectedScreen):
 		self.resetSkins = ConfigYesNo(default=True)
 		self.resetTimers = ConfigYesNo(default=True)
 		self.resetOthers = ConfigYesNo(default=True)
+		self.mountChoices = getMountChoices() if callable(getMountChoices) else None
 		self.doBackup = ConfigYesNo(default=True)
 		self.setup = {}  # Old Setup config entry data.
 		Setup.__init__(self, session=session, setup="factoryreset")
@@ -70,7 +66,7 @@ class FactoryReset(Setup, ProtectedScreen):
 				self.list.append((_("Remove all timer data"), self.resetTimers, _("Select 'Yes' to remove all timer configuration data. Selecting this option will clear all timers, autotimers and power timers.")))
 			if len(self.others):
 				self.list.append((_("Remove all other data"), self.resetOthers, _("Select 'Yes' to remove all other files and directories not covered by the options above.")))
-		if BackupFiles:
+		if self.mountChoices:
 			self.list.append((_("Make settings backup"), self.doBackup, _("Select 'Yes' to make a settings backup before wiping the current configuration.")))
 		currentItem = self["config"].getCurrent()
 		self["config"].list = self.list
@@ -120,10 +116,10 @@ class FactoryReset(Setup, ProtectedScreen):
 				self.others.append(file)
 
 	def keySave(self):
-		if BackupFiles and self.doBackup.value:
+		if self.mountChoices and self.doBackup.value:
 			msg = _("This will permanently delete the current configuration. If necessary it should be possible to restore the current configuration by restoring the settings backup. Are you certain you want to continue with a factory reset?")
 		elif self.doBackup.value:
-			msg = _("This will permanently delete the current configuration. Although settings backup requested, there is No backup device attached, are you certain you want to continue with a factory reset?")		
+			msg = _("This will permanently delete the current configuration. Although settings backup requested, there is No backup device attached, are you certain you want to continue with a factory reset?")
 		else:
 			msg = _("This will permanently delete the current configuration. It would be a good idea to make a backup before taking this drastic action. Are you certain you want to continue with a factory reset?")
 		restartBox = self.session.openWithCallback(self.keySaveCallback, MessageBox, msg, default=False)
@@ -132,7 +128,7 @@ class FactoryReset(Setup, ProtectedScreen):
 	def keySaveCallback(self, answer):
 		if not answer:
 			return
-		if BackupFiles and self.doBackup.value:
+		if self.mountChoices and self.doBackup.value:
 			self.doSettingsBackup()
 		else:
 			self.continueReset()
