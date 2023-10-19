@@ -10,7 +10,6 @@ from Components.Label import Label
 from Components.Sources.Event import Event
 from Components.Sources.ServiceEvent import ServiceEvent
 from Components.Sources.StaticText import StaticText
-from Components.UsageConfig import preferredTimerPath
 from RecordTimer import AFTEREVENT
 from Screens.ChoiceBox import PopupChoiceBox
 from Screens.EventView import EventViewEPGSelect
@@ -290,7 +289,7 @@ class EPGSelectionBase(Screen, HelpableScreen):
 		try:
 			from Plugins.Extensions.AutoTimer.AutoPoller import AutoPoller
 			from Plugins.Extensions.AutoTimer.AutoTimer import AutoTimer
-			from Plugins.Extensions.AutoTimer.plugin import autostart, main
+			# from Plugins.Extensions.AutoTimer.plugin import autostart, main  # what is this for?
 			autopoller = AutoPoller()
 			autotimer = AutoTimer()
 			try:
@@ -349,9 +348,10 @@ class EPGSelectionBase(Screen, HelpableScreen):
 
 		self.closeEventViewDialog()
 		self.__popupMenu(
-				"%s?" % event.getEventName(),
-				[[_("Add Timer"), addTimerFromEventSilent, self.session, self.refreshTimerActionButton, event, service],
-				[_("Add AutoTimer"), self.addAutoTimerSilent, event, service]])
+			"%s?" % event.getEventName(),
+			[[_("Add Timer"), addTimerFromEventSilent, self.session, self.refreshTimerActionButton, event, service],
+			[_("Add AutoTimer"), self.addAutoTimerSilent, event, service]]
+		)
 
 	def addEditTimer(self):
 		self.closeEventViewDialog()
