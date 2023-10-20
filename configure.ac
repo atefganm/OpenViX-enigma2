@@ -65,7 +65,7 @@ AC_SUBST(E2REV)
 AC_DEFINE_UNQUOTED(E2REV,"$E2REV",[enigma2 revision])
 
 AC_ARG_WITH(boxtype,
-	[  --with-boxtype=NAME box type [[none,dm7025,dm800...]]],
+	[  --with-boxtype=NAME box type [[none,dm800...]]],
 	[BOXTYPE="$withval"],[BOXTYPE="dm800"])
 AC_SUBST(BOXTYPE)
 AC_DEFINE_UNQUOTED(BOXTYPE,"$BOXTYPE",[box type])
@@ -183,6 +183,27 @@ AM_CONDITIONAL(HAVE_COLORLCD2, test "$BOXTYPE" == dm800se -o "$BOXTYPE" == dm800
 AM_CONDITIONAL(HAVE_COLORLCD1, test "$BOXTYPE" == dm8000 -o "$BOXTYPE" == dm800 -o "$BOXTYPE" == dm7020hd -o "$BOXTYPE" == dm7020hdv2)
 AM_CONDITIONAL(HAVE_GRAUTEC8000, test "$BOXTYPE" == dm8000)
 AM_CONDITIONAL(HAVE_GRAUTEC70X0, test "$BOXTYPE" == dm7020hd -o "$BOXTYPE" == dm7020hdv2 -o "$BOXTYPE" == dm7080)
+
+if test "$BOXBRAND" == "dreambox"; then
+	AC_DEFINE(DREAMBOX, 1, [Dreambox hardware])
+	AC_DEFINE(KEY_PLAY_ACTUALLY_IS_KEY_PLAYPAUSE, 1,[define when rc sends a KEY_PLAY event for its KEY_PLAYPAUSE key])
+fi
+
+if test "$BOXTYPE" == "dm7080" -o "$BOXTYPE" == "dm820" -o "$BOXTYPE" == "dm800se" -o "$BOXTYPE" == "dm800sev2" -o "$BOXTYPE" == "dm7020hd" -o "$BOXTYPE" == "dm7020hdv2" -o "$BOXTYPE" == "dm900" -o "$BOXTYPE" == "dm920"; then
+	AC_DEFINE(DREAMBOX_DUAL_TUNER, 1,[define dreambox dual tuner])
+fi
+
+if test "$BOXTYPE" == "dm7080" -o "$BOXTYPE" == "dm820"  -o "$BOXTYPE" == "dm900" -o "$BOXTYPE" == "dm920" -o "$BOXTYPE" == "dm520"; then
+	AC_DEFINE(CONFIG_ION, 1,[define BOX use ION Allocator])
+fi
+
+if test "$BOXTYPE" == "dm7080" -o "$BOXTYPE" == "dm820" -o "$BOXTYPE" == "dm900" -o "$BOXTYPE" == "dm920"; then
+	AC_DEFINE(HAVE_HDMIIN_DM, 1,[has hdmi in dm])
+fi
+
+if test "$BOXTYPE" == "dm900" -o "$BOXTYPE" == "dm920"; then
+	AC_DEFINE(DM9X0_LCD, 1,[define when we need to move lcd text a bit to the right])
+fi
 
 AC_ARG_WITH(accelerationthreshold,
 	AS_HELP_STRING([--with-accelerationthreshold=n], [use acceleration threshold of n bytes]),
@@ -439,19 +460,6 @@ if test x"$witholdpvr" != xno ; then
 fi
 AM_CONDITIONAL(HAVE_OLDPVR, test x"$witholdpvr" != xno)
 
-if test "$BOXBRAND" == "dreambox"; then
-	AC_DEFINE(DREAMBOX, 1, [Dreambox hardware])
-	AC_DEFINE(KEY_PLAY_ACTUALLY_IS_KEY_PLAYPAUSE, 1,[define when rc sends a KEY_PLAY event for its KEY_PLAYPAUSE key])
-fi
-
-if test "$BOXTYPE" == "dm7080" -o "$BOXTYPE" == "dm820" -o "$BOXTYPE" == "dm800se" -o "$BOXTYPE" == "dm800sev2" -o "$BOXTYPE" == "dm7020hd" -o "$BOXTYPE" == "dm7020hdv2" -o "$BOXTYPE" == "dm900" -o "$BOXTYPE" == "dm920"; then
-	AC_DEFINE(DREAMBOX_DUAL_TUNER, 1,[define BOXTYPE DM7080])
-fi
-
-if test "$BOXTYPE" == "dm7080" -o "$BOXTYPE" == "dm820"  -o "$BOXTYPE" == "dm900" -o "$BOXTYPE" == "dm920" -o "$BOXTYPE" == "dm520"; then
-	AC_DEFINE(CONFIG_ION, 1,[define BOX use ION Allocator])
-fi
-
 if test `echo "$BOXTYPE" | cut -b 1-2` == "et" ; then
 	AC_DEFINE(KEY_PLAY_ACTUALLY_IS_KEY_PLAYPAUSE, 1,[define when rc sends a KEY_PLAY event for its KEY_PLAYPAUSE key])
 fi
@@ -550,10 +558,6 @@ fi
 if test "$BOXTYPE" == "formuler1"; then
 	AC_DEFINE(KEY_BOOKMARKS_TO_KEY_MEDIA, 1,[define when rc Playlist sends a KEY_BOOKMARKS event for its KEY_MEDIA key])
 	AC_DEFINE(KEY_VIDEO_TO_KEY_FAVORITES, 1,[define when rc FAV key sends a KEY_VIDEO event for its KEY_FAVORITES key])
-fi
-
-if test "$BOXTYPE" == "dm7080" -o "$BOXTYPE" == "dm820" -o "$BOXTYPE" == "dm900" -o "$BOXTYPE" == "dm920"; then
-	AC_DEFINE(HAVE_HDMIIN_DM, 1,[has hdmi in dm])
 fi
 
 AC_ARG_WITH(libsdl,
