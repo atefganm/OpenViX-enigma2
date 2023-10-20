@@ -31,6 +31,7 @@ CONFIG_FILE_AV = '/etc/enigma2/config_av'
 
 selectionpng = LoadPixmap(cached=True, path=resolveFilename(SCOPE_CURRENT_SKIN, "selections/selectioncross.png"))
 
+
 def getAVDict():
 	if os_path.exists(CONFIG_FILE_AV):
 		pkl_file = open(CONFIG_FILE_AV, 'rb')
@@ -125,7 +126,6 @@ class AudioSelection(Screen, ConfigListScreen):
 			self.infobar.av_config[ref_str] = pickle_dumps(playinga_idx, 0).decode()
 
 		self.saveAVDict(self.infobar.av_config)
-
 
 	def fillList(self, arg=None):
 		streams = []
