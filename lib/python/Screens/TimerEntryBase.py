@@ -8,7 +8,7 @@ from Screens.Screen import Screen
 from Screens.Setup import Setup
 from Screens.HelpMenu import HelpableScreen
 
-from time import localtime, mktime, strftime
+from time import localtime, mktime, strftime, time
 from datetime import datetime
 
 
@@ -44,21 +44,21 @@ class TimerEntryBase(Setup):
 		for x in (0, 1, 2, 3, 4, 5, 6):
 			day.append(0)
 
-		if self.timer.repeated: # repeated
+		if self.timer.repeated:  # repeated
 			type = "repeated"
-			if self.timer.repeated == 31: # Mon-Fri
+			if self.timer.repeated == 31:  # Mon-Fri
 				repeated = "weekdays"
-			elif self.timer.repeated == 127: # daily
+			elif self.timer.repeated == 127:  # daily
 				repeated = "daily"
 			else:
 				flags = self.timer.repeated
 				repeated = "user"
 				count = 0
 				for x in (0, 1, 2, 3, 4, 5, 6):
-					if flags == 1: # weekly
-# 						print("[TimerEntryBase] Set to weekday " + str(x))
+					if flags == 1:  # weekly
+						# print("[TimerEntryBase] Set to weekday " + str(x))
 						weekday = x
-					if flags & 1 == 1: # set user defined flags
+					if flags & 1 == 1:  # set user defined flags
 						day[x] = 1
 						count += 1
 					else:
@@ -66,7 +66,7 @@ class TimerEntryBase(Setup):
 					flags >>= 1
 				if count == 1:
 					repeated = "weekly"
-		else: # once
+		else:  # once
 			type = "once"
 			repeated = None
 			weekday = int(strftime("%u", localtime(self.timer.begin))) - 1
