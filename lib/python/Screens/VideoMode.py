@@ -80,10 +80,7 @@ class VideoSetup(Screen, ConfigListScreen):
 		ConfigListScreen.__init__(self, self.list, session=session, on_change=self.changedEntry)
 
 		self["actions"] = ActionMap(["SetupActions", "MenuActions", "ColorActions"],
-			{
-				"cancel": self.keyCancel,
-				"save": self.apply,
-			}, -2)
+			{"save": self.apply, }, -2)
 
 		self["key_red"] = StaticText(_("Cancel"))
 		self["key_green"] = StaticText(_("Save"))
@@ -546,12 +543,12 @@ class AutoVideoMode(Screen):
 		service = self.session.nav.getCurrentlyPlayingServiceReference()
 		servicepath = service and service.getPath()
 		if servicepath and servicepath.startswith("/"):
-				if service.toString().startswith("1:"):
-					info = eServiceCenter.getInstance().info(service)
-					service = info and info.getInfoString(service, iServiceInformation.sServiceref)
-					return service and eDVBDB.getInstance().getFlag(eServiceReference(service)) & FLAG_IS_DEDICATED_3D == FLAG_IS_DEDICATED_3D and "sidebyside"
-				else:
-					return ".3d." in servicepath.lower() and "sidebyside" or ".tab." in servicepath.lower() and "topandbottom"
+			if service.toString().startswith("1:"):
+				info = eServiceCenter.getInstance().info(service)
+				service = info and info.getInfoString(service, iServiceInformation.sServiceref)
+				return service and eDVBDB.getInstance().getFlag(eServiceReference(service)) & FLAG_IS_DEDICATED_3D == FLAG_IS_DEDICATED_3D and "sidebyside"
+			else:
+				return ".3d." in servicepath.lower() and "sidebyside" or ".tab." in servicepath.lower() and "topandbottom"
 		service = self.session.nav.getCurrentService()
 		info = service and service.info()
 		return info and info.getInfo(iServiceInformation.sIsDedicated3D) == 1 and "sidebyside"
@@ -603,14 +600,6 @@ class AutoVideoMode(Screen):
 		current_mode = avControl.getVideoMode("")
 		if current_mode.upper() in ("PAL", "NTSC"):
 			current_mode = current_mode.upper()
-
-		current_pol = ""
-		if "i" in current_mode:
-			current_pol = "i"
-		elif "p" in current_mode:
-			current_pol = "p"
-		current_res = current_pol and current_mode.split(current_pol)[0].replace("\n", "") or ""
-		current_rate = current_pol and current_mode.split(current_pol)[0].replace("\n", "") and current_mode.split(current_pol)[1].replace("\n", "") or ""
 
 		write_mode = None
 		new_mode = None
@@ -791,7 +780,9 @@ class AutoVideoMode(Screen):
 							write_mode = config_mode + new_rate
 						else:
 							write_mode = config_mode
-
+			write_mode = new_mode = None
+			if config_mode in ("PAL", "NTSC"):
+				write_mode = config_mode
 			elif config.av.autores.value == "all" or (config.av.autores.value == "hd" and int(new_res) >= 720):
 				autorestyp = "all or hd"
 				if config.av.autores_deinterlace.value:
