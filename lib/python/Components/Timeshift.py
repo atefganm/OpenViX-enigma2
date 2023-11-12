@@ -76,9 +76,9 @@ class InfoBarTimeshift:
 
 		self["TimeshiftActivateActions"] = ActionMap(["InfobarTimeshiftActivateActions"],
 			{
-				"timeshiftActivateEnd": self.activateTimeshiftEnd, # something like "rewind key"
+				"timeshiftActivateEnd": self.activateTimeshiftEnd,  # something like "rewind key"
 				"timeshiftActivateEndAndPause": self.activateTimeshiftEndAndPause  # something like "pause key"
-			}, prio=-1) # priority over record
+			}, prio=-1)  # priority over record
 
 		self["TimeshiftSeekPointerActions"] = ActionMap(["InfobarTimeshiftSeekPointerActions"],
 			{
@@ -91,7 +91,7 @@ class InfoBarTimeshift:
 			{
 				"jumpPreviousFile": self.__evSOF,
 				"jumpNextFile": self.__evEOF
-			}, prio=-1) # priority over history
+			}, prio=-1)  # priority over history
 
 		self["TimeshiftActions"].setEnabled(False)
 		self["TimeshiftActivateActions"].setEnabled(False)
@@ -324,7 +324,7 @@ class InfoBarTimeshift:
 
 	def seekdef(self, key):
 		if self.seekstate == self.SEEK_STATE_PLAY:
-			return 0 # trade as unhandled action
+			return 0  # trade as unhandled action
 		time = (-config.seek.selfdefined_13.value, False, config.seek.selfdefined_13.value,
 			-config.seek.selfdefined_46.value, False, config.seek.selfdefined_46.value,
 			-config.seek.selfdefined_79.value, False, config.seek.selfdefined_79.value)[key - 1]
@@ -408,7 +408,7 @@ class InfoBarTimeshift:
 		ts = self.getTimeshift()
 		if ts and ts.isTimeshiftEnabled():
 			# print("[Timeshift]TEST5")
-			was_enabled = ts.isTimeshiftEnabled()  # "was_enabled" assigned but not used? This code is nonsense.
+			was_enabled = ts.isTimeshiftEnabled()  # noqa: F841 "was_enabled" assigned but not used? This code is nonsense.
 		if answer and ts:
 			# print("[Timeshift]TEST6")
 			if int(config.timeshift.startdelay.value):
@@ -429,11 +429,11 @@ class InfoBarTimeshift:
 		if ts.isTimeshiftActive():
 			self.pauseService()
 		else:
-			ts.activateTimeshift() # activate timeshift will automatically pause
+			ts.activateTimeshift()  # activate timeshift will automatically pause
 			self.setSeekState(self.SEEK_STATE_PAUSE)
 			seekable = self.getSeek()
 			if seekable is not None:
-				seekable.seekTo(-90000) # seek approx. 1 sec before end
+				seekable.seekTo(-90000)  # seek approx. 1 sec before end
 		if back:
 			if getBrandOEM() == "xtrend":
 				self.ts_rewind_timer.start(1000, 1)
@@ -465,19 +465,19 @@ class InfoBarTimeshift:
 					# print("[Timeshift]TEST3")
 					message = _("You have chosen to save the current timeshift event, but the event has not yet finished\nWhat do you want to do ?")
 					choice = [
-                        (_("Save timeshift as movie and stop recording"), "savetimeshift"),
-                        (_("Save timeshift as movie and continue recording"), "savetimeshiftandrecord"),
-                        (_("Cancel save timeshift as movie"), "noSave"),
-                        (_("Nothing, just leave this menu"), "no")]
+						(_("Save timeshift as movie and stop recording"), "savetimeshift"),
+						(_("Save timeshift as movie and continue recording"), "savetimeshiftandrecord"),
+						(_("Cancel save timeshift as movie"), "noSave"),
+						(_("Nothing, just leave this menu"), "no")]
 					self.session.openWithCallback(boundFunction(self.checkTimeshiftRunningCallback, returnFunction), MessageBox, message, simple=True, list=choice)
 				else:
 					# print("[Timeshift]TEST4")
 					message = _("You seem to be in timeshift, Do you want to leave timeshift? Streams & IPTV not fully supported!")
 					choice = [
-                        (_("Yes, but save timeshift as movie and stop recording"), "savetimeshift"),
-                        (_("Yes, but save timeshift as movie and continue recording"), "savetimeshiftandrecord"),
-                        (_("Yes, but don't save timeshift as movie"), "noSave"),
-                        (_("No"), "no")]
+						(_("Yes, but save timeshift as movie and stop recording"), "savetimeshift"),
+						(_("Yes, but save timeshift as movie and continue recording"), "savetimeshiftandrecord"),
+						(_("Yes, but don't save timeshift as movie"), "noSave"),
+						(_("No"), "no")]
 					self.session.openWithCallback(boundFunction(self.checkTimeshiftRunningCallback, returnFunction), MessageBox, message, simple=True, list=choice)
 			else:
 				# print("[Timeshift]TEST5")
@@ -593,9 +593,9 @@ class InfoBarTimeshift:
 					if statinfo.st_mtime < (time() - 5.0):
 						# Get Event Info from meta file
 						readmetafile = open("%s%s.meta" % (config.usage.timeshift_path.value, filename), "r")
-						servicerefname = readmetafile.readline()[0:-1]  # local variable 'servicerefname' is assigned to but never used
+						servicerefname = readmetafile.readline()[0:-1]  # noqa: F841 local variable 'servicerefname' is assigned to but never used
 						eventname = readmetafile.readline()[0:-1]
-						description = readmetafile.readline()[0:-1]  # local variable 'description' is assigned to but never used
+						description = readmetafile.readline()[0:-1]  # noqa: F841 local variable 'description' is assigned to but never used
 						begintime = readmetafile.readline()[0:-1]
 						readmetafile.close()
 
@@ -777,7 +777,7 @@ class InfoBarTimeshift:
 						# Get Event Info from meta file
 						if os.path.exists("%s.ts.meta" % fullname):
 							readmetafile = open("%s.ts.meta" % fullname, "r")
-							servicerefname = readmetafile.readline()[0:-1]  # local variable 'servicerefname' is assigned to but never used
+							servicerefname = readmetafile.readline()[0:-1]  # noqa: F841 local variable 'servicerefname' is assigned to but never used
 							eventname = readmetafile.readline()[0:-1]
 							readmetafile.close()
 						else:
@@ -811,18 +811,18 @@ class InfoBarTimeshift:
 		for filename in os.listdir(config.usage.timeshift_path.value):
 			if (filename.startswith("timeshift.") or filename.startswith("pts_livebuffer_")) and (filename.endswith(".del") is False and filename.endswith(".copy") is False):
 				# print("[Timeshift]filename:", filename)
-				statinfo = os.stat("%s%s" % (config.usage.timeshift_path.value, filename)) # if no write for 3 sec = stranded timeshift
+				statinfo = os.stat("%s%s" % (config.usage.timeshift_path.value, filename))  # if no write for 3 sec = stranded timeshift
 				if statinfo.st_mtime < (time() - 3.0):
-				# try:
-					# print("[Timeshift][TimeShift] Erasing stranded timeshift %s" % filename)
+					# try:
+					# 	print("[Timeshift][TimeShift] Erasing stranded timeshift %s" % filename)
 					self.BgFileEraser.erase("%s%s" % (config.usage.timeshift_path.value, filename))
 
-					# Delete Meta and EIT File too
-					# if filename.startswith("pts_livebuffer_") is True:
-					# 	self.BgFileEraser.erase("%s%s.meta" % (config.usage.timeshift_path.value, filename))
-					# 	self.BgFileEraser.erase("%s%s.eit" % (config.usage.timeshift_path.value, filename))
-				# except:
-				# 	print("[Timeshift][TimeShift] IO-Error while cleaning Timeshift Folder ...")
+					# 	Delete Meta and EIT File too
+					# 	if filename.startswith("pts_livebuffer_") is True:
+					# 		self.BgFileEraser.erase("%s%s.meta" % (config.usage.timeshift_path.value, filename))
+					# 		self.BgFileEraser.erase("%s%s.eit" % (config.usage.timeshift_path.value, filename))
+					# except:
+					# 	print("[Timeshift][TimeShift] IO-Error while cleaning Timeshift Folder ...")
 
 	def ptsGetEventInfo(self):
 		event = None
@@ -1001,7 +1001,7 @@ class InfoBarTimeshift:
 			if fileExists(filename + ".meta", "r"):
 				# Get Event Info from meta file
 				readmetafile = open(filename + ".meta", "r")
-				servicerefname = readmetafile.readline()[0:-1]  # local variable 'servicerefname' is assigned to but never used
+				servicerefname = readmetafile.readline()[0:-1]  # noqa: F841 local variable 'servicerefname' is assigned to but never used
 				eventname = readmetafile.readline()[0:-1]
 				readmetafile.close()
 			else:
@@ -1239,7 +1239,7 @@ class InfoBarTimeshift:
 
 	def ptsSeekBackTimer(self):
 		# print("[Timeshift]!!!!! ptsSeekBackTimer RUN")
-		self.doSeek(-90000 * 10) # seek ~10s before end
+		self.doSeek(-90000 * 10)  # seek ~10s before end
 		self.setSeekState(self.SEEK_STATE_PAUSE)
 		self.pts_StartSeekBackTimer.start(1000, True)
 
@@ -1299,7 +1299,7 @@ class InfoBarTimeshift:
 			self.ptsFrontpanelActions("start")
 	# This will already be set if it needs to be set and otherwise it must
 	# *not* be set.
-	#			config.timeshift.isRecording.value = True
+	# config.timeshift.isRecording.value = True
 
 	def ptsLiveTVStatus(self):
 		service = self.session.nav.getCurrentService()
