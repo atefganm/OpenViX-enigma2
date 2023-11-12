@@ -62,7 +62,7 @@ def expandCollections(items):
 	return expanded
 
 
-cutsParser = struct.Struct('>QI') # big-endian, 64-bit PTS and 32-bit type
+cutsParser = struct.Struct('>QI')  # big-endian, 64-bit PTS and 32-bit type
 
 
 class MovieListData:
@@ -120,7 +120,7 @@ def moviePlayState(cutsFileName, ref, length):
 			if len(data) < cutsParser.size:
 				break
 			cut, cutType = cutsParser.unpack(data)
-			if cutType == 3: # undocumented, but 3 appears to be the stop
+			if cutType == 3:  # undocumented, but 3 appears to be the stop
 				lastPosition = cut
 		f.close()
 		# See what we have in RAM (it might help)
@@ -230,6 +230,7 @@ class MovieList(GUIComponent):
 		self.pbarColourPlayRec = 0xffc71d
 		self.partIconeShift = None
 		self.spaceRight = 2
+		self.spaceLeft = 2
 		self.spaceIconeText = 2
 		self.iconsWidth = 22
 		self.durationWidth = 160
@@ -237,10 +238,10 @@ class MovieList(GUIComponent):
 		if config.usage.time.wide.value:
 			self.dateWidth = int(self.dateWidth * 1.15)
 		self.reloadDelayTimer = None
-		self.l = eListboxPythonMultiContent()
+		self.l = eListboxPythonMultiContent()  # noqa: E741
 		self.tags = set()
 		self.markList = []
-		self.allowCollections = allowCollections # used to disable collections when loaded by OpenWebIf
+		self.allowCollections = allowCollections  # used to disable collections when loaded by OpenWebIf
 		self.root = None
 		self._playInBackground = None
 		self._playInForeground = None
@@ -377,6 +378,9 @@ class MovieList(GUIComponent):
 		def iconsWidth(value):
 			self.iconsWidth = parseScale(value)
 
+		def spaceLeft(value):
+			self.spaceLeft = parseScale(value)
+
 		def spaceRight(value):
 			self.spaceRight = parseScale(value)
 
@@ -443,34 +447,34 @@ class MovieList(GUIComponent):
 
 		if serviceref.flags & eServiceReference.isGroup:
 			# Collection
-			res.append(MultiContentEntryPixmapAlphaBlend(pos=(0, 0), size=(col0iconSize, self.itemHeight), png=self.iconCollection, flags=BT_ALIGN_CENTER))
+			res.append(MultiContentEntryPixmapAlphaBlend(pos=(self.spaceLeft, 0), size=(col0iconSize, self.itemHeight), png=self.iconCollection, flags=BT_ALIGN_CENTER))
 			if self.getCurrent() in self.markList:
-				res.append(MultiContentEntryPixmapAlphaBlend(pos=(0, 0), size=(col0iconSize, self.itemHeight), png=self.iconMarked))
-			res.append(MultiContentEntryText(pos=(col0iconSize + space, 0), size=(width - 220, self.itemHeight), font=0, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER, text=data.txt))
+				res.append(MultiContentEntryPixmapAlphaBlend(pos=(self.spaceLeft, 0), size=(col0iconSize, self.itemHeight), png=self.iconMarked))
+			res.append(MultiContentEntryText(pos=(self.spaceLeft + col0iconSize + space, 0), size=(width - 220, self.itemHeight), font=0, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER, text=data.txt))
 			recordingCount = ngettext("%d Recording", "%d Recordings", data.collectionCount) % data.collectionCount
 			res.append(MultiContentEntryText(pos=(width - 220 - r, 0), size=(220, self.itemHeight), font=1, flags=RT_HALIGN_RIGHT | RT_VALIGN_CENTER, text=recordingCount))
 			return res
 		if serviceref.flags & eServiceReference.mustDescent:
 			# Directory
 			if data.txt == ".Trash":
-				res.append(MultiContentEntryPixmapAlphaBlend(pos=(0, 0), size=(col0iconSize, self.itemHeight), png=self.iconTrash, flags=BT_ALIGN_CENTER))
-				res.append(MultiContentEntryText(pos=(col0iconSize + space, 0), size=(width - 145, self.itemHeight), font=0, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER, text=_("Deleted items")))
+				res.append(MultiContentEntryPixmapAlphaBlend(pos=(self.spaceLeft, 0), size=(col0iconSize, self.itemHeight), png=self.iconTrash, flags=BT_ALIGN_CENTER))
+				res.append(MultiContentEntryText(pos=(self.spaceLeft + col0iconSize + space, 0), size=(width - 145, self.itemHeight), font=0, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER, text=_("Deleted items")))
 				res.append(MultiContentEntryText(pos=(width - 145 - r, 0), size=(145, self.itemHeight), font=1, flags=RT_HALIGN_RIGHT | RT_VALIGN_CENTER, text=_("Trash can")))
 				return res
-			res.append(MultiContentEntryPixmapAlphaBlend(pos=(0, 0), size=(col0iconSize, self.itemHeight), png=self.iconFolder, flags=BT_ALIGN_CENTER))
+			res.append(MultiContentEntryPixmapAlphaBlend(pos=(self.spaceLeft, 0), size=(col0iconSize, self.itemHeight), png=self.iconFolder, flags=BT_ALIGN_CENTER))
 			if self.getCurrent() in self.markList:
-				res.append(MultiContentEntryPixmapAlphaBlend(pos=(0, 0), size=(col0iconSize, self.itemHeight), png=self.iconMarked))
-			res.append(MultiContentEntryText(pos=(col0iconSize + space, 0), size=(width - 145, self.itemHeight), font=0, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER, text=data.txt))
+				res.append(MultiContentEntryPixmapAlphaBlend(pos=(self.spaceLeft, 0), size=(col0iconSize, self.itemHeight), png=self.iconMarked))
+			res.append(MultiContentEntryText(pos=(self.spaceLeft + col0iconSize + space, 0), size=(width - 145, self.itemHeight), font=0, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER, text=data.txt))
 			res.append(MultiContentEntryText(pos=(width - 145 - r, 0), size=(145, self.itemHeight), font=1, flags=RT_HALIGN_RIGHT | RT_VALIGN_CENTER, text=_("Directory")))
 			return res
 		if data.dirty:
 			cur_idx = self.l.getCurrentSelectionIndex()
-			x = self.list[cur_idx] # x = ref,info,begin,...
+			x = self.list[cur_idx]  # x = ref,info,begin,...
 			if config.usage.load_length_of_movies_in_moviellist.value:
-				data.len = x[1].getLength(x[0]) #recalc the movie length...
+				data.len = x[1].getLength(x[0])  # recalc the movie length...
 			else:
-				data.len = 0 #dont recalc movielist to speedup loading the list
-			self.list[cur_idx] = (x[0], x[1], x[2], data) #update entry in list... so next time we don't need to recalc
+				data.len = 0  # dont recalc movielist to speedup loading the list
+			self.list[cur_idx] = (x[0], x[1], x[2], data)  # update entry in list... so next time we don't need to recalc
 			data.picon = None
 			if showPicons:
 				refs = info.getInfoString(x[0], iServiceInformation.sServiceref)
@@ -518,25 +522,25 @@ class MovieList(GUIComponent):
 			if data:
 				if switch == 'i' and data.icon is not None:
 					if self.partIconeShift is None:
-						res.append(MultiContentEntryPixmapAlphaBlend(pos=(colX, 0), size=(iconSize, ih), png=data.icon, flags=BT_ALIGN_CENTER))
+						res.append(MultiContentEntryPixmapAlphaBlend(pos=(self.spaceLeft + colX, 0), size=(iconSize, ih), png=data.icon, flags=BT_ALIGN_CENTER))
 					else:
-						res.append(MultiContentEntryPixmapAlphaBlend(pos=(colX, self.partIconeShift), size=(iconSize, data.icon.size().height()), png=data.icon))
+						res.append(MultiContentEntryPixmapAlphaBlend(pos=(self.spaceLeft + colX, self.partIconeShift), size=(iconSize, data.icon.size().height()), png=data.icon))
 				elif switch in ('p', 's'):
 					if data.part > 0:
 						pbarY = (self.itemHeight - self.pbarHeight) // 2 if self.pbarShift is None else self.pbarShift
-						res.append(MultiContentEntryProgress(pos=(colX, pbarY), size=(iconSize, self.pbarHeight), percent=data.part, borderWidth=2, foreColor=data.partcol, foreColorSelected=None, backColor=None, backColorSelected=None))
+						res.append(MultiContentEntryProgress(pos=(self.spaceLeft + colX, pbarY), size=(iconSize, self.pbarHeight), percent=data.part, borderWidth=2, foreColor=data.partcol, foreColorSelected=None, backColor=None, backColorSelected=None))
 					elif data.icon is not None:
 						if self.pbarShift is None:
-							res.append(MultiContentEntryPixmapAlphaBlend(pos=(colX, 0), size=(iconSize, ih), png=data.icon, flags=BT_ALIGN_CENTER))
+							res.append(MultiContentEntryPixmapAlphaBlend(pos=(self.spaceLeft + colX, 0), size=(iconSize, ih), png=data.icon, flags=BT_ALIGN_CENTER))
 						else:
-							res.append(MultiContentEntryPixmapAlphaBlend(pos=(colX, self.pbarShift), size=(iconSize, self.pbarHeight), png=data.icon))
+							res.append(MultiContentEntryPixmapAlphaBlend(pos=(self.spaceLeft + colX, self.pbarShift), size=(iconSize, self.pbarHeight), png=data.icon))
 			return iconSize
 
 		if piconWidth > 0:
 			# Picon
 			if data and data.picon is not None:
 				res.append(MultiContentEntryPixmapAlphaBlend(
-					pos=(colX, 0), size=(piconWidth, ih),
+					pos=(self.spaceLeft + colX, 0), size=(piconWidth, ih),
 					png=data.picon,
 					backcolor=None, backcolor_sel=None, flags=BT_SCALE | BT_KEEP_ASPECT_RATIO | BT_HALIGN_CENTER | BT_VALIGN_CENTER))
 			colX += piconWidth
@@ -545,11 +549,11 @@ class MovieList(GUIComponent):
 
 		# The selection mark floats over the top of the first column
 		if self.getCurrent() in self.markList:
-			res.append(MultiContentEntryPixmapAlphaBlend(pos=(0, 0), size=(colX, self.itemHeight), png=self.iconMarked))
+			res.append(MultiContentEntryPixmapAlphaBlend(pos=(self.spaceLeft, 0), size=(colX, self.itemHeight), png=self.iconMarked))
 		colX += space
 
 		# Recording name
-		res.append(MultiContentEntryText(pos=(colX, 0), size=(width - iconSize - space - durationWidth - dateWidth - r - colX, ih), font=0, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER, text=data.txt))
+		res.append(MultiContentEntryText(pos=(self.spaceLeft + colX, 0), size=(width - iconSize - space - durationWidth - dateWidth - r - colX, ih), font=0, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER, text=data.txt))
 		colX = width - iconSize - space - durationWidth - dateWidth - r
 
 		if piconWidth > 0:
@@ -561,7 +565,7 @@ class MovieList(GUIComponent):
 				length = data.len
 				if length > 0:
 					length = ngettext("%d Min", "%d Mins", (length // 60)) % (length // 60)
-					res.append(MultiContentEntryText(pos=(colX, 0), size=(durationWidth, ih), font=1, flags=RT_HALIGN_RIGHT | RT_VALIGN_CENTER, text=length))
+					res.append(MultiContentEntryText(pos=(self.spaceLeft + colX, 0), size=(durationWidth, ih), font=1, flags=RT_HALIGN_RIGHT | RT_VALIGN_CENTER, text=length))
 
 		# Date
 		begin_string = ""
@@ -603,12 +607,12 @@ class MovieList(GUIComponent):
 		return self.instance.getCurrentIndex()
 
 	def getCurrentEvent(self):
-		l = self.l.getCurrentSelection()
-		return l and l[0] and l[1] and l[1].getEvent(l[0])
+		currl = self.l.getCurrentSelection()
+		return currl and currl[0] and currl[1] and currl[1].getEvent(currl[0])
 
 	def getCurrent(self):
-		l = self.l.getCurrentSelection()
-		return l and l[0]
+		currl = self.l.getCurrentSelection()
+		return currl and currl[0]
 
 	def getItem(self, index):
 		if self.list:
@@ -929,7 +933,7 @@ class MovieList(GUIComponent):
 		rautotags = {}
 		for tag, movies in autotags.items():
 			if (len(movies) > 1):
-				movies = tuple(movies) # a tuple can be hashed, but a list not
+				movies = tuple(movies)  # a tuple can be hashed, but a list not
 				item = rautotags.get(movies, [])
 				if not item:
 					rautotags[movies] = item
@@ -960,7 +964,7 @@ class MovieList(GUIComponent):
 				self.tags[match] = set(tags)
 			else:
 				match = ' '.join(tags)
-				if (len(match) > 2) or (match in realtags): #Omit small words, only for auto tags
+				if (len(match) > 2) or (match in realtags):  # Omit small words, only for auto tags
 					self.tags[match] = set(tags)
 		# Adding the realtags to the tag list
 		for tag in realtags:
@@ -984,7 +988,7 @@ class MovieList(GUIComponent):
 			firstItem = x[3].collectionItems[0]
 			if firstItem:
 				ref = firstItem[0] or ref
-		len = x[1] and (x[1].getLength(ref) // 60) # we only display minutes, so sort by minutes
+		len = x[1] and (x[1].getLength(ref) // 60)  # we only display minutes, so sort by minutes
 		name = x[3].txt
 		return self.getSortPrimaryGroup(x), len or 0, name and name.lower() or "", -x[2]
 
@@ -1036,7 +1040,7 @@ class MovieList(GUIComponent):
 			lbl.visible = True
 		self.moveToCharTimer = eTimer()
 		self.moveToCharTimer.callback.append(self._moveToChrStr)
-		self.moveToCharTimer.start(1000, True) #time to wait for next key press to decide which letter to use...
+		self.moveToCharTimer.start(1000, True)  # time to wait for next key press to decide which letter to use...
 
 	def moveToString(self, char, lbl=None):
 		self._char = self._char + char.upper()
@@ -1046,7 +1050,7 @@ class MovieList(GUIComponent):
 			lbl.visible = True
 		self.moveToCharTimer = eTimer()
 		self.moveToCharTimer.callback.append(self._moveToChrStr)
-		self.moveToCharTimer.start(1000, True) #time to wait for next key press to decide which letter to use...
+		self.moveToCharTimer.start(1000, True)  # time to wait for next key press to decide which letter to use...
 
 	def _moveToChrStr(self):
 		currentIndex = self.instance.getCurrentIndex()
@@ -1069,7 +1073,7 @@ class MovieList(GUIComponent):
 					self.instance.moveSelectionTo(index + currentIndex + 1)
 					break
 		if found is False and currentIndex > 0:
-			itemsAbove = self.list[1:currentIndex] #first item (0) points parent folder - no point to include
+			itemsAbove = self.list[1:currentIndex]  # first item (0) points parent folder - no point to include
 			for index, item in enumerate(itemsAbove):
 				# Just ignore any "root tagged" item - for which item[1] is None
 				if not item[1]:
@@ -1130,10 +1134,10 @@ class MovieList(GUIComponent):
 
 
 def getShortName(name, serviceref):
-	if serviceref.flags & eServiceReference.mustDescent: #Directory
+	if serviceref.flags & eServiceReference.mustDescent:  # Directory
 		pathName = serviceref.getPath()
 		p = path.split(pathName)
-		if not p[1]: #if path ends in '/', p is blank.
+		if not p[1]:  # if path ends in '/', p is blank.
 			p = path.split(p[0])
 		return p[1].upper()
 	else:
