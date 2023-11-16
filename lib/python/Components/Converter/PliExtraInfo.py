@@ -1,6 +1,6 @@
 # shamelessly copied from pliExpertInfo (Vali, Mirakels, Littlesat)
 
-from enigma import eAVControl, iServiceInformation, iPlayableService
+from enigma import eServiceCenter, iServiceInformation, iPlayableService
 from Components.Converter.Converter import Converter
 from Components.Element import cached
 from Components.config import config
@@ -9,6 +9,7 @@ from Tools.GetEcmInfo import GetEcmInfo
 from Tools.Hex2strColor import Hex2strColor
 from Components.Converter.Poll import Poll
 from skin import parameters
+from Session import SessionObject
 
 caid_data = (
 	("0x100", "0x1ff", "Seca", "S", True),
@@ -130,7 +131,7 @@ class PliExtraInfo(Poll, Converter, object):
 				"ResolutionString",
 			),
 			"TransponderInfo": (
-				( # not feraw
+				(  # not feraw
 					"StreamURLInfo",
 				),
 				(  # feraw and "DVB-T" not in feraw.get("tuner_type", "")
@@ -223,17 +224,17 @@ class PliExtraInfo(Poll, Converter, object):
 	def createCryptoBar(self, info):
 		res = ""
 		available_caids = info.getInfoObject(iServiceInformation.sCAIDs)
-		colors = parameters.get("PliExtraInfoColors", (0x0000FF00, 0x00FFFF00, 0x007F7F7F, 0x00FFFFFF)) # "found", "not found", "available", "default" colors
+		colors = parameters.get("PliExtraInfoColors", (0x0000FF00, 0x00FFFF00, 0x007F7F7F, 0x00FFFFFF))  # "found", "not found", "available", "default" colors
 
 		for caid_entry in caid_data:
 			if int(caid_entry[0], 16) <= int(self.current_caid, 16) <= int(caid_entry[1], 16):
-				color = Hex2strColor(colors[0]) # green
+				color = Hex2strColor(colors[0])  # green
 			else:
-				color = Hex2strColor(colors[2]) # grey
+				color = Hex2strColor(colors[2])  # grey
 				try:
 					for caid in available_caids:
 						if int(caid_entry[0], 16) <= caid <= int(caid_entry[1], 16):
-							color = Hex2strColor(colors[1]) # yellow
+							color = Hex2strColor(colors[1])  # yellow
 				except:
 					pass
 
@@ -242,7 +243,7 @@ class PliExtraInfo(Poll, Converter, object):
 					res += " "
 				res += color + caid_entry[3]
 
-		res += Hex2strColor(colors[3]) # white (this acts like a color "reset" for following strings
+		res += Hex2strColor(colors[3])  # white (this acts like a color "reset" for following strings
 		return res
 
 	def createCryptoSeca(self, info):
@@ -469,14 +470,30 @@ class PliExtraInfo(Poll, Converter, object):
 		return ""
 
 	def createResolution(self, info):
-		avControl = eAVControl.getInstance()
-		video_rate = avControl.getFrameRate(0)
-		video_pol = "p" if avControl.getProgressive() else "i"
-		video_width = avControl.getResolutionX(0)
-		video_height = avControl.getResolutionY(0)
-		fps = str((video_rate + 500) / 1000)
-		gamma = ("SDR", "HDR", "HDR10", "HLG", "")[info.getInfo(iServiceInformation.sGamma)]
-		return str(video_width) + "x" + str(video_height) + video_pol + fps + addspace(gamma)
+		try:
+			yres = int(open("/proc/stb/vmpeg/0/yres", "r").read(), 16)
+			if yres > 4096 or yres == 0:
+				return ""
+		except:
+			return ""
+		try:
+			xres = int(open("/proc/stb/vmpeg/0/xres", "r").read(), 16)
+			if xres > 4096 or xres == 0:
+				return ""
+		except:
+			return ""
+		mode = ""
+		try:
+			mode = "p" if int(open("/proc/stb/vmpeg/0/progressive", "r").read(), 16) else "i"
+		except:
+			pass
+		fps = ""
+		try:
+			fps = str((int(open("/proc/stb/vmpeg/0/framerate", "r").read()) + 500) // 1000)
+		except:
+			pass
+
+		return "%sx%s%s%s" % (xres, yres, mode, fps)
 
 	def createVideoCodec(self, info):
 		return codec_data.get(info.getInfo(iServiceInformation.sVideoType), _("N/A"))
@@ -546,7 +563,7 @@ class PliExtraInfo(Poll, Converter, object):
 	def createStreamURLInfo(self, info):
 		refstr = info.getInfoString(iServiceInformation.sServiceref)
 		if "%3a//" in refstr.lower():
-			return refstr.split(":")[10].replace("%3a", ":").replace("%3A", ":")
+			return refstr.replace("%3a", ":").replace("%3A", ":").split("://")[1].split("/")[0].split('@')[-1]
 		return ""
 
 	def createFrequency(self, fedata):
@@ -602,14 +619,17 @@ class PliExtraInfo(Poll, Converter, object):
 	def createTunerSystem(self, fedata):
 		return fedata.get("system") or ""
 
-	def createOrbPos(self, feraw):
-		orbpos = feraw.get("orbital_position")
-		if orbpos is not None:
+	def formatOrbPos(self, orbpos):
+		if isinstance(orbpos, int) and 0 <= orbpos <= 3600:  # sanity
 			if orbpos > 1800:
 				return str((float(3600 - orbpos)) / 10.0) + "\xb0" + "W"
-			elif orbpos > 0:
+			else:
 				return str((float(orbpos)) / 10.0) + "\xb0" + "E"
 		return ""
+
+	def createOrbPos(self, feraw):
+		orbpos = feraw.get("orbital_position")
+		return self.formatOrbPos(orbpos)
 
 	def createOrbPosOrTunerSystem(self, fedata, feraw):
 		orbpos = self.createOrbPos(feraw)
@@ -619,10 +639,10 @@ class PliExtraInfo(Poll, Converter, object):
 
 	def createTransponderName(self, feraw):
 		orbpos = feraw.get("orbital_position")
-		if orbpos is None: # Not satellite
+		if orbpos is None:  # Not satellite
 			return ""
 		freq = feraw.get("frequency")
-		if freq and freq < 10700000: # C-band
+		if freq and freq < 10700000:  # C-band
 			if orbpos > 1800:
 				orbpos += 1
 			else:
@@ -722,13 +742,11 @@ class PliExtraInfo(Poll, Converter, object):
 
 		if orbpos in sat_names:
 			return sat_names[orbpos]
-		elif orbpos > 1800:
-			return str((float(3600 - orbpos)) / 10.0) + "W"
 		else:
-			return str((float(orbpos)) / 10.0) + "E"
+			return self.formatOrbPos(orbpos)
 
 	def createProviderName(self, info):
-		return info.getInfoString(iServiceInformation.sProvider)
+		return info.getInfoString(iServiceInformation.sProvider) or self.feraw and {282: "BSkyB", 192: "SKY", 130: "SkyItalia"}.get(self.feraw.get("orbital_position"), "")
 
 	def createMisPls(self, fedata):
 		tmp = ""
@@ -868,6 +886,9 @@ class PliExtraInfo(Poll, Converter, object):
 			feinfo = service.frontendInfo()
 			if feinfo:
 				self.feraw = feinfo.getAll(config.usage.infobar_frontend_source.value == "settings")
+				if not self.feraw:
+					serviceref = SessionObject().session.nav.getCurrentlyPlayingServiceReference()
+					self.feraw = serviceref and eServiceCenter.getInstance().info(serviceref).getInfoObject(serviceref, iServiceInformation.sTransponderData)
 				if self.feraw:
 					self.fedata = ConvertToHumanReadable(self.feraw)
 
@@ -965,7 +986,7 @@ class PliExtraInfo(Poll, Converter, object):
 				if request_selected:
 					if int(caid_entry[0], 16) <= int(current_caid, 16) <= int(caid_entry[1], 16):
 						return True
-				else: # request available
+				else:  # request available
 					try:
 						for caid in available_caids:
 							if int(caid_entry[0], 16) <= caid <= int(caid_entry[1], 16):
