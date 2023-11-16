@@ -13,6 +13,7 @@ install_PYTHON = \
 	PowerTimer.py \
 	RecordTimer.py \
 	ServiceReference.py \
+	Session.py \
 	skin.py \
 	StartEnigma.py \
 	timer.py \
