@@ -274,7 +274,7 @@ int eListboxServiceContent::getPrevMarkerPos()
 		if (i->flags == eServiceReference::isMarker)
 			break;
 	}
-	
+
 	return cursorResolve(index);
 }
 
