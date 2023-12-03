@@ -2487,7 +2487,7 @@ bool eDVBServiceBase::tryFallbackTuner(eServiceReferenceDVB &service, bool &is_s
 	service = eServiceReferenceDVB(remote_service_ref.str());
 
 	is_stream = true;
-	
+
 //	m_is_streamx = true;	// used by decoder.cpp to stop tuxtxt logging on text pid for streams
 
 	return true;

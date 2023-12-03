@@ -45,7 +45,7 @@ eDVBAudio::eDVBAudio(eDVBDemux *demux, int dev)
 	if (tmp_fd == 0)
 	{
 		::close(tmp_fd);
-		tmp_fd = -1;	
+		tmp_fd = -1;
 		fd0lock = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
 		/* eDebug("[decoder][eDVBAudio] opening null fd returned: %d", fd0lock); */
 	}
@@ -282,7 +282,7 @@ eDVBVideo::eDVBVideo(eDVBDemux *demux, int dev, bool fcc_enable)
 	if (tmp_fd == 0)
 	{
 		::close(tmp_fd);
-		tmp_fd = -1;	
+		tmp_fd = -1;
 		fd0lock = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
 		/* eDebug("[decoder][eDVBVideo] opening null fd returned: %d", fd0lock); */
 	}

@@ -1213,7 +1213,7 @@ def InitUsageConfig():
 	config.mediaplayer = ConfigSubsection()
 	config.mediaplayer.useAlternateUserAgent = ConfigYesNo(default=False)
 	config.mediaplayer.alternateUserAgent = ConfigText(default="")
-	
+
 	config.hdmicec = ConfigSubsection()
 	config.hdmicec.enabled = ConfigYesNo(default=False)
 	config.hdmicec.control_tv_standby = ConfigYesNo(default=True)
