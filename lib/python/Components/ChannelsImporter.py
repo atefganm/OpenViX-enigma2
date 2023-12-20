@@ -21,16 +21,26 @@ def autostart():
 		autoClientModeTimer = AutoClientModeTimer()
 
 
+def getRemoteAddress():
+	if config.clientmode.serverAddressType.value == "ip":
+		return "%d.%d.%d.%d" % (config.clientmode.serverIP.value[0], config.clientmode.serverIP.value[1], config.clientmode.serverIP.value[2], config.clientmode.serverIP.value[3])
+	else:
+		return config.clientmode.serverDomain.value
+
+
 class AutoClientModeTimer:
 	instance = None
 
 	def __init__(self):
 		self.clientmodetimer = eTimer()
 		self.clientmodetimer.callback.append(self.ClientModeonTimer)
+		self.autostartscantimer = eTimer()
+		self.autostartscantimer.callback.append(self.doautostartscan)
 		self.clientmodeactivityTimer = eTimer()
 		self.clientmodeactivityTimer.timeout.get().append(self.clientmodedatedelay)
 		now = int(time())
-		self.doautostartscan() # import at boot time
+		self.attempts = 0
+		self.doautostartscan()  # import at boot time
 
 		global ClientModeTime
 		if config.clientmode.enableSchedule.value:
@@ -60,7 +70,7 @@ class AutoClientModeTimer:
 		backupclock = config.clientmode.scheduletime.value
 		nowt = time()
 		now = localtime(nowt)
-		if config.clientmode.scheduleRepeatInterval.value.isdigit(): # contains wait time in minutes
+		if config.clientmode.scheduleRepeatInterval.value.isdigit():  # contains wait time in minutes
 			repeatIntervalMinutes = int(config.clientmode.scheduleRepeatInterval.value)
 			return int(mktime((now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min + repeatIntervalMinutes, 0, now.tm_wday, now.tm_yday, now.tm_isdst)))
 		return int(mktime((now.tm_year, now.tm_mon, now.tm_mday, backupclock[0], backupclock[1], 0, now.tm_wday, now.tm_yday, now.tm_isdst)))
@@ -72,7 +82,7 @@ class AutoClientModeTimer:
 		now = int(time())
 		if ClientModeTime > 0:
 			if ClientModeTime < now + atLeast:
-				if config.clientmode.scheduleRepeatInterval.value.isdigit(): # contains wait time in minutes
+				if config.clientmode.scheduleRepeatInterval.value.isdigit():  # contains wait time in minutes
 					ClientModeTime = now + (60 * int(config.clientmode.scheduleRepeatInterval.value))
 					while (int(ClientModeTime) - 30) < now:
 						ClientModeTime += 60 * int(config.clientmode.scheduleRepeatInterval.value)
@@ -111,14 +121,40 @@ class AutoClientModeTimer:
 		self.clientmodedate(atLeast)
 
 	def doClientMode(self, answer):
+		self.autostartscantimer.stop()
+		self.attempts = 0
 		now = int(time())
-		self.timer = eTimer()
-		self.timer.callback.append(self.doautostartscan)
 		print("[ClientModeScheduler][doClientMode] Running ClientMode", strftime("%c", localtime(now)))
-		self.timer.start(100, 1)
+		self.autostartscantimer.start(100, 1)
 
 	def doautostartscan(self):
-		ChannelsImporter()
+		self.autostartscantimer.stop()
+		if self.checkFTPconnection():
+			self.attempts = 0
+			ChannelsImporter()
+		else:
+			if self.attempts < 5:
+				print("[ChannelsImporter] attempt %d failed. Retrying..." % (self.attempts + 1,))
+				self.autostartscantimer.startLongTimer(10)
+			self.attempts += 1
+
+	def checkFTPconnection(self):
+		print("[ChannelsImporter][checkFTPconnection] Testing FTP connection...")
+		try:
+			from ftplib import FTP
+			ftp = FTP()
+			ftp.set_pasv(config.clientmode.passive.value)
+			ftp.connect(host=getRemoteAddress(), port=config.clientmode.serverFTPPort.value, timeout=5)
+			result = ftp.login(user=config.clientmode.serverFTPusername.value, passwd=config.clientmode.serverFTPpassword.value)
+			ftp.quit()
+			if result.startswith("230"):
+				print("[ChannelsImporter][checkFTPconnection] FTP connection success:", result)
+				return True
+			print("[ChannelsImporter][checkFTPconnection] FTP connection failure:", result)
+			return False
+		except Exception as err:
+			print("[ChannelsImporter][checkFTPconnection] Error:", err)
+			return False
 
 	def doneConfiguring(self):
 		now = int(time())
@@ -320,10 +356,7 @@ class ChannelsImporter():
 		shutil.copy2(source, dest)
 
 	def getRemoteAddress(self):
-		if config.clientmode.serverAddressType.value == "ip":
-			return "%d.%d.%d.%d" % (config.clientmode.serverIP.value[0], config.clientmode.serverIP.value[1], config.clientmode.serverIP.value[2], config.clientmode.serverIP.value[3])
-		else:
-			return config.clientmode.serverDomain.value
+		return getRemoteAddress()
 
 	def FTPdownloadFile(self, sourcefolder, sourcefile, destfile):
 		print("[ChannelsImporter] Downloading remote file '%s'" % sourcefile)
@@ -355,6 +388,6 @@ class ChannelsImporter():
 		except HTTPError as err:
 			print("[ChannelsImporter][saveEPGonRemoteReceiver] ERROR:", err)
 		except URLError as err:
-			print("[ChannelsImporter][saveEPGonRemoteReceiver] ERROR:", err.reason[0])
+			print("[ChannelsImporter][saveEPGonRemoteReceiver] ERROR:", err.reason)
 		except:
 			print("[ChannelsImporter][saveEPGonRemoteReceiver] undefined error")
