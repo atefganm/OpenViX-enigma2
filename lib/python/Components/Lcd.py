@@ -1,5 +1,7 @@
 from sys import maxsize
 
+from boxbranding import getBoxType, getDisplayType
+
 from enigma import eDBoxLCD, eTimer, eActionMap
 
 from Components.config import config, ConfigSubsection, ConfigSelection, ConfigSlider, ConfigYesNo, ConfigNothing
@@ -351,7 +353,12 @@ def InitLcd():
 		def setLCDminitvfps(configElement):
 			ilcd.setLCDMiniTVFPS(configElement.value)
 
-		standby_default = 0
+		if getBoxType() in ('dm900', 'dm920', 'e4hdultra'):
+			standby_default = 4
+		elif getBoxType() in ('spycat4kmini', 'osmega'):
+			standby_default = 10
+		else:
+			standby_default = 1
 
 		if not ilcd.isOled():
 			config.lcd.contrast = ConfigSlider(default=5, limits=(0, 20))
