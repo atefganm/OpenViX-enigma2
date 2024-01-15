@@ -1,3 +1,4 @@
+from ast import literal_eval
 from os import listdir
 from hashlib import md5
 from os import R_OK, access
@@ -10,15 +11,13 @@ from Components.RcModel import rc_model
 from Tools.Directories import fileCheck, fileExists, fileHas, pathExists, resolveFilename, SCOPE_LIBDIR, SCOPE_SKIN, fileReadLines
 from Tools.HardwareInfo import HardwareInfo
 
-SystemInfo = {}
-
 
 class BoxInformation:
 	def __init__(self, root=""):
 		self.immutableList = []
 		self.boxInfo = {}
 		file = root + pathjoin(resolveFilename(SCOPE_LIBDIR), "enigma.info")
-		self.boxInfo["overrideactive"] = False # not currently used by us
+		self.boxInfo["overrideactive"] = False  # not currently used by us
 		self.boxInfo["checksumerror"] = True
 		lines = fileReadLines(file)
 		if lines:
@@ -31,75 +30,39 @@ class BoxInformation:
 				elif item:
 					self.setItem(item, self.processValue(value), immutable=True)
 			if self.boxInfo["checksumerror"]:
-				 print("[BoxInfo] Data integrity of %s could not be verified." % file)
-			# else:
-				# print("[SystemInfo] Enigma information file data loaded into BoxInfo.")
+				print("[BoxInfo] Data integrity of %s could not be verified." % file)
 		else:
 			print("[BoxInfo] ERROR: %s is not available!  The system is unlikely to boot or operate correctly." % file)
 
 	def processValue(self, value):
-		if len(value) > 1 and value[0] in ("\"", "'") and value[-1] == value[0]:
-			value = value[1:-1]
-		elif value.startswith("(") and value.endswith(")"):
-			data = []
-			for item in [x.strip() for x in value[1:-1].split(",")]:
-				data.append(self.processValue(item))
-			value = tuple(data)
-		elif value.startswith("[") and value.endswith("]"):
-			data = []
-			for item in [x.strip() for x in value[1:-1].split(",")]:
-				data.append(self.processValue(item))
-			value = list(data)
-		elif value.upper() in ("FALSE", "NO", "OFF", "DISABLED"):
-			value = False
-		elif value.upper() in ("TRUE", "YES", "ON", "ENABLED"):
-			value = True
-		elif value.upper() == "NONE":
-			value = None
-		elif value.isdigit() or ((value[0:1] == "-" or value[0:1] == "+") and value[1:].isdigit()):
-			if value[0] != "0":  # if this is zero padded it must be a string, so skip
-				value = int(value)
-		elif value.lower().startswith("0x"):
-			value = int(value, 16)
-		elif value.lower().startswith("0o"):
-			value = int(value, 8)
-		elif value.lower().startswith("0b"):
-			value = int(value, 2)
-		else:
-			try:
-				value = float(value)
-			except ValueError:
-				pass
-		return value
+		try:
+			return literal_eval(value)
+		except:
+			return value
 
 	def getEnigmaInfoList(self):
 		return sorted(self.immutableList)
 
-	def getEnigmaConfList(self): # not used by us
-		return []
+	def getEnigmaConfList(self):  # not used by us
+		return []  # return an empty list because we do not import a file called "enigma.conf"
 
 	def getItemsList(self):
 		return sorted(list(self.boxInfo.keys()))
 
 	def getItem(self, item, default=None):
-		if item in self.boxInfo:
-			return self.boxInfo[item]
-		elif item in SystemInfo:
-			return SystemInfo[item]
-		return default
+		return self.boxInfo.get(item, default)
 
-	def setItem(self, item, value, immutable=False, forceOverride=False):
-		if item in self.immutableList and not forceOverride:
+	def setItem(self, item, value, immutable=False):
+		if item in self.immutableList:
 			print("[BoxInfo] Error: Item '%s' is immutable and can not be %s!" % (item, "changed" if item in self.boxInfo else "added"))
 			return False
 		if immutable and item not in self.immutableList:
 			self.immutableList.append(item)
 		self.boxInfo[item] = value
-		SystemInfo[item] = value
 		return True
 
-	def deleteItem(self, item, forceOverride=False):
-		if item in self.immutableList and not forceOverride:
+	def deleteItem(self, item):
+		if item in self.immutableList:
 			print("[BoxInfo] Error: Item '%s' is immutable and can not be deleted!" % item)
 		elif item in self.boxInfo:
 			del self.boxInfo[item]
@@ -108,6 +71,32 @@ class BoxInformation:
 
 
 BoxInfo = BoxInformation()
+
+
+class SystemInformation(dict):
+	def __getitem__(self, item):
+		return BoxInfo.boxInfo[item]
+
+	def __setitem__(self, item, value):
+		BoxInfo.setItem(item, value, immutable=False)
+
+	def __delitem__(self, item):
+		BoxInfo.deleteItem(item)
+
+	def get(self, item, default=None):
+		return BoxInfo.boxInfo.get(item, default)
+
+	def __prohibited(self, *args, **kws):
+		print("[SystemInfo] operation not permitted")
+
+	clear = __prohibited
+	update = __prohibited
+	setdefault = __prohibited
+	pop = __prohibited
+	popitem = __prohibited
+
+
+SystemInfo = SystemInformation()
 
 
 ARCHITECTURE = BoxInfo.getItem("architecture")
@@ -136,7 +125,7 @@ def getBoxType():  # this function mimics the function of the same name in brand
 
 
 BoxInfo.setItem("boxtype", getBoxType(), immutable=True)
-	
+
 
 def getMachineName():  # this function mimics the function of the same name in branding module
 	if MACHINEBUILD == "sf8008":
@@ -153,7 +142,7 @@ def getMachineName():  # this function mimics the function of the same name in b
 
 
 BoxInfo.setItem("machinename", getMachineName(), immutable=True)
-	
+
 
 def getBoxDisplayName():  # This function returns a tuple like ("BRANDNAME", "BOXNAME")
 	return (DISPLAYBRAND, SystemInfo["machinename"])
