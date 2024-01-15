@@ -18,7 +18,6 @@ from Screens.AutoDiseqc import AutoDiseqc
 from Tools.BoundFunction import boundFunction
 from Tools.Directories import fileExists
 
-from boxbranding import getImageType
 from time import mktime, localtime, time
 from datetime import datetime
 
@@ -450,7 +449,7 @@ class NimSetup(ConfigListScreen, ServiceStopScreen, Screen):
 						self.nimConfig.advanced.unicableconnectedTo.setChoices(choices)
 						self.list.append(getConfigListEntry(self.indent % _("Connected to"), self.nimConfig.advanced.unicableconnectedTo, _("Select the tuner to which the signal cable of the SCR device is connected.")))
 
-			else:	#kein Unicable
+			else:  # kein Unicable
 				self.list.append(getConfigListEntry(self.indent % _("Voltage mode"), Sat.voltage, _("Select 'polarisation' if using a 'universal' LNB, otherwise consult your LNB spec sheet.")))
 				self.list.append(getConfigListEntry(self.indent % _("Increased voltage"), currLnb.increased_voltage))
 				self.list.append(getConfigListEntry(self.indent % _("Tone mode"), Sat.tonemode, _("Select 'band' if using a 'universal' LNB, otherwise consult your LNB spec sheet.")))
@@ -612,7 +611,7 @@ class NimSetup(ConfigListScreen, ServiceStopScreen, Screen):
 				# why we need this cast?
 				sat_name = str(nimmanager.getSatDescription(orbpos))
 			except:
-				if orbpos > 1800: # west
+				if orbpos > 1800:  # west
 					orbpos = 3600 - orbpos
 					h = _("W")
 				else:
@@ -832,7 +831,7 @@ class NimSelection(Screen):
 		recordings = self.session.nav.getRecordings()
 		next_rec_time = self.session.nav.RecordTimer.getNextRecordingTime()
 		if recordings or (next_rec_time and next_rec_time > 0 and (next_rec_time - time()) < 360):
-			if getImageType() == 'release':
+			if SystemInfo["imagetype"] == 'release':
 				self.session.open(MessageBox, _("Recording(s) are in progress or coming up in few seconds!"), MessageBox.TYPE_INFO, timeout=5, enable_input=False)
 			else:
 				message = _("Recording(s) are in progress or coming up in few seconds!")

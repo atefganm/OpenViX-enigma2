@@ -1,6 +1,5 @@
 from enigma import eTimer, eDVBDB
 
-from boxbranding import getImageType, getMachineBrand, getMachineName
 from Components.ActionMap import ActionMap
 from Components.Button import Button
 from Components.config import config
@@ -10,6 +9,7 @@ from Components.Label import Label
 from Components.ScrollLabel import ScrollLabel  # noqa: F401
 from Components.Sources.StaticText import StaticText
 from Components.Slider import Slider
+from Components.SystemInfo import SystemInfo
 import Components.Task
 from Screens.ChoiceBox import ChoiceBox
 from Screens.GitCommitInfo import CommitInfo, gitcommitinfo
@@ -17,7 +17,9 @@ from Screens.MessageBox import MessageBox
 from Components.OnlineUpdateCheck import feedsstatuscheck, kernelMismatch, statusMessage
 from Screens.ParentalControlSetup import ProtectedScreen
 from Screens.Screen import Screen
+from Screens.TextBox import TextBox
 from Screens.Standby import TryQuitMainloop
+from Tools.BoundFunction import boundFunction
 from Tools.Directories import isPluginInstalled
 
 ocram = ''
@@ -154,11 +156,11 @@ class UpdatePlugin(Screen, ProtectedScreen):
 			self['tl_yellow'].show()
 		else:
 			self['tl_off'].show()
-		if (getImageType() != 'release' and self.trafficLight not in ("unknown", "alien", "developer")) or (getImageType() == 'release' and self.trafficLight not in ("stable", "unstable", "alien", "developer")):
+		if (SystemInfo["imagetype"] != 'release' and self.trafficLight not in ("unknown", "alien", "developer")) or (SystemInfo["imagetype"] == 'release' and self.trafficLight not in ("stable", "unstable", "alien", "developer")):
 			self.session.openWithCallback(self.close, MessageBox, feedsstatuscheck.getFeedsErrorMessage(), type=MessageBox.TYPE_INFO, timeout=30, close_on_any_key=True)
 			return
 		else:
-			if getImageType() != 'release' or (config.softwareupdate.updateisunstable.value == 1 and config.softwareupdate.updatebeta.value) or config.softwareupdate.updateisunstable.value == 0:
+			if SystemInfo["imagetype"] != 'release' or (config.softwareupdate.updateisunstable.value == 1 and config.softwareupdate.updatebeta.value) or config.softwareupdate.updateisunstable.value == 0:
 				if kernelMismatch():
 					self.session.openWithCallback(self.close, MessageBox, _("The Linux kernel has changed, an update is not permitted. \nInstall latest image using USB stick or Image Manager."), type=MessageBox.TYPE_INFO, timeout=30, close_on_any_key=True)
 					return
@@ -216,8 +218,6 @@ class UpdatePlugin(Screen, ProtectedScreen):
 		if event == IpkgComponent.EVENT_DOWNLOAD:
 			self.status.setText(_("Downloading"))
 		elif event == IpkgComponent.EVENT_UPGRADE:
-			if self.sliderPackages.has_key(param):
-				self.slider.setValue(self.sliderPackages[param])
 			if param in self.sliderPackages:
 				self.slider.setValue(self.sliderPackages[param])
 			self.package.setText(param)
@@ -259,13 +259,13 @@ class UpdatePlugin(Screen, ProtectedScreen):
 				self.ipkg.startCmd(IpkgComponent.CMD_UPGRADE_LIST)
 			elif self.ipkg.currentCommand == IpkgComponent.CMD_UPGRADE_LIST:
 				self.total_packages = None
-				if (getImageType() != 'release' or (config.softwareupdate.updateisunstable.value == 1 and config.softwareupdate.updatebeta.value)) or config.softwareupdate.updateisunstable.value == 0:
+				if (SystemInfo["imagetype"] != 'release' or (config.softwareupdate.updateisunstable.value == 1 and config.softwareupdate.updatebeta.value)) or config.softwareupdate.updateisunstable.value == 0:
 					self.total_packages = len(self.ipkg.getFetchedList())
 					packagesMsg = "\n(" + (ngettext("%s updated package available", "%s updated packages available", self.total_packages) % self.total_packages) + ")"
-					if getImageType() != 'release' or (config.softwareupdate.updateisunstable.value == 1 and config.softwareupdate.updatebeta.value):
-						message = _("The current update may be unstable.") + "\n" + _("Are you sure you want to update your %s %s?") % (getMachineBrand(), getMachineName()) + packagesMsg
+					if SystemInfo["imagetype"] != 'release' or (config.softwareupdate.updateisunstable.value == 1 and config.softwareupdate.updatebeta.value):
+						message = _("The current update may be unstable.") + "\n" + _("Are you sure you want to update your %s %s?") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"]) + packagesMsg
 					elif config.softwareupdate.updateisunstable.value == 0:
-						message = _("Do you want to update your %s %s?") % (getMachineBrand(), getMachineName()) + packagesMsg
+						message = _("Do you want to update your %s %s?") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"]) + packagesMsg
 				if self.total_packages:
 					if self.total_packages > 150:
 						message += " " + _("Reflash recommended!")
@@ -287,6 +287,7 @@ class UpdatePlugin(Screen, ProtectedScreen):
 						if not config.softwareupdate.autoimagebackup.value and config.imagemanager.backuplocation.value:
 							choices.append((_("Perform a full image backup"), "imagebackup"))
 					choices.append((_("Update channel list only"), "channels"))
+					choices.append((_("Show packages to be updated"), "showlist"))
 					choices.append((_("Cancel"), ""))
 					self["actions"].setEnabled(True)
 					upgrademessage = self.session.openWithCallback(self.startActualUpgrade, UpdateChoices, text=message, list=choices, skin_name="SoftwareUpdateChoices", var=self.trafficLight)
@@ -317,14 +318,14 @@ class UpdatePlugin(Screen, ProtectedScreen):
 			else:
 				self.activityTimer.stop()
 				self.activityslider.setValue(0)
-				error = _("Your %s %s might be unusable now. Please consult the manual for further assistance before rebooting your %s %s.") % (getMachineBrand(), getMachineName(), getMachineBrand(), getMachineName())
+				error = _("Your %s %s might be unusable now. Please consult the manual for further assistance before rebooting your %s %s.") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"], SystemInfo["MachineBrand"], SystemInfo["MachineName"])
 				if self.packages == 0:
 					if self.error != 0:
 						error = _("Problem retrieving update list.\nIf this issue persists please check/report on forum")
 					else:
 						error = _("A background update check is in progress,\nplease wait a few minutes and try again.")
 				if self.updating:
-					error = _("Update failed. Your %s %s does not have a working internet connection.") % (getMachineBrand(), getMachineName())
+					error = _("Update failed. Your %s %s does not have a working internet connection.") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"])
 				self.status.setText(_("Error") + " - " + error)
 				self["actions"].setEnabled(True)
 		elif event == IpkgComponent.EVENT_LISTITEM:
@@ -349,9 +350,9 @@ class UpdatePlugin(Screen, ProtectedScreen):
 		if answer[1] == "menu":
 			packagesMsg = "\n(%s " % self.total_packages + _("Packages") + ")"
 			if config.softwareupdate.updateisunstable.value == 1:
-				message = _("The current update may be unstable.") + "\n" + _("Are you sure you want to update your %s %s?") % (getMachineBrand(), getMachineName()) + packagesMsg
+				message = _("The current update may be unstable.") + "\n" + _("Are you sure you want to update your %s %s?") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"]) + packagesMsg
 			elif config.softwareupdate.updateisunstable.value == 0:
-				message = _("Do you want to update your %s %s?") % (getMachineBrand(), getMachineName()) + packagesMsg
+				message = _("Do you want to update your %s %s?") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"]) + packagesMsg
 			choices = [(_("View the changes"), "changes"),
 				(_("Upgrade and reboot system"), "cold")]
 			if not self.SettingsBackupDone and not config.softwareupdate.autosettingsbackup.value and config.backupmanager.backuplocation.value:
@@ -364,6 +365,9 @@ class UpdatePlugin(Screen, ProtectedScreen):
 			self["actions"].setEnabled(True)
 			upgrademessage = self.session.openWithCallback(self.startActualUpgrade, UpdateChoices, text=message, list=choices, skin_name="SoftwareUpdateChoices", var=self.trafficLight)
 			upgrademessage.setTitle(self.getTitle())
+		elif answer[1] == "showlist":
+			text = "\n".join([x[0] for x in sorted(self.ipkg.getFetchedList(), key=lambda d: d[0])])
+			self.session.openWithCallback(boundFunction(self.ipkgCallback, IpkgComponent.EVENT_DONE, None), TextBox, text, _("Packages to update"), True)
 		elif answer[1] == "changes":
 			self.session.openWithCallback(self.startActualUpgrade, SoftwareUpdateChanges)
 		elif answer[1] == "backup":
@@ -430,7 +434,7 @@ class UpdatePlugin(Screen, ProtectedScreen):
 	def exit(self):
 		if not self.ipkg.isRunning():
 			if self.packages != 0 and self.error == 0 and self.channellist_only == 0:
-				self.session.openWithCallback(self.exitAnswer, MessageBox, _("Upgrade finished.") + " " + _("Do you want to reboot your %s %s") % (getMachineBrand(), getMachineName()))
+				self.session.openWithCallback(self.exitAnswer, MessageBox, _("Upgrade finished.") + " " + _("Do you want to reboot your %s %s") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"]))
 			else:
 				self.close()
 		else:

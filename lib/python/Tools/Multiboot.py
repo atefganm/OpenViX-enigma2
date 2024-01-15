@@ -4,7 +4,6 @@ import subprocess
 import tempfile
 from os import path, rmdir, rename, sep, stat
 
-from boxbranding import getMachineMtdRoot
 from Components.Console import Console
 from Components.SystemInfo import SystemInfo, BoxInfo as BoxInfoRunningInstance, BoxInformation
 from Tools.Directories import fileHas, fileExists
@@ -15,7 +14,7 @@ if fileHas("/proc/cmdline", "kexec=1"):
 	from PIL import ImageFont
 
 MbootList1 = ("/dev/mmcblk0p1", "/dev/mmcblk1p1", "/dev/mmcblk0p3", "/dev/mmcblk0p4", "/dev/mtdblock2", "/dev/block/by-name/bootoptions")
-MbootList2 = ("/dev/%s" % getMachineMtdRoot(), )  # kexec kernel Vu+ multiboot
+MbootList2 = ("/dev/%s" % SystemInfo["mtdrootfs"], )  # kexec kernel Vu+ multiboot
 
 
 class tmp:
@@ -27,9 +26,9 @@ def getMultibootslots():
 	slotname = ""
 	SystemInfo["MultiBootSlot"] = None
 	SystemInfo["VuUUIDSlot"] = ""
+	SystemInfo["BootDevice"] = ""
 	UUID = ""
 	UUIDnum = 0
-	BoxInfo = BoxInfoRunningInstance
 	tmp.dir = tempfile.mkdtemp(prefix="getMultibootslots")
 	tmpname = tmp.dir
 	MbootList = MbootList2 if fileHas("/proc/cmdline", "kexec=1") else MbootList1
@@ -45,7 +44,7 @@ def getMultibootslots():
 				SystemInfo["MBbootdevice"] = device
 				device2 = device.rsplit("/", 1)[1]
 				print("[Multiboot][[getMultibootslots]1 Bootdevice found: %s" % device2)
-				BoxInfo.setItem("mtdbootfs", device2, forceOverride=True)
+				SystemInfo["BootDevice"] = device2
 				for file in glob.glob(path.join(tmpname, "STARTUP_*")):
 					print("[multiboot*****] [getMultibootslots]2 tmpname = %s" % (tmpname))
 					print("[multiboot] [getMultibootslots]4 file = ", file)
@@ -178,12 +177,12 @@ def GetImagelist(Recovery=None):
 		if path.isfile(path.join(imagedir, "usr/bin/enigma2")):
 			# print("[multiboot] [GetImagelist]1 Slot = %s imagedir = %s" % (slot, imagedir))
 			if path.isfile(path.join(imagedir, "usr/lib/enigma.info")):
-				print("[multiboot] [BoxInfo] using BoxInfo")
+				print("[multiboot] [GetImagelist] using enigma.info")
 				BuildVersion = createInfo(slot, imagedir=imagedir)
-				# print("[multiboot] [BoxInfo]  slot=%s, BuildVersion=%s" % (slot, BuildVersion))
+				# print("[multiboot] [GetImagelist]  slot=%s, BuildVersion=%s" % (slot, BuildVersion))
 			else:
-				# print("[multiboot] [BoxInfo] using BoxBranding")
-				print("[multiboot] [GetImagelist] 2 slot = %s imagedir = %s" % (slot, imagedir))
+				# print("[multiboot] [GetImagelist] using BoxBranding")
+				print("[multiboot] [GetImagelist]2 slot = %s imagedir = %s" % (slot, imagedir))
 				Creator = open("%s/etc/issue" % imagedir).readlines()[-2].capitalize().strip()[:-6]
 				print("[multiboot] [GetImagelist] Creator = %s imagedir = %s" % (Creator, imagedir))
 				if fileHas("/proc/cmdline", "kexec=1") and path.isfile(path.join(imagedir, "etc/vtiversion.info")):
@@ -220,7 +219,7 @@ def createInfo(slot, imagedir="/"):
 	BuildVer = BoxInfo.getItem("imagebuild")
 	BuildDate = VerDate(imagedir)
 	BuildDev = str(BoxInfo.getItem("imagedevbuild")).zfill(3) if BuildType != "rel" else ""
-	return "%s %s %s %s %s (%s)" % (Creator, BuildImgVersion, BuildType, BuildVer, BuildDev, BuildDate)
+	return " ".join([str(x) for x in (Creator, BuildImgVersion, BuildType, BuildVer, BuildDev, "(%s)" % BuildDate) if x])
 
 
 def VerDate(imagedir):
@@ -231,7 +230,7 @@ def VerDate(imagedir):
 	if fileExists(path.join(imagedir, "usr/share/bootlogo.mvi")):
 		date3 = datetime.fromtimestamp(stat(path.join(imagedir, "usr/share/bootlogo.mvi")).st_mtime).strftime("%Y-%m-%d")
 	print("[multiboot][VerDate]1 date1, date2, date3", date1, "   ", date2, "   ", date3)
-	date = max(date1, date2, date3)
+	date = max(date1, date2, date3)  # this is comparing strings
 	print("[multiboot][VerDate]2 date = %s" % date)
 	date = datetime.strptime(date, '%Y-%m-%d').strftime("%d-%m-%Y")
 	return date
