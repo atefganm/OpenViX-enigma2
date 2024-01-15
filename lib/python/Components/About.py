@@ -15,6 +15,7 @@ MODULE_NAME = __name__.split(".")[-1]
 
 
 def getVersionString():
+	from Components.SystemInfo import SystemInfo
 	return SystemInfo["imageversion"]
 
 
