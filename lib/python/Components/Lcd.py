@@ -6,7 +6,7 @@ from usb import busses
 from enigma import eActionMap, eDBoxLCD, eTimer
 
 from Components.config import config, ConfigYesNo, ConfigNothing, ConfigOnOff, ConfigSelection, ConfigSlider, ConfigSubsection
-from Components.SystemInfo import BoxInfo
+from Components.SystemInfo import SystemInfo, BoxInfo
 from Screens.InfoBar import InfoBar
 from Screens.Screen import Screen
 import Screens.Standby
@@ -347,6 +347,19 @@ def InitLcd():
 		def setLEDblinkingtime(configElement):
 			ilcd.setLEDBlinkingTime(configElement.value)
 
+	if SystemInfo["Display"]:
+		config.lcd.scroll_speed = ConfigSelection(default="300", choices=[
+			("500", _("slow")),
+			("300", _("normal")),
+			("100", _("fast"))])
+		config.lcd.scroll_delay = ConfigSelection(default="10000", choices=[
+			("10000", "10 " + _("seconds")),
+			("20000", "20 " + _("seconds")),
+			("30000", "30 " + _("seconds")),
+			("60000", "1 " + _("minute")),
+			("300000", "5 " + _("minutes")),
+			("noscrolling", _("off"))])
+
 		def setLedPowerColor(configElement):
 			fileWriteLine("/proc/stb/fp/ledpowercolor", configElement.value)
 
@@ -458,6 +471,11 @@ def InitLcd():
 		config.lcd.bright.callNotifiersOnSaveAndCancel = True
 		config.lcd.invert = ConfigYesNo(default=False)
 		config.lcd.invert.addNotifier(setLCDinverted)
+
+		def PiconPackChanged(configElement):
+			configElement.save()
+		config.lcd.picon_pack = ConfigYesNo(default=False)
+		config.lcd.picon_pack.addNotifier(PiconPackChanged)
 
 		config.lcd.flip = ConfigYesNo(default=False)
 		config.lcd.flip.addNotifier(setLCDflipped)
@@ -599,6 +617,7 @@ def InitLcd():
 		config.lcd.ledbrightnessdeepstandby = ConfigNothing()
 		config.lcd.ledbrightnessdeepstandby.apply = lambda: doNothing()
 		config.lcd.ledblinkingtime = ConfigNothing()
+		config.lcd.picon_pack = ConfigNothing()
 
 	def setPowerLEDstate(configElement):
 		fileWriteLine("/proc/stb/power/powerled", "on" if configElement.value else "off")
