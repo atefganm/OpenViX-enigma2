@@ -384,6 +384,7 @@ public:
 class gDC : public iObject
 {
 	DECLARE_REF(gDC);
+
 protected:
 	ePtr<gPixmap> m_pixmap;
 
@@ -410,6 +411,7 @@ protected:
 	ePtr<gPixmap> *m_spinner_pic;
 	eRect m_spinner_pos;
 	int m_spinner_num, m_spinner_i;
+
 public:
 	virtual void exec(const gOpcode *opcode);
 	gDC(gPixmap *pixmap);

@@ -991,8 +991,8 @@ void gDC::exec(const gOpcode *o)
 		}
 		else
 			clip = m_current_clip;
-		 if (!o->parm.blit->pixmap->surface->transparent)
-		 	o->parm.blit->flags &=~(gPixmap::blitAlphaTest|gPixmap::blitAlphaBlend);
+		if (!o->parm.blit->pixmap->surface->transparent)
+			o->parm.blit->flags &=~(gPixmap::blitAlphaTest|gPixmap::blitAlphaBlend);
 		m_pixmap->blit(*o->parm.blit->pixmap, o->parm.blit->position, clip, m_radius, m_radius_edges, o->parm.blit->flags);
 		m_radius = 0;
 		m_radius_edges = 0;
