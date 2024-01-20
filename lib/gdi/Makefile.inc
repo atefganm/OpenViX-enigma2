@@ -1,12 +1,11 @@
 noinst_LIBRARIES += gdi/libenigma_gdi.a
 
-gdi_libenigma_gdi_a_CXXFLAGS = -O3 $(LIBSDL_CFLAGS)
+gdi_libenigma_gdi_a_CXXFLAGS = $(LIBSDL_CFLAGS)
 
 gdi_libenigma_gdi_a_SOURCES = \
 	gdi/accel.cpp \
 	gdi/bcm.cpp \
 	gdi/compositing.cpp \
-	gdi/drawing.cpp \
 	gdi/epng.cpp \
 	gdi/erect.cpp \
 	gdi/fb.cpp \
@@ -28,7 +27,6 @@ gdiincludedir = $(pkgincludedir)/lib/gdi
 gdiinclude_HEADERS = \
 	gdi/accel.h \
 	gdi/compositing.h \
-	gdi/drawing.h \
 	gdi/epng.h \
 	gdi/epoint.h \
 	gdi/erect.h \
