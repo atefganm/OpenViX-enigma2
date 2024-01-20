@@ -145,6 +145,7 @@ class eTextPara: public iObject
 	int bboxValid;
 	eRect boundBox;
 	bool doTopBottomReordering;
+	bool m_blend;
 
 	int appendGlyph(Font *current_font, FT_Face current_face, FT_UInt glyphIndex, int flags, int rflags, int border, bool last,
 			bool activate_newcolor, unsigned long newcolor);
@@ -170,6 +171,8 @@ public:
 	int renderString(const char *string, int flags=0, int border=0);
 
 	void clear();
+
+	void setBlend(bool blend) { m_blend = blend; }
 
 	void blit(gDC &dc, const ePoint &offset, const gRGB &background, const gRGB &foreground, bool border = false);
 
