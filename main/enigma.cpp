@@ -167,7 +167,7 @@ static const std::string getConfigCurrentSpinner(const char* key)
 	}
 
 	return "spinner"; // fallback on default system spinner
-} 
+}
 
 int exit_code;
 
