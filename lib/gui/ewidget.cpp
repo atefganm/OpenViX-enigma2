@@ -23,6 +23,10 @@ eWidget::eWidget(eWidget *parent): m_animation(this), m_parent(parent ? parent->
 	m_current_focus = 0;
 	m_focus_owner = 0;
 	m_notify_child_on_position_change = 1;
+	m_cornerRadius = 0;
+	m_cornerRadiusEdges = 0;
+	m_have_border_color = false;
+	m_border_width = 0;
 }
 
 void eWidget::move(ePoint pos)
@@ -106,9 +110,7 @@ void eWidget::invalidate(const gRegion &region)
 	res.moveBy(abspos);
 //	eDebug("[eWidget] region to invalidate:");
 //	dumpRegion(res);
-	if (root && root->m_desktop){
-		root->m_desktop->invalidate(res, this, target_layer);
-	}
+	root->m_desktop->invalidate(res, this, target_layer);
 }
 
 void eWidget::show()
@@ -142,13 +144,11 @@ void eWidget::show()
 		abspos += root->position();
 	}
 
-	if (root && root->m_desktop){
-		root->m_desktop->recalcClipRegions(root);
+	root->m_desktop->recalcClipRegions(root);
 
-		gRegion abs = m_visible_with_childs;
-		abs.moveBy(abspos);
-		root->m_desktop->invalidate(abs, this, target_layer);
-	}
+	gRegion abs = m_visible_with_childs;
+	abs.moveBy(abspos);
+	root->m_desktop->invalidate(abs, this, target_layer);
 }
 
 void eWidget::hide()
@@ -178,13 +178,11 @@ void eWidget::hide()
 	}
 	ASSERT(root->m_desktop);
 
-		if (root && root->m_desktop){
-		gRegion abs = m_visible_with_childs;
-		abs.moveBy(abspos);
+	gRegion abs = m_visible_with_childs;
+	abs.moveBy(abspos);
 
-		root->m_desktop->recalcClipRegions(root);
-		root->m_desktop->invalidate(abs);
-	}
+	root->m_desktop->recalcClipRegions(root);
+	root->m_desktop->invalidate(abs);
 }
 
 void eWidget::raise()
@@ -364,15 +362,51 @@ int eWidget::event(int event, void *data, void *data2)
 //		dumpRegion(*(gRegion*)data);
 		if (!isTransparent())
 		{
-			if (!m_have_background_color)
-			{
-				ePtr<eWindowStyle> style;
-				if (!getStyle(style))
-					style->paintBackground(painter, ePoint(0, 0), size());
-			} else
-			{
+			bool drawborder = (m_have_border_color && m_border_width);
+
+			if (m_have_background_color)
 				painter.setBackgroundColor(m_background_color);
-				painter.clear();
+			const int r = getCornerRadius();
+
+			if (r)
+			{
+				if (r)
+					painter.setRadius(r, m_cornerRadiusEdges);
+				if (r && drawborder)
+				{
+					painter.setBackgroundColor(m_border_color);
+					painter.drawRectangle(eRect(ePoint(0, 0), size()));
+					if (r)
+						painter.setRadius(r, m_cornerRadiusEdges);
+					painter.setBackgroundColor(m_have_background_color ? m_background_color : gRGB(0, 0, 0));
+					painter.drawRectangle(eRect(m_border_width, m_border_width, size().width() - m_border_width * 2, size().height() - m_border_width * 2));
+					drawborder = false;
+				}
+				else
+					painter.drawRectangle(eRect(ePoint(0, 0), size()));
+			}
+			else
+			{
+				if (!m_have_background_color)
+				{
+					ePtr<eWindowStyle> style;
+					if (!getStyle(style))
+						style->paintBackground(painter, ePoint(0, 0), size());
+				}
+				else
+				{
+					//painter.setBackgroundColor(m_background_color);
+					painter.clear();
+				}
+			}
+			if (drawborder)
+			{
+				painter.setForegroundColor(m_border_color);
+				eSize s(size());
+				painter.fill(eRect(0, 0, s.width(), m_border_width));
+				painter.fill(eRect(0, m_border_width, m_border_width, s.height() - m_border_width));
+				painter.fill(eRect(m_border_width, s.height() - m_border_width, s.width() - m_border_width, m_border_width));
+				painter.fill(eRect(s.width() - m_border_width, m_border_width, m_border_width, s.height() - m_border_width));
 			}
 		} else
 		{
@@ -424,4 +458,40 @@ void eWidget::notifyShowHide()
 	event(evtParentVisibilityChanged);
 	for (ePtrList<eWidget>::iterator i(m_childs.begin()); i != m_childs.end(); ++i)
 		i->notifyShowHide();
+}
+
+void eWidget::setCornerRadius(int radius, int edges)
+{
+	m_cornerRadius = radius;
+	m_cornerRadiusEdges = edges;
+	invalidate();
+}
+
+void eWidget::setBorderWidth(int pixel)
+{
+	m_border_width = pixel;
+	invalidate();
+}
+
+void eWidget::setBorderColor(const gRGB &color)
+{
+	m_border_color = color;
+	m_have_border_color = true;
+	invalidate();
+}
+
+int eWidget::getCornerRadius()
+{
+	int r = m_cornerRadius;
+	if(r) {
+		const int w = m_size.width();
+		const int h = m_size.height();
+		if(w && h) {
+			int minDimension = (w < h) ? w : h;
+			if (r > minDimension / 2) {
+				r = minDimension / 2;
+			}
+		}
+	}
+	return r;
 }
