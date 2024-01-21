@@ -59,7 +59,8 @@ class HardwareInfo:
 		return getMachineName()
 
 	def has_hdmi(self):
-		return not (HardwareInfo.device_name == 'dm800' or (HardwareInfo.device_name == 'dm8000' and HardwareInfo.device_version == None))
+		from Components.SystemInfo import SystemInfo
+		return SystemInfo["brand"] in ('xtrend', 'gigablue', 'dags', 'ixuss', 'odin', 'vuplus', 'ini', 'ebox', 'ceryon') or (SystemInfo["boxtype"] in ('dm7020hd', 'dm800se', 'dm500hd', 'dm8000') and HardwareInfo.device_version is not None)
 
 	def linux_kernel(self):
 		try:
@@ -68,7 +69,8 @@ class HardwareInfo:
 			return "unknown"
 
 	def has_deepstandby(self):
-		return getBoxType() != 'dm800'
+		# from Components.SystemInfo import SystemInfo
+		return True  # SystemInfo["boxtype"] != 'dm800'
 
 	def is_nextgen(self):
 		if about.getCPUString() in ('BCM7346B2', 'BCM7425B2', 'BCM7429B0'):
