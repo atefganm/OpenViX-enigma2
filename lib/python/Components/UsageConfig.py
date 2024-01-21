@@ -2,6 +2,7 @@ import io
 import locale
 import os
 import skin
+from boxbranding import getBrandOEM, getDisplayType
 
 from enigma import eDVBDB, eEPGCache, setTunerTypePriorityOrder, setPreferredTuner, setSpinnerOnOff, setEnableTtCachingOnOff, eEnv, Misc_Options, eServiceEvent
 
@@ -30,7 +31,7 @@ visuallyImpairedCommentary = "NAR qad"
 
 def InitUsageConfig():
 	config.version = ConfigNumber(default=0)
-	if SystemInfo["brand"] in ('vuplus', 'ini'):
+	if getBrandOEM() in ('vuplus', 'ini'):
 		config.misc.remotecontrol_text_support = ConfigYesNo(default=True)
 	else:
 		config.misc.remotecontrol_text_support = ConfigYesNo(default=False)
@@ -339,7 +340,7 @@ def InitUsageConfig():
 		config.usage.wakeOnLAN.addNotifier(wakeOnLANChanged)
 
 	# standby
-	if SystemInfo["displaytype"] in ("textlcd7segment"):
+	if getDisplayType() in ("textlcd7segment"):
 		config.usage.blinking_display_clock_during_recording = ConfigSelection(default="Rec", choices=[
 			("Rec", _("REC")),
 			("RecBlink", _("Blinking REC")),
@@ -348,12 +349,12 @@ def InitUsageConfig():
 		config.usage.blinking_display_clock_during_recording = ConfigYesNo(default=False)
 
 	# in use
-	if SystemInfo["displaytype"] in ("textlcd"):
+	if getDisplayType() in ("textlcd"):
 		config.usage.blinking_rec_symbol_during_recording = ConfigSelection(default="Channel", choices=[
 			("Rec", _("REC Symbol")),
 			("RecBlink", _("Blinking REC Symbol")),
 			("Channel", _("Channelname"))])
-	if SystemInfo["displaytype"] in ("textlcd7segment"):
+	if getDisplayType() in ("textlcd7segment"):
 		config.usage.blinking_rec_symbol_during_recording = ConfigSelection(default="Rec", choices=[
 			("Rec", _("REC")),
 			("RecBlink", _("Blinking REC")),
@@ -361,7 +362,7 @@ def InitUsageConfig():
 	else:
 		config.usage.blinking_rec_symbol_during_recording = ConfigYesNo(default=True)
 
-	if SystemInfo["displaytype"] in ("textlcd7segment"):
+	if getDisplayType() in ("textlcd7segment"):
 		config.usage.show_in_standby = ConfigSelection(default="time", choices=[
 			("time", _("Time")),
 			("nothing", _("Nothing"))])
@@ -1187,7 +1188,7 @@ def InitUsageConfig():
 		if softcam.lower().startswith("cccam"):
 			config.cccaminfo.showInExtensions = ConfigYesNo(default=True)
 			SystemInfo["CCcamInstalled"] = True
-		elif softcam.lower().startswith(('oscam', 'ncam')):
+		elif softcam.lower().startswith('oscam') or softcam.lower().startswith('ncam'):
 			config.oscaminfo.showInExtensions = ConfigYesNo(default=True)
 			SystemInfo["OScamInstalled"] = True
 

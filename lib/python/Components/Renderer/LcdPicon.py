@@ -1,14 +1,14 @@
-# -*- coding: utf-8 -*-
-import os
+from os import path as ospath
 from Components.Renderer.Renderer import Renderer
 from enigma import ePixmap, ePicLoad
 from Tools.Directories import pathExists, SCOPE_CURRENT_SKIN, resolveFilename
+from boxbranding import getDisplayType
 from Components.config import config
 from Components.Renderer.Picon import PiconLocator
 
 
 def useLcdPicons():
-	return config.lcd.picon_pack.value
+	return getDisplayType() in ('bwlcd255', 'bwlcd140', 'bwlcd128') or config.lcd.picon_pack.value
 
 
 lcdPiconLocator = None
@@ -36,7 +36,7 @@ class LcdPicon(Renderer):
 		pngname = lcdPiconLocator.findPicon(serviceName)
 		if not pngname:
 			pngname = resolveFilename(SCOPE_CURRENT_SKIN, serviceName + ".png")
-		self.defaultpngname = pngname if os.path.getsize(pngname) else None
+		self.defaultpngname = pngname if ospath.getsize(pngname) else None
 		self.changed((self.CHANGED_DEFAULT,))
 
 	def destroy(self):

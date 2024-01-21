@@ -67,10 +67,7 @@ class ServiceList(GUIComponent):
 		pic = LoadPixmap(resolveFilename(SCOPE_CURRENT_SKIN, "icons/ico_altref-fs8.png"))
 		pic and self.l.setPixmap(self.l.picBackup, pic)
 
-		try:  # "config.recording" not available in VuRecovery mode
-			self.l.setAlternativeRecordMatching(config.recording.record_icon_match.value == "Sref only")
-		except AttributeError:
-			pass
+		self.l.setAlternativeRecordMatching(config.recording.record_icon_match.value == "Sref only")
 
 		self.root = None
 		self.mode = self.MODE_NORMAL
@@ -294,7 +291,7 @@ class ServiceList(GUIComponent):
 		from Components.ServiceEventTracker import InfoBarCount
 		if adjust and config.usage.multibouquet.value and InfoBarCount == 1 and ref and ref.type != 8192:
 			print("[servicelist] search for service in userbouquets")
-			isRadio = ref.toString().startswith(("1:0:2:", "1:0:A:"))
+			isRadio = ref.toString().startswith("1:0:2:") or ref.toString().startswith("1:0:A:")
 			if self.serviceList:
 				revert_mode = config.servicelist.lastmode.value
 				revert_root = self.getRoot()

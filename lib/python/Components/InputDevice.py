@@ -5,7 +5,7 @@ import struct
 from enigma import eRCInput
 from keyids import KEYIDNAMES
 
-from Components.SystemInfo import SystemInfo
+from boxbranding import getBrandOEM
 from Components.config import config, ConfigInteger, ConfigSlider, ConfigSubsection, ConfigText, ConfigYesNo
 from Screens.Rc import RcPositions
 
@@ -113,7 +113,7 @@ class inputDevices:
 		write(fd, event_delay)
 		close(fd)
 
-	def setRepeat(self, device, value):  # REP_PERIOD
+	def setRepeat(self, device, value): #REP_PERIOD
 		if self.getDeviceAttribute(device, 'enabled'):
 			print("[InputDevice] setRepeat for device %s to %d ms" % (device, value))
 			event = struct.pack('LLHHi', 0, 0, 0x14, 0x01, int(value))
@@ -121,7 +121,7 @@ class inputDevices:
 			write(fd, event)
 			close(fd)
 
-	def setDelay(self, device, value):  # REP_DELAY
+	def setDelay(self, device, value): #REP_DELAY
 		if self.getDeviceAttribute(device, 'enabled'):
 			print("[InputDevice] setDelay for device %s to %d ms" % (device, value))
 			event = struct.pack('LLHHi', 0, 0, 0x14, 0x00, int(value))
@@ -215,7 +215,7 @@ config.plugins.remotecontroltype.rctype = ConfigInteger(default=0)
 class RcTypeControl():
 	def __init__(self):
 		self.boxType = "Default"
-		if path.exists('/proc/stb/ir/rc/type') and path.exists('/proc/stb/info/boxtype') and SystemInfo["brand"] != 'gigablue':
+		if path.exists('/proc/stb/ir/rc/type') and path.exists('/proc/stb/info/boxtype') and getBrandOEM() != 'gigablue':
 			self.isSupported = True
 			with open("/proc/stb/info/boxtype", "r") as fd:
 				self.boxType = fd.read().strip()

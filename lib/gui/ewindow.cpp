@@ -139,10 +139,3 @@ void eWindow::setAnimationMode(int mode)
 	 */
 	m_animation_mode = mode;
 }
-
-void eWindow::setCornerRadius(int radius, int edges)
-{
-	/* set corner radius for child, too */
-	eWidget::setCornerRadius(radius, edges);
-	m_child->setCornerRadius(radius, edges);
-}

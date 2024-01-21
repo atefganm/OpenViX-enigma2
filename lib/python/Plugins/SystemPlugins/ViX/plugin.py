@@ -105,17 +105,6 @@ def SoftcamSetup(menuid):
 	return []
 
 
-def PackageManagerMenu(session, **kwargs):
-	from .PackageManager import PackageManager
-	session.open(PackageManager)
-
-
-def PackageManagerSetup(menuid):
-	if config.usage.setup_level.index > 1 and menuid == "softwareupdatemenu":
-		return [(_("Package Manager"), PackageManagerMenu, "packagemanager", 1005)]
-	return []
-
-
 def BackupManager(session):
 	from .BackupManager import VIXBackupManager
 	return VIXBackupManager(session)
@@ -204,8 +193,7 @@ def Plugins(**kwargs):
 	plist = [
 		PluginDescriptor(where=PluginDescriptor.WHERE_MENU, needsRestart=False, fnc=startSetup),
 		PluginDescriptor(name=_("ViX Image Management"), where=PluginDescriptor.WHERE_EXTENSIONSMENU, fnc=UpgradeMain),
-		PluginDescriptor(where=PluginDescriptor.WHERE_MENU, fnc=SoftcamSetup),
-		PluginDescriptor(where=PluginDescriptor.WHERE_MENU, fnc=PackageManagerSetup)]
+		PluginDescriptor(where=PluginDescriptor.WHERE_MENU, fnc=SoftcamSetup)]
 	if config.softcammanager.showinextensions.value:
 		plist.append(PluginDescriptor(name=_("Softcam manager"), where=PluginDescriptor.WHERE_EXTENSIONSMENU, fnc=SoftcamMenu))
 	if config.scriptrunner.showinextensions.value:

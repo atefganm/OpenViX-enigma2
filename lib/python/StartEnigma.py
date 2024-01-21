@@ -444,14 +444,12 @@ def runScreenTest():
 
 
 profile("PYTHON_START")
-from Components.SystemInfo import SystemInfo  # noqa: E402  don't move this import
-
 print("[StartEnigma]  Starting Python Level Initialisation.")
-print("[StartEnigma]  Image Type -> '%s'" % SystemInfo["imagetype"])
-print("[StartEnigma]  Image Version -> '%s'" % SystemInfo["imageversion"])
-print("[StartEnigma]  Image Build -> '%s'" % SystemInfo["imagebuild"])
-if SystemInfo["imagetype"] != "release":
-	print("[StartEnigma]  Image DevBuild -> '%s'" % SystemInfo["imagedevbuild"])
+print("[StartEnigma]  Image Type -> '%s'" % getImageType())
+print("[StartEnigma]  Image Version -> '%s'" % getImageVersion())
+print("[StartEnigma]  Image Build -> '%s'" % getImageBuild())
+if getImageType() != "release":
+	print("[StartEnigma]  Image DevBuild -> '%s'" % getImageDevBuild())
 
 
 # SetupDevices sets up defaults:- language, keyboard, parental & expert config.
@@ -462,7 +460,7 @@ print("[StartEnigma]  Initialising SetupDevices.")
 from Components.SetupDevices import InitSetupDevices  # noqa: E402
 InitSetupDevices()
 
-if SystemInfo["architecture"] in ("aarch64"):  # something not right here
+if getImageArch() in ("aarch64"):
 	from usb.backend import libusb1  # noqa: E402
 	libusb1.get_backend(find_library=lambda x: "/lib64/libusb-1.0.so.0")
 
@@ -476,7 +474,7 @@ profile("InfoBar")
 print("[StartEnigma]  Initialising InfoBar.")
 from Screens import InfoBar  # noqa: E402
 
-# from Components.SystemInfo import SystemInfo  # noqa: E402  don't move this import
+from Components.SystemInfo import SystemInfo  # noqa: E402  don't move this import
 VuRecovery = SystemInfo["HasKexecMultiboot"] and SystemInfo["MultiBootSlot"] == 0
 # print("[StartEnigma]  Is this VuRecovery?. Recovery = ", VuRecovery)
 

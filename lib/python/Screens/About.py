@@ -1,6 +1,7 @@
 from os import listdir, path, popen
 from re import search
 from enigma import eTimer, getDesktop
+from boxbranding import getMachineBrand, getMachineName, getImageVersion, getImageType, getImageBuild, getImageDevBuild
 from Components.About import about
 from Components.ActionMap import ActionMap
 from Components.Button import Button
@@ -11,7 +12,7 @@ from Components.Network import iNetwork
 from Components.NimManager import nimmanager
 from Components.Pixmap import MultiPixmap
 from Components.Sources.StaticText import StaticText
-from Components.SystemInfo import SystemInfo
+from Components.SystemInfo import SystemInfo, BoxInfo
 from Screens.GitCommitInfo import CommitInfo
 from Screens.Screen import Screen, ScreenSummary
 from Screens.SoftwareUpdate import UpdatePlugin
@@ -54,7 +55,7 @@ class About(AboutBase):
 
 	def populate(self):
 		AboutText = ""
-		AboutText += _("Model:\t%s %s\n") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"])
+		AboutText += _("Model:\t%s %s\n") % (getMachineBrand(), getMachineName())
 
 		if about.getChipSetString() != _("unavailable"):
 			if SystemInfo["HasHiSi"]:
@@ -66,7 +67,7 @@ class About(AboutBase):
 
 		AboutText += _("CPU:\t%s %s %s\n") % (about.getCPUArch(), about.getCPUSpeedString(), about.getCpuCoresString())
 
-		AboutText += _("SoC:\t%s\n") % SystemInfo["socfamily"].upper()
+		AboutText += _("SoC:\t%s\n") % BoxInfo.getItem("socfamily").upper()
 
 		tempinfo = ""
 		if path.exists("/proc/stb/sensors/temp0/value"):
@@ -101,16 +102,16 @@ class About(AboutBase):
 			AboutText += _("Processor temp:\t%s") % tempinfo.replace("\n", "").replace(" ", "") + "\xb0" + "C\n"
 
 		imageSubBuild = ""
-		if SystemInfo["imagetype"] != "release":
-			imageSubBuild = ".%s" % SystemInfo["imagedevbuild"]
-		AboutText += _("Image:\t%s.%s%s (%s)\n") % (SystemInfo["imageversion"], SystemInfo["imagebuild"], imageSubBuild, SystemInfo["imagetype"].title())
+		if getImageType() != "release":
+			imageSubBuild = ".%s" % getImageDevBuild()
+		AboutText += _("Image:\t%s.%s%s (%s)\n") % (getImageVersion(), getImageBuild(), imageSubBuild, getImageType().title())
 
 		VuPlustxt = "Vu+ Multiboot - " if SystemInfo["HasKexecMultiboot"] else ""
 		if fileHas("/proc/cmdline", "rootsubdir=linuxrootfs0"):
 			AboutText += _("Boot Device: \tRecovery Slot\n")
 		else:
-			if "BootDevice" in SystemInfo and SystemInfo["BootDevice"]:
-				AboutText += _("Boot Device:\t%s%s\n") % (VuPlustxt, SystemInfo["BootDevice"])
+			if BoxInfo.getItem("mtdbootfs") != "" and " " not in BoxInfo.getItem("mtdbootfs"):
+				AboutText += _("Boot Device:\t%s%s\n") % (VuPlustxt, BoxInfo.getItem("mtdbootfs"))
 
 		if SystemInfo["HasH9SD"]:
 			if "rootfstype=ext4" in open("/sys/firmware/devicetree/base/chosen/bootargs", "r").read():
@@ -131,7 +132,7 @@ class About(AboutBase):
 			bootmode = _("bootmode = %s") % GetCurrentImageMode() if SystemInfo["canMode12"] else ""
 			AboutText += (_("Image Slot:\tStartup %s - %s %s") % (str(slot), part, bootmode)) + "\n"
 
-		if SystemInfo["MachineName"] in ("ET8500") and path.exists("/proc/mtd"):
+		if getMachineName() in ("ET8500") and path.exists("/proc/mtd"):
 			self.dualboot = self.dualBoot()
 			if self.dualboot:
 				AboutText += _("ET8500 Multiboot: Installed\n")
@@ -311,7 +312,7 @@ class Devices(Screen):
 		self.mountinfo = ""
 		for line in result:
 			self.parts = line.split()
-			if line and self.parts[0] and self.parts[0].startswith(("192", "//192")):
+			if line and self.parts[0] and (self.parts[0].startswith("192") or self.parts[0].startswith("//192")):
 				line = line.split()
 				ipaddress = line[0]
 				mounttotal = line[1]
@@ -621,8 +622,8 @@ class AboutSummary(ScreenSummary):
 		self.skinName = "AboutSummary"
 		self.aboutText = []
 		self["AboutText"] = StaticText()
-		self.aboutText.append(_("OpenViX: %s") % SystemInfo["imageversion"] + "." + SystemInfo["imagebuild"] + "\n")
-		self.aboutText.append(_("Model: %s %s\n") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"]))
+		self.aboutText.append(_("OpenViX: %s") % getImageVersion() + "." + getImageBuild() + "\n")
+		self.aboutText.append(_("Model: %s %s\n") % (getMachineBrand(), getMachineName()))
 		self.aboutText.append(_("Updated: %s") % about.getLastUpdate() + "\n")
 		tempinfo = ""
 		if path.exists("/proc/stb/sensors/temp0/value"):
