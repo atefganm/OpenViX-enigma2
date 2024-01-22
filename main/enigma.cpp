@@ -167,7 +167,7 @@ static const std::string getConfigCurrentSpinner(const char* key)
 	}
 
 	return "spinner"; // fallback on default system spinner
-} 
+}
 
 int exit_code;
 
@@ -404,9 +404,19 @@ const char *getEnigmaVersionString()
 	return enigma2_date;
 }
 
+const char *getE2Rev()
+{
+	return E2REV;
+}
+
 const char *getGStreamerVersionString()
 {
 	return gst_version_string();
+}
+
+const char *getBoxType()
+{
+	return BOXTYPE;
 }
 
 #include <malloc.h>
