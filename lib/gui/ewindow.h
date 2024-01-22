@@ -15,14 +15,15 @@ public:
 	void setTitle(const std::string &string);
 	std::string getTitle() const;
 	eWidget *child() { return m_child; }
+
 	void show();
 	void hide();
-
 	enum {
 		wfNoBorder = 1
 	};
 
 	void setBackgroundColor(const gRGB &col);
+	void setCornerRadius(int radius, int edges);
 
 	void setFlag(int flags);
 	void clearFlag(int flags);
