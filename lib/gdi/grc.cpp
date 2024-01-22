@@ -57,22 +57,6 @@ void gRC::lock()
 #endif
 }
 
-#ifdef CONFIG_ION
-void gRC::lock()
-{
-#ifndef SYNC_PAINT
-	pthread_mutex_lock(&mutex);
-#endif
-}
-
-void gRC::unlock()
-{
-#ifndef SYNC_PAINT
-	pthread_mutex_unlock(&mutex);
-#endif
-}
-#endif
-
 void gRC::unlock()
 {
 #ifndef SYNC_PAINT
@@ -896,6 +880,7 @@ void gDC::exec(const gOpcode *o)
 			}
 		}
 		para->renderString(o->parm.renderText->text, (flags & gPainter::RT_WRAP) ? RS_WRAP : 0, o->parm.renderText->border);
+
 		if (o->parm.renderText->text)
 			free(o->parm.renderText->text);
 		if (flags & gPainter::RT_HALIGN_LEFT)
