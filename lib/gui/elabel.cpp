@@ -1,7 +1,7 @@
 #include <lib/gui/elabel.h>
 #include <lib/gdi/font.h>
 
-eLabel::eLabel(eWidget *parent, int markedPos): eWidget(parent)
+eLabel::eLabel(eWidget *parent, int markedPos) : eWidget(parent)
 {
 	m_pos = markedPos;
 	ePtr<eWindowStyle> style;
@@ -9,14 +9,14 @@ eLabel::eLabel(eWidget *parent, int markedPos): eWidget(parent)
 
 	style->getFont(eWindowStyle::fontStatic, m_font);
 
-		/* default to topleft alignment */
+	/* default to topleft alignment */
 	m_valign = alignTop;
 	m_halign = alignBidi;
 
 	m_have_foreground_color = 0;
 	m_have_shadow_color = 0;
 
-	m_nowrap = 0;
+	m_wrap = 1;
 	m_border_size = 0;
 }
 
@@ -32,7 +32,7 @@ int eLabel::event(int event, void *data, void *data2)
 
 		eWidget::event(event, data, data2);
 
-		gPainter &painter = *(gPainter*)data2;
+		gPainter &painter = *(gPainter *)data2;
 
 		if (m_pos != -1)
 		{
@@ -107,8 +107,10 @@ int eLabel::event(int event, void *data, void *data2)
 			else if (m_halign == alignBlock)
 				flags |= gPainter::RT_HALIGN_BLOCK;
 
-			if (!m_nowrap)
+		if (m_wrap == 1)
 				flags |= gPainter::RT_WRAP;
+		else if (m_wrap == 2)
+			flags |= gPainter::RT_ELLIPSIS;
 
 				/* if we don't have shadow, m_shadow_offset will be 0,0 */
 			painter.renderText(eRect(-m_shadow_offset.x(), -m_shadow_offset.y(), size().width(), size().height()), m_text, flags, m_border_color, m_border_size);
@@ -157,7 +159,7 @@ void eLabel::setFont(gFont *font)
 	event(evtChangedFont);
 }
 
-gFont* eLabel::getFont()
+gFont *eLabel::getFont()
 {
 	return m_font;
 }
@@ -213,11 +215,11 @@ void eLabel::setBorderWidth(int size)
 	m_border_size = size;
 }
 
-void eLabel::setNoWrap(int nowrap)
+void eLabel::setWrap(int wrap)
 {
-	if (m_nowrap != nowrap)
+	if (m_wrap != wrap)
 	{
-		m_nowrap = nowrap;
+		m_wrap = wrap;
 		invalidate();
 	}
 }
@@ -233,12 +235,12 @@ void eLabel::clearForegroundColor()
 
 eSize eLabel::calculateSize()
 {
-	return calculateTextSize(m_font, m_text, size(), m_nowrap);
+	return calculateTextSize(m_font, m_text, size(), m_wrap == 0);
 }
 
-eSize eLabel::calculateTextSize(gFont* font, const std::string &string, eSize targetSize, bool nowrap)
+eSize eLabel::calculateTextSize(gFont *font, const std::string &string, eSize targetSize, bool nowrap)
 {
-	// Calculate text size for a piece of text without creating an eLabel instance 
+	// Calculate text size for a piece of text without creating an eLabel instance
 	// this avoids the side effect of "invalidate" being called on the parent container
 	// during the setup of the font and text on the eLabel
 	eTextPara para(eRect(0, 0, targetSize.width(), targetSize.height()));
