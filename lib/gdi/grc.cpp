@@ -5,10 +5,12 @@
 #include <lib/base/init.h>
 #include <lib/base/init_num.h>
 #include <lib/base/nconfig.h>
-#ifdef USE_LIBVUGLES2
-#include <vuplus_gles.h>
-#endif
 
+//#define GFX_DEBUG_DRAWRECT
+
+#ifdef GFX_DEBUG_DRAWRECT
+#include "../base/benchmark.h"
+#endif
 
 #ifndef SYNC_PAINT
 void *gRC::thread_wrapper(void *ptr)
@@ -21,14 +23,14 @@ gRC *gRC::instance = 0;
 
 gRC::gRC() : rp(0), wp(0)
 #ifdef SYNC_PAINT
-			 ,
-			 m_notify_pump(eApp, 0, "gRC")
+	,
+	m_notify_pump(eApp, 0, "gRC")
 #else
-			 ,
-			 m_notify_pump(eApp, 1, "gRC")
+	,
+	m_notify_pump(eApp, 1, "gRC")
 #endif
-			 ,
-			 m_spinner_enabled(0), m_spinneronoff(1), m_prev_idle_count(0) // NOSONAR
+	,
+	m_spinner_enabled(0), m_spinneronoff(1), m_prev_idle_count(0) // NOSONAR
 {
 	ASSERT(!instance);
 	instance = this;
@@ -123,13 +125,6 @@ void gRC::submit(const gOpcode &o)
 void *gRC::thread()
 {
 	int need_notify = 0;
-#ifdef USE_LIBVUGLES2
-	if (gles_open())
-	{
-		gles_state_open();
-		gles_viewport(720, 576, 720 * 4);
-	}
-#endif
 #ifndef SYNC_PAINT
 	while (1)
 	{
@@ -227,10 +222,6 @@ void *gRC::thread()
 #endif
 		}
 	}
-#ifdef USE_LIBVUGLES2
-	gles_state_close();
-	gles_close();
-#endif
 #ifndef SYNC_PAINT
 	pthread_exit(0);
 #endif
@@ -733,43 +724,6 @@ void gPainter::sendHide(ePoint point, eSize size)
 	o.parm.setShowHideInfo->size = size;
 	m_rc->submit(o);
 }
-#ifdef USE_LIBVUGLES2
-void gPainter::sendShowItem(long dir, ePoint point, eSize size)
-{
-	if (m_dc->islocked())
-		return;
-	gOpcode o;
-	o.opcode = gOpcode::sendShowItem;
-	o.dc = m_dc.grabRef();
-	o.parm.setShowItemInfo = new gOpcode::para::psetShowItemInfo;
-	o.parm.setShowItemInfo->dir = dir;
-	o.parm.setShowItemInfo->point = point;
-	o.parm.setShowItemInfo->size = size;
-	m_rc->submit(o);
-}
-void gPainter::setFlush(bool val)
-{
-	if (m_dc->islocked())
-		return;
-	gOpcode o;
-	o.opcode = gOpcode::setFlush;
-	o.dc = m_dc.grabRef();
-	o.parm.setFlush = new gOpcode::para::psetFlush;
-	o.parm.setFlush->enable = val;
-	m_rc->submit(o);
-}
-void gPainter::setView(eSize size)
-{
-	if (m_dc->islocked())
-		return;
-	gOpcode o;
-	o.opcode = gOpcode::setView;
-	o.dc = m_dc.grabRef();
-	o.parm.setViewInfo = new gOpcode::para::psetViewInfo;
-	o.parm.setViewInfo->size = size;
-	m_rc->submit(o);
-}
-#endif
 
 gDC::gDC()
 {
@@ -880,20 +834,24 @@ void gDC::exec(const gOpcode *o)
 				o->parm.renderText->text = strdup(text.c_str());
 			}
 		}
-		para->renderString(o->parm.renderText->text, (flags & gPainter::RT_WRAP) ? RS_WRAP : 0, o->parm.renderText->border);
+		para->renderString(o->parm.renderText->text, (flags & gPainter::RT_WRAP) ? RS_WRAP : 0, border, markedpos);
 
 		if (o->parm.renderText->text)
 			free(o->parm.renderText->text);
+		if (o->parm.renderText->offset)
+			para->setTextOffset(*o->parm.renderText->offset);
 		if (flags & gPainter::RT_HALIGN_LEFT)
-			para->realign(eTextPara::dirLeft);
+			para->realign(eTextPara::dirLeft, markedpos, scrollpos);
 		else if (flags & gPainter::RT_HALIGN_RIGHT)
-			para->realign(eTextPara::dirRight);
+			para->realign(eTextPara::dirRight, markedpos, scrollpos);
 		else if (flags & gPainter::RT_HALIGN_CENTER)
-			para->realign((flags & gPainter::RT_WRAP) ? eTextPara::dirCenter : eTextPara::dirCenterIfFits);
+			para->realign((flags & gPainter::RT_WRAP) ? eTextPara::dirCenter : eTextPara::dirCenterIfFits, markedpos, scrollpos);
 		else if (flags & gPainter::RT_HALIGN_BLOCK)
-			para->realign(eTextPara::dirBlock);
+			para->realign(eTextPara::dirBlock, markedpos, scrollpos);
 		else
-			para->realign(eTextPara::dirBidi);
+			para->realign(eTextPara::dirBidi, markedpos, scrollpos);
+		if (o->parm.renderText->offset)
+			*o->parm.renderText->offset = para->getTextOffset();
 
 		ePoint offset = m_current_offset;
 
@@ -903,7 +861,7 @@ void gDC::exec(const gOpcode *o)
 			int vcentered_top = o->parm.renderText->area.top() + ((o->parm.renderText->area.height() - bbox.height()) / 2);
 			int correction = vcentered_top - bbox.top();
 			// Only center if it fits, don't push text out the top
-			if (correction > 0)
+			if ((correction > 0) || (para->getLineCount() == 1))
 			{
 				offset += ePoint(0, correction);
 			}
@@ -914,7 +872,69 @@ void gDC::exec(const gOpcode *o)
 			int correction = o->parm.renderText->area.height() - bbox.height() - 2;
 			offset += ePoint(0, correction);
 		}
-		if (o->parm.renderText->border)
+		if (markedpos != -1)
+		{
+			int glyphs = para->size();
+			int left, width = 0;
+			int top = o->parm.renderText->area.top();
+			int height = fontRenderClass::getInstance()->getLineHeight(*m_current_font);
+			eRect bbox;
+			if (markedpos == -2)
+			{
+				if (glyphs > 0)
+				{
+					// FIXME: Mark each line of text, not the whole rectangle.
+					// (Currently no multiline text is all marked.)
+					bbox = para->getBoundBox();
+					left = bbox.left();
+					width = bbox.width();
+					if (height < bbox.height())
+						height = bbox.height();
+				}
+			}
+			else if (markedpos >= 0 && markedpos < glyphs)
+			{
+				bbox = para->getGlyphBBox(markedpos);
+				left = bbox.left();
+				width = bbox.width();
+				int btop = bbox.top();
+				while (top + height <= btop)
+					top += height;
+			}
+			else if (markedpos > 0xFFFF)
+			{
+				int markedlen = markedpos >> 16;
+				markedpos &= 0xFFFF;
+				int markedlast = markedpos + markedlen - 1;
+				if (markedlast < glyphs)
+				{
+					bbox = para->getGlyphBBox(markedpos);
+					eRect bbox1 = para->getGlyphBBox(markedlast);
+					left = bbox.left();
+					// Assume the mark is on the one line.
+					width = bbox1.right() - left;
+					int btop = bbox.top();
+					while (top + height <= btop)
+						top += height;
+				}
+			}
+			if (width)
+			{
+				bbox = eRect(left, top, width, height);
+				bbox.moveBy(offset);
+				eRect area = o->parm.renderText->area;
+				area.moveBy(offset);
+				gRegion clip = m_current_clip & bbox & area;
+				if (m_pixmap->needClut())
+					m_pixmap->fill(clip, m_foreground_color);
+				else
+					m_pixmap->fill(clip, m_foreground_color_rgb);
+			}
+		}
+
+		para->setBlend(flags & gPainter::RT_BLEND);
+
+		if (border)
 		{
 			para->blit(*this, offset, m_background_color_rgb, o->parm.renderText->bordercolor, true);
 			para->blit(*this, offset, o->parm.renderText->bordercolor, m_foreground_color_rgb);
@@ -965,6 +985,9 @@ void gDC::exec(const gOpcode *o)
 		break;
 	case gOpcode::blit:
 	{
+#ifdef GFX_DEBUG_DRAWRECT
+		Stopwatch s;
+#endif
 		gRegion clip;
 		// this code should be checked again but i'm too tired now
 
@@ -977,9 +1000,20 @@ void gDC::exec(const gOpcode *o)
 		}
 		else
 			clip = m_current_clip;
-		 if (!o->parm.blit->pixmap->surface->transparent)
-		 	o->parm.blit->flags &=~(gPixmap::blitAlphaTest|gPixmap::blitAlphaBlend);
+		if (!o->parm.blit->pixmap->surface->transparent)
+			o->parm.blit->flags &=~(gPixmap::blitAlphaTest|gPixmap::blitAlphaBlend);
 		m_pixmap->blit(*o->parm.blit->pixmap, o->parm.blit->position, clip, m_radius, m_radius_edges, o->parm.blit->flags);
+#ifdef GFX_DEBUG_DRAWRECT
+		if(m_radius)
+		{
+			s.stop();
+			FILE *handle = fopen("/tmp/drawRectangle.perf", "a");
+			if (handle) {
+				fprintf(handle, "%dx%dx%d|%u\n", o->parm.blit->pixmap->size().width(), o->parm.blit->pixmap->size().height(),o->parm.blit->pixmap->surface->bpp, s.elapsed_us());
+				fclose(handle);
+			}
+		}
+#endif
 		m_radius = 0;
 		m_radius_edges = 0;
 		o->parm.blit->pixmap->Release();
@@ -988,6 +1022,9 @@ void gDC::exec(const gOpcode *o)
 	}
 	case gOpcode::rectangle:
 	{
+#ifdef GFX_DEBUG_DRAWRECT
+		Stopwatch s;
+#endif
 		o->parm.rectangle->area.moveBy(m_current_offset);
 		gRegion clip = m_current_clip & o->parm.rectangle->area;
 		m_pixmap->drawRectangle(clip, o->parm.rectangle->area, m_background_color_rgb, m_border_color, m_border_width, m_gradient_colors, m_gradient_orientation, m_radius, m_radius_edges, m_gradient_alphablend, m_gradient_fullSize);
@@ -997,6 +1034,15 @@ void gDC::exec(const gOpcode *o)
 		m_gradient_orientation = 0;
 		m_gradient_fullSize = 0;
 		m_gradient_alphablend = false;
+#ifdef GFX_DEBUG_DRAWRECT
+		s.stop();
+		FILE *handle = fopen("/tmp/drawRectangle.perf", "a");
+		if (handle) {
+			eRect area = o->parm.rectangle->area;
+			fprintf(handle, "%dx%dx%dx%d|%u\n", area.left(), area.top(), area.width(), area.height(), s.elapsed_us());
+			fclose(handle);
+		}
+#endif
 		delete o->parm.rectangle;
 		break;
 	}
@@ -1062,14 +1108,6 @@ void gDC::exec(const gOpcode *o)
 		break;
 	case gOpcode::sendHide:
 		break;
-#ifdef USE_LIBVUGLES2
-	case gOpcode::sendShowItem:
-		break;
-	case gOpcode::setFlush:
-		break;
-	case gOpcode::setView:
-		break;
-#endif
 	case gOpcode::enableSpinner:
 		enableSpinner();
 		break;
