@@ -14,6 +14,7 @@
 #include <pthread.h>
 #include <stack>
 #include <list>
+#include <vector>
 
 #include <string>
 #include <lib/base/elock.h>
@@ -39,6 +40,8 @@ struct gOpcode
 		fillRegion,
 		clear,
 		blit,
+		gradient,
+		rectangle,
 
 		setPalette,
 		mergePalette,
@@ -50,6 +53,10 @@ struct gOpcode
 
 		setBackgroundColorRGB,
 		setForegroundColorRGB,
+
+		setGradient,
+		setRadius,
+		setBorder,
 
 		setOffset,
 
@@ -73,6 +80,8 @@ struct gOpcode
 		sendShow,
 		sendHide,
 #ifdef USE_LIBVUGLES2
+		sendShowItem,
+		setFlush,
 		setView,
 #endif
 	} opcode;
@@ -97,6 +106,9 @@ struct gOpcode
 			int flags;
 			int border;
 			gRGB bordercolor;
+			int markedpos;
+			int scrollpos;
+			int *offset;
 		} *renderText;
 
 		struct prenderPara
@@ -122,6 +134,31 @@ struct gOpcode
 			eRect position;
 			eRect clip;
 		} *blit;
+
+		struct pgradient
+		{
+			std::vector<gRGB> colors;
+			uint8_t orientation;
+			bool alphablend;
+			int fullSize;
+		} *gradient;
+
+		struct pradius
+		{
+			int radius;
+			uint8_t edges;
+		} *radius;
+
+		struct pborder
+		{
+			gRGB color;
+			int width;
+		} *border;
+
+		struct prectangle
+		{
+			eRect area;
+		} *rectangle;
 
 		struct pmergePalette
 		{
@@ -162,6 +199,18 @@ struct gOpcode
 			eSize size;
 		} *setShowHideInfo;
 #ifdef USE_LIBVUGLES2
+		struct psetShowItemInfo
+		{
+			long dir;
+			ePoint point;
+			eSize size;
+		} *setShowItemInfo;
+
+		struct psetFlush
+		{
+			bool enable;
+		} *setFlush;
+
 		struct psetViewInfo
 		{
 			eSize size;
@@ -216,7 +265,7 @@ public:
 	void unlock();
 #endif
 
-	sigc::signal<void()> notify;
+	sigc::signal0<void> notify;
 
 	void setSpinnerDC(gDC *dc) { m_spinner_dc = dc; }
 	void setSpinnerOnOff(int onoff) { m_spinneronoff = onoff; }
@@ -245,6 +294,10 @@ public:
 	void setBackgroundColor(const gRGB &color);
 	void setForegroundColor(const gRGB &color);
 
+	void setBorder(const gRGB &borderColor, int width);
+	void setGradient(const std::vector<gRGB> &colors, uint8_t orientation, bool alphablend, int fullSize = 0);
+	void setRadius(int radius, uint8_t edges);
+
 	void setFont(gFont *font);
 	/* flags only THESE: */
 	enum
@@ -261,7 +314,8 @@ public:
 		RT_VALIGN_BOTTOM = 32,
 
 		RT_WRAP = 64,
-		RT_ELLIPSIS = 128
+		RT_ELLIPSIS = 128,
+		RT_BLEND = 256
 	};
 	void renderText(const eRect &position, const std::string &string, int flags = 0, gRGB bordercolor = gRGB(), int border = 0, int markedpos = -1, int *offset = 0);
 
@@ -285,9 +339,18 @@ public:
 		BT_VALIGN_BOTTOM = 128
 	};
 
-	void blitScale(gPixmap *pixmap, const eRect &pos, const eRect &clip = eRect(), int flags = 0, int aflags = BT_SCALE);
-	void blit(gPixmap *pixmap, ePoint pos, const eRect &clip = eRect(), int flags = 0);
-	void blit(gPixmap *pixmap, const eRect &pos, const eRect &clip = eRect(), int flags = 0);
+	enum
+	{
+		GRADIENT_OFF = 0,
+		GRADIENT_VERTICAL = 1,
+		GRADIENT_HORIZONTAL = 2
+	};
+
+	void blitScale(gPixmap *pixmap, const eRect &pos, const eRect &clip=eRect(), int flags=0, int aflags = BT_SCALE);
+	void blit(gPixmap *pixmap, ePoint pos, const eRect &clip=eRect(), int flags=0);
+	void blit(gPixmap *pixmap, const eRect &pos, const eRect &clip=eRect(), int flags=0);
+
+	void drawRectangle(const eRect &area);
 
 	void setPalette(gRGB *colors, int start = 0, int len = 256);
 	void setPalette(gPixmap *source);
@@ -312,6 +375,8 @@ public:
 	void sendShow(ePoint point, eSize size);
 	void sendHide(ePoint point, eSize size);
 #ifdef USE_LIBVUGLES2
+	void sendShowItem(long dir, ePoint point, eSize size);
+	void setFlush(bool val);
 	void setView(eSize size);
 #endif
 };
@@ -327,6 +392,17 @@ protected:
 	gRGB m_foreground_color_rgb, m_background_color_rgb;
 	ePtr<gFont> m_current_font;
 	ePoint m_current_offset;
+
+	std::vector<gRGB> m_gradient_colors;
+	uint8_t m_gradient_orientation;
+	bool m_gradient_alphablend;
+	int m_gradient_fullSize;
+
+	int m_radius;
+	uint8_t m_radius_edges;
+
+	gRGB m_border_color;
+	int m_border_width;
 
 	std::stack<gRegion> m_clip_stack;
 	gRegion m_current_clip;
