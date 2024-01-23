@@ -186,6 +186,7 @@ AM_CONDITIONAL(HAVE_COLORLCD2, test "$BOXTYPE" == dm800se -o "$BOXTYPE" == dm800
 AM_CONDITIONAL(HAVE_COLORLCD1, test "$BOXTYPE" == dm8000 -o "$BOXTYPE" == dm800 -o "$BOXTYPE" == dm7020hd -o "$BOXTYPE" == dm7020hdv2)
 AM_CONDITIONAL(HAVE_GRAUTEC8000, test "$BOXTYPE" == dm8000)
 AM_CONDITIONAL(HAVE_GRAUTEC70X0, test "$BOXTYPE" == dm7020hd -o "$BOXTYPE" == dm7020hdv2 -o "$BOXTYPE" == dm7080)
+AM_CONDITIONAL(LCD_FRAMEBUFFER_MODE, test "$BOXTYPE" == et8500 -o "$BOXTYPE" == et8500s)
 
 if test "$BOXBRAND" == "dreambox"; then
 	AC_DEFINE(DREAMBOX, 1, [Dreambox hardware])
@@ -205,7 +206,7 @@ if test "$BOXTYPE" == "dm7080" -o "$BOXTYPE" == "dm820" -o "$BOXTYPE" == "dm900"
 fi
 
 if test "$BOXTYPE" == "dm900" -o "$BOXTYPE" == "dm920"; then
-	AC_DEFINE(DM9X0_LCD, 1,[define when we need to move lcd text a bit to the right])
+	AC_DEFINE(LCD_DM900_Y_OFFSET, 4,[define LCD Y offset for dm900 and dm920])
 fi
 
 AC_ARG_WITH(accelerationthreshold,
@@ -523,6 +524,7 @@ if test "$BOXTYPE" == "sf8008" -o "$BOXTYPE" == "sf8008m" -o "$BOXTYPE" == "sx98
 	AC_DEFINE(HAVE_HISILICON, 1,[define add HISILICON chip])
 	AC_DEFINE(CONFIG_HISILICON_FB, 1,[define add HISILICON framebuffer blit])
 	AC_DEFINE(FORCE_ALPHABLENDING_ACCELERATION, 1,[define when the framebuffer acceleration has alphablending support, but detection slow down all])
+	AC_DEFINE(LCD_FRAMEBUFFER_MODE, 1,[define the framebuffer LCD mode])
 fi
 
 if test "$BOXTYPE" == "u5" -o "$BOXTYPE" == "u5pvr" -o "$BOXTYPE" == "u51" -o "$BOXTYPE" == "u52" -o "$BOXTYPE" == "u53" -o "$BOXTYPE" == "u532" -o "$BOXTYPE" == "u533" -o "$BOXTYPE" == "u54" -o "$BOXTYPE" == "u55" -o "$BOXTYPE" == "u56" -o "$BOXTYPE" == "u57" -o "$BOXTYPE" == "u571" -o "$BOXTYPE" == "u41" -o "$BOXTYPE" == "u42" -o "$BOXTYPE" == "u43"; then
