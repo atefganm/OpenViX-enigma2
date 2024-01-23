@@ -369,7 +369,7 @@ static int savePNGto(FILE *fp, gPixmap *pixmap)
 	return 0;
 }
 
-int loadSVG(ePtr<gPixmap> &result, const char *filename, int cached, int width, int height, float scale, int keepAspect, int align)
+int loadSVG(ePtr<gPixmap> &result, const char *filename, int cached, int width, int height, float scale, int keepAspect)
 {
 	result = nullptr;
 	int size = 0;
@@ -420,6 +420,22 @@ int loadSVG(ePtr<gPixmap> &result, const char *filename, int cached, int width, 
 		if (align == 2) tx = width - new_width; // Right alignment
 		else if (align == 4) tx = (int)(((double)(width - new_width))/2); // Center alignment
 		ty = (int)(((double)(height - new_height))/2);
+	} else {
+	if (width > 0 && height > 0 && keepAspect) {
+		double sourceWidth = image->width;
+		double sourceHeight = image->height;
+		double ratio = sourceWidth / sourceHeight;
+		double widthScale = 0, heightScale = 0;
+		if (sourceWidth > 0)
+			widthScale = (double)width / sourceWidth;
+		if (sourceHeight > 0)
+			heightScale = (double)height / sourceHeight;
+
+		double scale = std::min(widthScale, heightScale);
+		yscale = scale;
+		xscale = scale;
+			width = (int)(image->width * xscale);
+			height = (int)(image->height * scale);
 	} else {
 		if (height > 0)
 			yscale = ((double) height) / image->height;
