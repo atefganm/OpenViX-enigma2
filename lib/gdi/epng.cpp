@@ -421,22 +421,6 @@ int loadSVG(ePtr<gPixmap> &result, const char *filename, int cached, int width, 
 		else if (align == 4) tx = (int)(((double)(width - new_width))/2); // Center alignment
 		ty = (int)(((double)(height - new_height))/2);
 	} else {
-	if (width > 0 && height > 0 && keepAspect) {
-		double sourceWidth = image->width;
-		double sourceHeight = image->height;
-		double ratio = sourceWidth / sourceHeight;
-		double widthScale = 0, heightScale = 0;
-		if (sourceWidth > 0)
-			widthScale = (double)width / sourceWidth;
-		if (sourceHeight > 0)
-			heightScale = (double)height / sourceHeight;
-
-		double scale = std::min(widthScale, heightScale);
-		yscale = scale;
-		xscale = scale;
-			width = (int)(image->width * xscale);
-			height = (int)(image->height * scale);
-	} else {
 		if (height > 0)
 			yscale = ((double) height) / image->height;
 
@@ -505,7 +489,6 @@ int loadImage(ePtr<gPixmap> &result, const char *filename, int accel, int width,
 int savePNG(const char *filename, gPixmap *pixmap)
 {
 	int result;
-
 	{
 		eDebug("[ePNG] saving to %s",filename);
 		CFile fp(filename, "wb");
@@ -618,7 +601,7 @@ static void loadGIFFile(GifFile* filepara)
 #endif
 	return;
 ERROR_R:
-	eTrace("[loadGIFFile] <Error gif>");
+	eDebug("[loadGIFFile] <Error gif>");
 #if !defined(GIFLIB_MAJOR) || ( GIFLIB_MAJOR < 5) || (GIFLIB_MAJOR == 5 && GIFLIB_MINOR == 0)
 	DGifCloseFile(gft);
 #else
@@ -679,3 +662,4 @@ int loadGIF(ePtr<gPixmap> &result, const char *filename, int accel,int cached)
 	m_filepara = NULL;
 	return 0;
 }
+
