@@ -1,14 +1,14 @@
-from os import path as ospath
+# -*- coding: utf-8 -*-
+import os
 from Components.Renderer.Renderer import Renderer
 from enigma import ePixmap, ePicLoad
 from Tools.Directories import pathExists, SCOPE_CURRENT_SKIN, resolveFilename
 from Components.config import config
-from Components.SystemInfo import SystemInfo
 from Components.Renderer.Picon import PiconLocator
 
 
 def useLcdPicons():
-	return SystemInfo["displaytype"] in ('bwlcd255', 'bwlcd140', 'bwlcd128') or config.lcd.picon_pack.value
+	return config.lcd.picon_pack.value
 
 
 lcdPiconLocator = None
@@ -36,7 +36,7 @@ class LcdPicon(Renderer):
 		pngname = lcdPiconLocator.findPicon(serviceName)
 		if not pngname:
 			pngname = resolveFilename(SCOPE_CURRENT_SKIN, serviceName + ".png")
-		self.defaultpngname = pngname if ospath.getsize(pngname) else None
+		self.defaultpngname = pngname if os.path.getsize(pngname) else None
 		self.changed((self.CHANGED_DEFAULT,))
 
 	def destroy(self):
@@ -69,7 +69,7 @@ class LcdPicon(Renderer):
 		if self.instance:
 			if what[0] in (self.CHANGED_DEFAULT, self.CHANGED_ALL, self.CHANGED_SPECIFIC):
 				pngname = lcdPiconLocator.getPiconName(self.source.text)
-				if not pathExists(pngname):  # no picon for service found
+				if not pathExists(pngname): # no picon for service found
 					pngname = self.defaultpngname
 				if self.pngname != pngname:
 					if pngname:

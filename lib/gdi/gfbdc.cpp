@@ -7,6 +7,10 @@
 
 #include <time.h>
 
+#ifdef USE_LIBVUGLES2
+#include <vuplus_gles.h>
+#endif
+
 #ifdef HAVE_OSDANIMATION
 #include <lib/base/cfile.h>
 #endif
@@ -21,11 +25,11 @@ extern void bcm_accel_blit(
 		int dst_x, int dst_y, int dwidth, int dheight,
 		int pal_addr, int flags);
 #endif
+
 #ifdef HAVE_HISILICON_ACCEL
 extern void  dinobot_accel_register(void *p1,void *p2);
 extern void  dinibot_accel_notify(void);
 #endif
-
 gFBDC::gFBDC()
 {
 	fb=new fbClass;
@@ -163,7 +167,15 @@ void gFBDC::exec(const gOpcode *o)
 		break;
 	}
 	case gOpcode::flush:
+#ifdef USE_LIBVUGLES2
+		if (gles_is_animation())
+			gles_do_animation();
+		else
+			fb->blit();
+		gles_flush();
+#else
 		fb->blit();
+#endif
 #ifdef CONFIG_ION
 		if (surface_back.data_phys)
 		{
@@ -208,6 +220,10 @@ void gFBDC::exec(const gOpcode *o)
 #ifdef HAVE_OSDANIMATION
 		CFile::writeIntHex("/proc/stb/fb/animation_mode", 0x01);
 #endif
+#ifdef USE_LIBVUGLES2
+		gles_set_buffer((unsigned int *)surface.data);
+		gles_set_animation(1, o->parm.setShowHideInfo->point.x(), o->parm.setShowHideInfo->point.y(), o->parm.setShowHideInfo->size.width(), o->parm.setShowHideInfo->size.height());
+#endif
 		delete o->parm.setShowHideInfo;
 		break;
 	}
@@ -216,9 +232,35 @@ void gFBDC::exec(const gOpcode *o)
 #ifdef HAVE_OSDANIMATION
 		CFile::writeIntHex("/proc/stb/fb/animation_mode", 0x10);
 #endif
+#ifdef USE_LIBVUGLES2
+		gles_set_buffer((unsigned int *)surface.data);
+		gles_set_animation(0, o->parm.setShowHideInfo->point.x(), o->parm.setShowHideInfo->point.y(), o->parm.setShowHideInfo->size.width(), o->parm.setShowHideInfo->size.height());
 		delete o->parm.setShowHideInfo;
+#endif
 		break;
 	}
+#ifdef USE_LIBVUGLES2
+	case gOpcode::sendShowItem:
+	{
+		gles_set_buffer((unsigned int *)surface.data);
+		gles_set_animation_listbox(o->parm.setShowItemInfo->dir, o->parm.setShowItemInfo->point.x(), o->parm.setShowItemInfo->point.y(), o->parm.setShowItemInfo->size.width(), o->parm.setShowItemInfo->size.height());
+		delete o->parm.setShowItemInfo;
+		break;
+	}
+	case gOpcode::setFlush:	
+	{
+		gles_set_flush(o->parm.setFlush->enable);
+		delete o->parm.setFlush;
+		break;
+	}
+	case gOpcode::setView:
+	{
+		gles_viewport(o->parm.setViewInfo->size.width(), o->parm.setViewInfo->size.height(), fb->Stride());
+		delete o->parm.setViewInfo;
+		break;
+	}
+#endif
+
 	default:
 		gDC::exec(o);
 		break;
@@ -265,6 +307,7 @@ void gFBDC::setResolution(int xres, int yres, int bpp)
 	if (grc)
 		grc->lock();
 #endif
+
 	fb->SetMode(xres, yres, bpp);
 
 	surface.x = xres;
@@ -273,8 +316,11 @@ void gFBDC::setResolution(int xres, int yres, int bpp)
 	surface.bypp = bpp / 8;
 	surface.stride = fb->Stride();
 	surface.data = fb->lfb;
+	
+	for (int y=0; y<yres; y++)    // make whole screen transparent 
+		memset(fb->lfb+ y * xres * 4, 0x00, xres * 4);	
+
 	surface.data_phys = fb->getPhysAddr();
-	memset(surface.data, 0x00, surface.stride * surface.y); // clear
 
 	int fb_size = surface.stride * surface.y;
 
@@ -283,7 +329,6 @@ void gFBDC::setResolution(int xres, int yres, int bpp)
 		surface_back = surface;
 		surface_back.data = fb->lfb + fb_size;
 		surface_back.data_phys = surface.data_phys + fb_size;
-		memset(surface_back.data, 0x00, surface_back.stride * surface_back.y); // clear
 		fb_size *= 2;
 	}
 	else
@@ -291,8 +336,9 @@ void gFBDC::setResolution(int xres, int yres, int bpp)
 		surface_back.data = 0;
 		surface_back.data_phys = 0;
 	}
-	
-	eDebug("[gFBDC] resolution: %d x %d x %d (stride: %d) pages: %d", surface.x, surface.y, surface.bpp, fb->Stride(), fb->getNumPages());
+
+	eDebug("[gFBDC] resolution: %dx%dx%d stride=%d, %dkB available for acceleration surfaces.",
+		 surface.x, surface.y, surface.bpp, fb->Stride(), (fb->Available() - fb_size)/1024);
 
 #ifndef CONFIG_ION
 	/* accel is already set in fb.cpp */
@@ -300,6 +346,7 @@ void gFBDC::setResolution(int xres, int yres, int bpp)
 	if (gAccel::getInstance())
 		gAccel::getInstance()->setAccelMemorySpace(fb->lfb + fb_size, surface.data_phys + fb_size, fb->Available() - fb_size);
 #endif
+
 #ifdef HAVE_HISILICON_ACCEL
 	dinobot_accel_register(&surface,&surface_back);
 #endif
@@ -399,6 +446,4 @@ void setAnimation_current(int a) {
 void setAnimation_speed(int speed) {
 	CFile::writeInt("/proc/stb/fb/animation_speed", speed);
 }
-
-void setAnimation_current_listbox(int a) {}
 #endif
