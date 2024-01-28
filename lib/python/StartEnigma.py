@@ -364,8 +364,6 @@ def runScreenTest():
 	if not VuRecovery:
 		profile("Init:VolumeControl")
 		vol = VolumeControl(session)  # noqa: F841
-		profile("InitProcessing")
-		processing = Processing(session)
 		profile("Init:PowerKey")
 		power = PowerKey(session)  # noqa: F841
 
@@ -646,9 +644,6 @@ if not VuRecovery:
 	print("[StartEnigma]  Initialising VolumeControl.")
 	from Components.VolumeControl import VolumeControl  # noqa: E402
 	from Tools.StbHardware import setFPWakeuptime, setRTCtime  # noqa: E402
-
-profile("Load:Processing")
-from Screens.Processing import Processing
 
 profile("Init:skin")
 print("[StartEnigma]  Initialising Skins.")
