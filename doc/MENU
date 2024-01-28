@@ -27,7 +27,7 @@ In skin.xml add the list of images to the "menus" section based on menuID.
 	
 	There is a special "key" attribute with the name "default".  This entry, 
 	if defined, assigns a default graphical image to be used in ALL 
-	"Screens/Menu.py" screens that do not have a specifically assigned 
+	"Screens/Menu.py" screens that do not have a specifically assigned
 	image.
 
 
@@ -52,6 +52,7 @@ In skin.xml add the icon size parameter (width x height):
 
 
 In skin.xml add the list of icons to the "menuicons" section based on "key" from menu.xml.
+
 
 	Syntax:
 	

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pickle
 import sys
 infilename = "iso-639-3.tab"
