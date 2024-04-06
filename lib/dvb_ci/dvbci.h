@@ -245,7 +245,8 @@ public:
 			slotStateChanged,
 			mmiSessionDestroyed,
 			mmiDataReceived,
-			appNameChanged
+			appNameChanged,
+			slotDecodingStateChanged
 		};
 		int m_type;
 		int m_slotid;
