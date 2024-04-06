@@ -1,7 +1,7 @@
 from time import time
 from os import path
 
-from enigma import eServiceCenter, eServiceReference, eTimer, pNavigation, getBestPlayableServiceReference, iPlayableService, setPreferredTuner, eDVBLocalTimeHandler, iRecordableServicePtr
+from enigma import eServiceCenter, eServiceReference, eTimer, pNavigation, getBestPlayableServiceReference, iServiceInformation, iPlayableService, setPreferredTuner, eDVBLocalTimeHandler, iRecordableServicePtr
 
 from Components.ParentalControl import parentalControl
 from Components.config import config
@@ -52,6 +52,7 @@ class Navigation:
 
 	def _processTimerWakeup(self):
 		now = time()
+		wakeup = ""
 		timeHandlerCallbacks = eDVBLocalTimeHandler.getInstance().m_timeUpdated.get()
 		if self.__nextRecordTimerAfterEventActionAuto and now < eDVBLocalTimeHandler.timeOK:  # 01.01.2004
 			print("[Navigation] RECTIMER: wakeup to standby but system time not set.")
@@ -62,21 +63,18 @@ class Navigation:
 			timeHandlerCallbacks.remove(self._processTimerWakeup)
 
 		if self.__nextRecordTimerAfterEventActionAuto and abs(self.RecordTimer.getNextRecordingTime() - now) <= 360:
-			print("[Navigation] RECTIMER: wakeup to standby detected.")
-			f = open("/tmp/was_rectimer_wakeup", "w")
-			f.write("1")
-			f.close()
-			# as we woke the box to record, place the box in standby.
-			self.standbytimer = eTimer()
-			self.standbytimer.callback.append(self.gotostandby)
-			self.standbytimer.start(15000, True)
-
+			wakeup = "/tmp/was_rectimer_wakeup"  # set wakeup flags as RecordTimer woke the box to record, place the box in standby.
 		elif self.__nextPowerManagerAfterEventActionAuto:
-			print("[Navigation] POWERTIMER: wakeup to standby detected.")
-			f = open("/tmp/was_powertimer_wakeup", "w")
-			f.write("1")
-			f.close()
-			# as a PowerTimer WakeToStandby was actiond to it.
+			wakeup = "/tmp/was_powertimer_wakeup"  # set wakeup flags as a PowerTimer WakeToStandby was actioned.
+		if wakeup:
+			fwakeup = open(f"{wakeup}", "w")  # set wakeup timer type
+			fwakeup.write("1")
+			fwakeup.close()
+			if path.exists(f"{wakeup}"):
+				print(f"[Navigation] TIMER: wakeup to standby detected, flag set: {wakeup}.")
+			fcec = open("/tmp/was_cectimer_wakeup", "w")  # tell Cec was timer wakeup, so don't issue Standby to TV
+			fcec.write("1")
+			fcec.close()
 			self.standbytimer = eTimer()
 			self.standbytimer.callback.append(self.gotostandby)
 			self.standbytimer.start(15000, True)
@@ -246,6 +244,11 @@ class Navigation:
 
 	def getCurrentlyPlayingServiceOrGroup(self):
 		return self.currentlyPlayingServiceOrGroup
+
+	def getCurrentServiceRef(self):
+		curPlayService = self.getCurrentService()
+		info = curPlayService and curPlayService.info()
+		return info and info.getInfoString(iServiceInformation.sServiceref)
 
 	def recordService(self, ref, simulate=False):
 		service = None
