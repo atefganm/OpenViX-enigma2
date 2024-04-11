@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from os import listdir, rename, remove, path as os_path
 import re
-from time import localtime, time, strftime
+from time import localtime, strftime, time
 
 from enigma import eActionMap, eServiceReference, eEPGCache, eServiceCenter, eRCInput, eTimer, ePoint, eDVBDB, iPlayableService, iServiceInformation, getPrevAsciiCode, eDVBLocalTimeHandler
 
@@ -720,13 +720,21 @@ class SelectionEventInfo:
 		self.servicelist.connectSelChanged(self.__selectionChanged)
 		self.timer = eTimer()
 		self.timer.callback.append(self.updateEventInfo)
-		self.onShown.append(self.__selectionChanged)
+		self.onShown.append(self.__onShow)
+
+	def __stopTimer(self):
+		self.timer.stop()
+
+	def __onShow(self):
+		self["Service"].newService(None)
+		self.__selectionChanged()
 
 	def __selectionChanged(self):
 		if self.execing:
 			self.timer.start(100, True)
 
 	def updateEventInfo(self):
+		self.__stopTimer()
 		cur = self.getCurrentSelection()
 		service = self["Service"]
 		try:
@@ -2074,6 +2082,7 @@ class ChannelSelection(ChannelSelectionEdit, ChannelSelectionBase, ChannelSelect
 		self.lastChannelRootTimer.start(100, True)
 		self.pipzaptimer = eTimer()
 		self.onClose.append(self.__onClose)
+		self.onZapping = []
 
 	def __onClose(self):
 		# clear the instance value so the skin reloader works correctly
