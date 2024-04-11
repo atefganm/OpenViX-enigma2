@@ -27,6 +27,7 @@ class Screen(dict):
 		self.onExecBegin = []
 		self.onExecEnd = []
 		self.onLayoutFinish = []
+		self.onContentChanged = []
 		self.onShown = []
 		self.onShow = []
 		self.onHide = []
@@ -176,7 +177,7 @@ class Screen(dict):
 			screenTitle = title
 		self["ScreenPath"].text = screenPath
 		self["Title"].text = screenTitle
-		self["title"].text = self.screenTitle # DEBUG: Hack to support for some summary screens.
+		self["title"].text = self.screenTitle  # DEBUG: Hack to support for some summary screens.
 
 	def getTitle(self):
 		return self.screenTitle
@@ -223,6 +224,13 @@ class Screen(dict):
 		self.__callLaterTimer = eTimer()
 		self.__callLaterTimer.callback.append(function)
 		self.__callLaterTimer.start(0, True)
+
+	def screenContentChanged(self):
+		for f in self.onContentChanged:
+			if not isinstance(f, type(self.close)):
+				exec(f, globals(), locals())  # Python 3
+			else:
+				f()
 
 	def applySkin(self):
 		# DEBUG: baseRes = (getDesktop(GUI_SKIN_ID).size().width(), getDesktop(GUI_SKIN_ID).size().height())
@@ -310,7 +318,7 @@ class ScreenSummary(Screen):
 			names = [names]
 		self.skinName = ["%s_summary" % x for x in names]
 		className = self.__class__.__name__
-		if className != "ScreenSummary" and className not in self.skinName: # e.g. if a module uses Screens.Setup.SetupSummary the skin needs to be available directly
+		if className != "ScreenSummary" and className not in self.skinName:  # e.g. if a module uses Screens.Setup.SetupSummary the skin needs to be available directly
 			self.skinName.append(className)
 		self.skinName.append("SimpleSummary")
 		self.skin = parent.__dict__.get("skinSummary", self.skin)  # If parent has a "skinSummary" defined, use that as default.

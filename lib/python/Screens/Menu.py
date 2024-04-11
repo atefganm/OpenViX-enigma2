@@ -37,7 +37,7 @@ def MenuEntryPixmap(key, png_cache):
 		return None
 	w, h = parameters.get("MenuIconSize", (50, 50))
 	png = png_cache.get(key)
-	if png is None: # no cached entry
+	if png is None:  # no cached entry
 		pngPath = menuicons.get(key, menuicons.get("default", ""))
 		if pngPath:
 			png = LoadPixmap(resolveFilename(SCOPE_CURRENT_SKIN, pngPath), cached=True, width=w, height=0 if pngPath.endswith(".svg") else h)
@@ -74,10 +74,10 @@ class Menu(Screen, HelpableScreen, ProtectedScreen):
 			exec("from %s import %s" % (arg[0], arg[1].split(",")[0]))
 			self.openDialog(*eval(arg[1]))
 
-	def nothing(self): #dummy
+	def nothing(self):  # dummy
 		pass
 
-	def openDialog(self, *dialog): # in every layer needed
+	def openDialog(self, *dialog):  # in every layer needed
 		self.session.openWithCallback(self.menuClosed, *dialog)
 
 	def openSetup(self, dialog):
@@ -259,7 +259,8 @@ class Menu(Screen, HelpableScreen, ProtectedScreen):
 		self.okbuttonClick()
 
 	def layoutFinished(self):
-		if self.menuImage:
+		self.screenContentChanged()
+		if self.menuImage and "menuimage" in self:
 			self["menuimage"].instance.setPixmap(self.menuImage)
 
 	def loadMenuImage(self):
@@ -277,7 +278,7 @@ class Menu(Screen, HelpableScreen, ProtectedScreen):
 
 		self.menuID = self.parentmenu.get("key")
 		self.list = []
-		for x in self.parentmenu: #walk through the actual nodelist
+		for x in self.parentmenu:  # walk through the actual nodelist
 			if not x.tag:
 				continue
 			if x.tag == 'item':
@@ -333,10 +334,11 @@ class Menu(Screen, HelpableScreen, ProtectedScreen):
 		if config.usage.menu_show_numbers.value:
 			self.list = [(str(x[0] + 1) + " " + x[1][0], x[1][1], x[1][2]) for x in enumerate(self.list)]
 
-		if self.menulength != len(self.list): # updateList must only be used on a list of the same length. If length is different we call setList.
+		if self.menulength != len(self.list):  # updateList must only be used on a list of the same length. If length is different we call setList.
 			self.menulength = len(self.list)
 			self["menu"].setList(self.list)
 		self["menu"].updateList(self.list)
+		self.screenContentChanged()
 
 	def keyNumberGlobal(self, number):
 		self.number = self.number * 10 + number
