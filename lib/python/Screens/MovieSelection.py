@@ -390,8 +390,8 @@ class MovieContextMenuSummary(Screen):
 class MovieContextMenu(Screen, ProtectedScreen):
 	# Contract: On OK returns a callable object (e.g. delete)
 	def __init__(self, session, csel, currentSelection):
-		Screen.__init__(self, session)
-		self.skinName = "Setup"
+		Screen.__init__(self, session, mandatoryWidgets=["config"])
+		self.skinName = ["MovieContextMenu", "Setup"]
 		self.setup_title = _("Movie List Setup")
 		Screen.setTitle(self, _(self.setup_title))
 
@@ -578,6 +578,7 @@ class MovieSelection(Screen, HelpableScreen, SelectionEventInfo, InfoBarBase, Pr
 
 		self.feedbackTimer = None
 		self.pathselectEnabled = False
+		self.shouldReload = False
 
 		self.numericalTextInput = NumericalTextInput.NumericalTextInput(mapping=NumericalTextInput.MAP_SEARCH_UPCASE)
 		self["chosenletter"] = Label("")
@@ -1107,14 +1108,12 @@ class MovieSelection(Screen, HelpableScreen, SelectionEventInfo, InfoBarBase, Pr
 		self["waitingtext"].hide()
 
 	def LivePlay(self):
-		if self.session.nav.getCurrentlyPlayingServiceReference():
-			if ':0:/' not in self.session.nav.getCurrentlyPlayingServiceReference().toString():
-				config.movielist.curentlyplayingservice.setValue(self.session.nav.getCurrentlyPlayingServiceReference().toString())
-		checkplaying = self.session.nav.getCurrentlyPlayingServiceReference()
-		if checkplaying:
-			checkplaying = checkplaying.toString()
-		if checkplaying is None or (config.movielist.curentlyplayingservice.value != checkplaying and ':0:/' not in self.session.nav.getCurrentlyPlayingServiceReference().toString()):
+		checkplaying = self.session.nav.getCurrentlyPlayingServiceOrGroup() and self.session.nav.getCurrentlyPlayingServiceOrGroup().toString()
+		if checkplaying and ':0:/' not in checkplaying:
+			config.movielist.curentlyplayingservice.value = checkplaying
+		if checkplaying is None or (config.movielist.curentlyplayingservice.value != checkplaying and ':0:/' not in checkplaying):
 			self.session.nav.playService(eServiceReference(config.movielist.curentlyplayingservice.value))
+
 		self.LivePlayTimer.stop()
 
 	def getCurrent(self):
@@ -1578,6 +1577,7 @@ class MovieSelection(Screen, HelpableScreen, SelectionEventInfo, InfoBarBase, Pr
 			return
 
 		self.saveconfig()
+		# This is needed for DVB subtitles to show after stop playing recording & exit
 		from Screens.InfoBar import InfoBar
 		infobar = InfoBar.instance
 		if self.session.nav.getCurrentlyPlayingServiceReference():
@@ -1599,9 +1599,10 @@ class MovieSelection(Screen, HelpableScreen, SelectionEventInfo, InfoBarBase, Pr
 				"movieoff": config.usage.on_movie_eof.value})
 			self.saveLocalSettings()
 			self._updateButtonTexts()
-			self["list"].setItemsPerPage()
-			self["list"].setFontsize()
 			self.reloadList()
+			self["list"].setFontsize()
+			self["list"].setItemsPerPage()
+			self["list"].refreshDisplay()
 			self.updateDescription()
 
 	def can_sortby(self, item):
