@@ -34,17 +34,24 @@ class CurrentService(PerServiceBase, Source):
 
 	@cached
 	def getCurrentService(self):
-		return self.srv or self.navcore.getCurrentService()
+		return self.navcore.getCurrentService()
 
 	def getCurrentServiceReference(self):
 		return self.navcore.getCurrentlyPlayingServiceReference()
 
 	service = property(getCurrentService)
 
+	def getCurrentServiceWithFallback(self):
+		return self.srv or self.navcore.getCurrentService()
+
+	# this gets current service (set manually) with a fallback to the selected service from navigation.
+	# Typically that is used in ServiceName convertor.
+	servicealt = property(getCurrentServiceWithFallback)
+
 	@cached
 	def getCurrentServiceRef(self):
 		if NavigationInstance.instance is not None:
-			return self.srv or NavigationInstance.instance.getCurrentlyPlayingServiceOrGroup()
+			return NavigationInstance.instance.getCurrentlyPlayingServiceOrGroup()
 		return None
 
 	serviceref = property(getCurrentServiceRef)

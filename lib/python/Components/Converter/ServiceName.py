@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-
+from enigma import iServiceInformation, iPlayableService, iPlayableServicePtr, eServiceReference, eEPGCache
 from Components.Converter.Converter import Converter
 from Components.config import config
-from enigma import iServiceInformation, iPlayableService, iPlayableServicePtr, eServiceReference, eEPGCache
 from ServiceReference import resolveAlternate
 from Components.Element import cached
 from Tools.Directories import fileExists
@@ -23,29 +22,25 @@ class ServiceName(Converter):
 	def __init__(self, type):
 		Converter.__init__(self, type)
 		self.epgQuery = eEPGCache.getInstance().lookupEventTime
-		self.parts = type.split(",")
+		self.KEYWORDS = {
+			"Provider": self.PROVIDER,
+			"Reference": self.REFERENCE,
+			"EditReference": self.EDITREFERENCE,
+			"NameOnly": self.NAME_ONLY,
+			"NameAndEvent": self.NAME_EVENT,
+			"StreamUrl": self.STREAM_URL,
+			"Name": self.NAME}
+
+		self.parts = [(arg.strip() if i or arg.strip() in self.KEYWORDS else arg) for i, arg in enumerate(type.split(","))]
 		if len(self.parts) > 1:
 			self.type = self.FORMAT_STRING
-			self.separatorChar = self.parts[0]
+			self.separator = self.parts[0]
 		else:
-			if type == "Provider":
-				self.type = self.PROVIDER
-			elif type == "Reference":
-				self.type = self.REFERENCE
-			elif type == "EditReference":
-				self.type = self.EDITREFERENCE
-			elif type == "NameOnly":
-				self.type = self.NAME_ONLY
-			elif type == "NameAndEvent":
-				self.type = self.NAME_EVENT
-			elif type == "StreamUrl":
-				self.type = self.STREAM_URL
-			else:
-				self.type = self.NAME
+			self.type = self.KEYWORDS.get(type, self.NAME)
 
 	@cached
 	def getText(self):
-		service = self.source.service
+		service = self.source.servicealt if hasattr(self.source, "servicealt") and self.source.servicealt else self.source.service
 		info = None
 		if isinstance(service, eServiceReference):
 			info = self.source.info
@@ -68,8 +63,7 @@ class ServiceName(Converter):
 				else:
 					return "%s - %s" % (name, act_event.getEventName())
 			elif self.type != self.NAME_ONLY and config.usage.show_infobar_channel_number.value and hasattr(self.source, "serviceref") and self.source.serviceref and '0:0:0:0:0:0:0:0:0' not in self.source.serviceref.toString():
-				numservice = self.source.serviceref
-				num = self.getNumber(numservice, info)
+				num = self.getNumber()
 				if num is not None:
 					return str(num) + '   ' + name
 				else:
@@ -93,26 +87,15 @@ class ServiceName(Converter):
 			return service.toString()
 		elif self.type == self.STREAM_URL:
 			srpart = "//%s:%s/" % (config.misc.softcam_streamrelay_url.getHTML(), config.misc.softcam_streamrelay_port.value)
-			if not service:
-				refstr = info.getInfoString(iServiceInformation.sServiceref)
-				path = refstr and eServiceReference(refstr).getPath()
-				if not path:
-					curService = SessionObject.session.nav.getCurrentlyPlayingServiceReference()
-					path = curService and curService.toString().split(":")[10].replace("%3a", ":")
-				if not path.startswith("//") and path.find(srpart) == -1:
-					return path
-				else:
-					return ""
-			path = service.getPath()
-			if not path:
-				path = service.toString().split(":")[10].replace("%3a", ":")
-			return "" if path.startswith("//") and path.find(srpart) == -1 else path
+			path = service.toString().split(":")[10].replace("%3a", ":")
+			if "://" in path and "http" not in path:
+				path = SessionObject.session.nav.getCurrentServiceRef().toString().split(":")[10].replace("%3a", ":")
+			return "" if path.startswith("//") and path.find(srpart) > -1 and "://" not in path else path
 		elif self.type == self.FORMAT_STRING:
 			name = self.getName(service, info)
-			numservice = hasattr(self.source, "serviceref") and self.source.serviceref
-			num = numservice and self.getNumber(numservice, info) or ""
+			provider = self.getProvider(service, info)
+			num = self.getNumber()
 			orbpos, tp_data = self.getOrbitalPos(service, info)
-			provider = self.getProvider(service, info, tp_data)
 			tuner_system = service and info and self.getServiceSystem(service, info, tp_data)
 			res_str = ""
 			for x in self.parts[1:]:
@@ -131,30 +114,36 @@ class ServiceName(Converter):
 	text = property(getText)
 
 	def changed(self, what):
-		if what[0] != self.CHANGED_SPECIFIC or what[1] in (iPlayableService.evStart, iPlayableService.evNewProgramInfo):
+		if what[0] != self.CHANGED_SPECIFIC or what[1] in (iPlayableService.evStart, ):
 			Converter.changed(self, what)
 
 	def getName(self, ref, info):
 		name = ref and info.getName(ref)
-		if name is None:
+		if not name:
+			name = ref and hasattr(self.source, "serviceref") and self.source.serviceref and info.getName(self.source.serviceref)
+		if not name:
 			name = info.getName()
 		return name.replace('\xc2\x86', '').replace('\xc2\x87', '').replace('_', ' ')
 
-	def getNumber(self, ref, info):
-		if not ref:
-			ref = eServiceReference(info.getInfoString(iServiceInformation.sServiceref))
-		num = ref and ref.getChannelNum() or None
-		if num is not None:
-			num = str(num)
-		return num
+	def getNumber(self):
+		numservice = hasattr(self.source, "serviceref") and self.source.serviceref
+		cnannelNumInt = numservice and numservice.getChannelNum() or 0
+		channelnum = str(cnannelNumInt) if cnannelNumInt else ""
+		return channelnum
 
-	def getProvider(self, ref, info, tp_data=None):
+	def getProvider(self, ref, info):
+		prov = ''
 		if ref:
-			return info.getInfoString(ref, iServiceInformation.sProvider)
-		return info.getInfoString(iServiceInformation.sProvider)
+			prov = ref.getProvider()
+		if not prov:
+			prov = not ref and info.getInfoString(iServiceInformation.sProvider)
+		if not prov:
+			prov = hasattr(self.source, "serviceref") and self.source.serviceref.getProvider()
+		return prov
 
 	def getOrbitalPos(self, ref, info):
 		orbitalpos = ""
+		tp_data = None
 		if ref:
 			tp_data = info.getInfoObject(ref, iServiceInformation.sTransponderData)
 		else:
@@ -164,9 +153,9 @@ class ServiceName(Converter):
 			try:
 				position = tp_data["orbital_position"]
 				if position > 1800:  # west
-					orbitalpos = "%.1f " % (float(3600 - position) / 10) + _("W")
+					orbitalpos = "%.1f° " % (float(3600 - position) / 10) + _("W")
 				else:
-					orbitalpos = "%.1f " % (float(position) / 10) + _("E")
+					orbitalpos = "%.1f° " % (float(position) / 10) + _("E")
 			except:
 				pass
 		return orbitalpos, tp_data
@@ -183,6 +172,9 @@ class ServiceName(Converter):
 		if sref and "%3a//" in sref:
 			return "IPTV"
 
-		fedata = ConvertToHumanReadable(feraw)
+		fedata = None
 
-		return fedata.get("system") or ""
+		if feraw:
+			fedata = ConvertToHumanReadable(feraw)
+
+		return fedata and fedata.get("system") or ""
