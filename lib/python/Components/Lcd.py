@@ -14,7 +14,28 @@ from Screens.Standby import inTryQuitMainloop
 from Tools.Directories import fileReadLine, fileWriteLine
 
 
-MODEL = BoxInfo.getItem("model", default="unknown")
+MODEL = BoxInfo.getItem("model")
+
+colorsList = [
+	("0xff0000", _("Red")),
+	("0xff3333", _("Rose")),
+	("0xff5500", _("Orange")),
+	("0xdd9900", _("Yellow")),
+	("0x99dd00", _("Lime")),
+	("0x00ff00", _("Green")),
+	("0x00ff99", _("Aqua")),
+	("0x00bbff", _("Olympic blue")),
+	("0x0000ff", _("Blue")),
+	("0x6666ff", _("Azure")),
+	("0x9900ff", _("Purple")),
+	("0xff0066", _("Pink")),
+	("0xffffff", _("White")),
+]
+config.lcd = ConfigSubsection()
+config.lcd.ledblinkcontrolcolor = ConfigSelection(choices=colorsList, default="0xffffff")
+config.lcd.ledbrightnesscontrol = ConfigSlider(default=0xff, increment=25, limits=(0, 0xff))
+config.lcd.ledcolorcontrolcolor = ConfigSelection(choices=colorsList, default="0xffffff")
+config.lcd.ledfadecontrolcolor = ConfigSelection(choices=colorsList, default="0xffffff")
 
 
 class dummyScreen(Screen):
