@@ -1372,7 +1372,7 @@ void eDVBCISlot::openDevice()
 	char filename[128];
 
 	plugged = true;
-	
+
 	sprintf(filename, "/dev/ci%d", slotid);
 
 //	possible_caids.insert(0x1702);
