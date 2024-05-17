@@ -1449,7 +1449,7 @@ eDVBDB::eDVBDB()
 		makeUpper(s_ref);
 
 		eDebug("[eDVBDB] Readed from config_av ref: %s", s_ref.c_str());
-		
+
 		eIPTVDBItem iptvDBItem(s_ref, ampeg_pid, aac3_pid, aac4_pid, addp_pid, aaach_pid, aaac_pid, adra_pid, subtitle_pid, video_pid);
 		iptv_services.push_back(iptvDBItem);
 		line = "";
@@ -1969,7 +1969,7 @@ PyObject *eDVBDB::readTerrestrials(ePyObject ter_list, ePyObject tp_dict)
 
 			Py_DECREF(tplist);
 		}
-		else if (ter_flags || ter_countrycode) 
+		else if (ter_flags || ter_countrycode)
 		{
 			if (ter_flags)
 			{
