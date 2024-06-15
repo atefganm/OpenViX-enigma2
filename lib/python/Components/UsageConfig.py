@@ -2,6 +2,7 @@ import io
 import locale
 import os
 import skin
+from boxbranding import getBrandOEM, getDisplayType
 
 from enigma import eDVBDB, eEPGCache, setTunerTypePriorityOrder, setPreferredTuner, setSpinnerOnOff, setEnableTtCachingOnOff, eEnv, Misc_Options, eServiceEvent
 
@@ -10,8 +11,17 @@ from Components.config import config, ConfigBoolean, ConfigDictionarySet, Config
 from Tools.camcontrol import CamControl
 from Tools.Directories import resolveFilename, SCOPE_HDD, SCOPE_TIMESHIFT, defaultRecordingLocation
 from Components.NimManager import nimmanager
+from Components.Renderer.FrontpanelLed import ledPatterns, PATTERN_ON, PATTERN_OFF, PATTERN_BLINK
 from Components.ServiceList import refreshServiceList
-from Components.SystemInfo import SystemInfo
+from Components.SystemInfo import SystemInfo, BoxInfo
+from Tools.HardwareInfo import HardwareInfo
+from Components.AVSwitch import iAVSwitch
+from os import makedirs
+from os.path import exists, isfile, join as pathjoin, normpath
+import os, time, locale, skin
+from boxbranding import getDisplayType
+
+displaytype = getDisplayType()
 
 # A raw writer for config changes to be read by the logger without
 # getting a time-stamp prepended.
@@ -282,6 +292,35 @@ def InitUsageConfig():
 		("5", "DVB-T/-S/-C"),
 		("127", _("No priority"))])
 
+	config.usage.frontled_color = ConfigSelection(default="2", choices=[
+		("0", _("Off")),
+		("1", _("Blue")),
+		("2", _("Red")),
+		("3", _("Blinking blue")),
+		("4", _("Blinking red"))
+	])
+	config.usage.frontledrec_color = ConfigSelection(default="3", choices=[
+		("0", _("Off")),
+		("1", _("Blue")),
+		("2", _("Red")),
+		("3", _("Blinking blue")),
+		("4", _("Blinking red"))
+	])
+	config.usage.frontledstdby_color = ConfigSelection(default="0", choices=[
+		("0", _("Off")),
+		("1", _("Blue")),
+		("2", _("Red")),
+		("3", _("Blinking blue")),
+		("4", _("Blinking red"))
+	])
+	config.usage.frontledrecstdby_color = ConfigSelection(default="3", choices=[
+		("0", _("Off")),
+		("1", _("Blue")),
+		("2", _("Red")),
+		("3", _("Blinking blue")),
+		("4", _("Blinking red"))
+	])
+
 	config.usage.remote_fallback_enabled = ConfigYesNo(default=False)
 	config.usage.remote_fallback = ConfigText(default="", fixed_size=False)
 
@@ -391,6 +430,11 @@ def InitUsageConfig():
 	config.usage.swap_media_time_display_on_vfd = ConfigSelection(default="0", choices=[("0", _("Skin Setting")), ("1", _("Mins")), ("2", _("Mins Secs")), ("3", _("Hours Mins")), ("4", _("Hours Mins Secs")), ("5", _("Percentage"))])
 	config.usage.swap_time_remaining_on_vfd = ConfigSelection(default="0", choices=[("0", _("Remaining")), ("1", _("Elapsed")), ("2", _("Elapsed & Remaining")), ("3", _("Remaining & Elapsed"))])
 	config.usage.elapsed_time_positive_vfd = ConfigYesNo(default=False)
+
+	config.usage.frontled_color = ConfigSelection(default = "2", choices = [("0", _("Off")), ("1", _("Blue")), ("2", _("Red")), ("3", _("Blinking blue")), ("4", _("Blinking red"))])
+	config.usage.frontledrec_color = ConfigSelection(default = "3", choices = [("0", _("Off")), ("1", _("Blue")), ("2", _("Red")), ("3", _("Blinking blue")), ("4", _("Blinking red"))])
+	config.usage.frontledstdby_color = ConfigSelection(default = "0", choices = [("0", _("Off")), ("1", _("Blue")), ("2", _("Red")), ("3", _("Blinking blue")), ("4", _("Blinking red"))])
+	config.usage.frontledrecstdby_color = ConfigSelection(default = "3", choices = [("0", _("Off")), ("1", _("Blue")), ("2", _("Red")), ("3", _("Blinking blue")), ("4", _("Blinking red"))])
 
 	def SpinnerOnOffChanged(configElement):
 		setSpinnerOnOff(int(configElement.value))
@@ -729,11 +773,70 @@ def InitUsageConfig():
 	if not SystemInfo["DeveloperImage"]:
 		config.usage.fast_skin_reload.value = False
 
-	if SystemInfo["hasXcoreVFD"]:
+	if BoxInfo.getItem("PowerLED"):
+		def powerLEDChanged(configElement):
+			if "fp" in BoxInfo.getItem("PowerLED"):
+				open(BoxInfo.getItem("PowerLED"), "w").write(configElement.value and "1" or "0")
+				patterns = [PATTERN_ON, PATTERN_ON, PATTERN_OFF, PATTERN_ON] if configElement.value else [PATTERN_OFF, PATTERN_OFF, PATTERN_OFF, PATTERN_OFF]
+				ledPatterns.setLedPatterns(1, patterns)
+			else:
+				open(BoxInfo.getItem("PowerLED"), "w").write(configElement.value and "on" or "off")
+		config.usage.powerLED = ConfigYesNo(default=True)
+		config.usage.powerLED.addNotifier(powerLEDChanged)
+
+	if BoxInfo.getItem("StandbyLED"):
+		def standbyLEDChanged(configElement):
+			if "fp" in BoxInfo.getItem("StandbyLED"):
+				patterns = [PATTERN_OFF, PATTERN_BLINK, PATTERN_ON, PATTERN_BLINK] if configElement.value else [PATTERN_OFF, PATTERN_OFF, PATTERN_OFF, PATTERN_OFF]
+				ledPatterns.setLedPatterns(0, patterns)
+			else:
+				open(BoxInfo.getItem("StandbyLED"), "w").write(configElement.value and "on" or "off")
+		config.usage.standbyLED = ConfigYesNo(default=True)
+		config.usage.standbyLED.addNotifier(standbyLEDChanged)
+
+	if BoxInfo.getItem("SuspendLED"):
+		def suspendLEDChanged(configElement):
+			if "fp" in BoxInfo.getItem("SuspendLED"):
+				open(BoxInfo.getItem("SuspendLED"), "w").write(configElement.value and "1" or "0")
+			else:
+				open(BoxInfo.getItem("SuspendLED"), "w").write(configElement.value and "on" or "off")
+		config.usage.suspendLED = ConfigYesNo(default=True)
+		config.usage.suspendLED.addNotifier(suspendLEDChanged)
+
+	if BoxInfo.getItem("PowerOffDisplay"):
+		def powerOffDisplayChanged(configElement):
+			with open(BoxInfo.getItem("PowerOffDisplay"), "w") as fd:
+				fd.write(configElement.value and "1" or "0")
+		config.usage.powerOffDisplay = ConfigYesNo(default=True)
+		config.usage.powerOffDisplay.addNotifier(powerOffDisplayChanged)
+
+	if BoxInfo.getItem("LCDshow_symbols"):
+		def lcdShowSymbols(configElement):
+			with open(BoxInfo.getItem("LCDshow_symbols"), "w") as fd:
+				fd.write(configElement.value and "1" or "0")
+		config.usage.lcd_show_symbols = ConfigYesNo(default=True)
+		config.usage.lcd_show_symbols.addNotifier(lcdShowSymbols)
+
+	if BoxInfo.getItem("hasXcoreVFD"):
 		def set12to8characterVFD(configElement):
-			open(SystemInfo["hasXcoreVFD"], "w").write(not configElement.value and "1" or "0")
-		config.usage.toggle12to8characterVFD = ConfigYesNo(default=True)
+			with open(BoxInfo.getItem("hasXcoreVFD"), "w") as fd:
+				fd.write(not configElement.value and "1" or "0")
+		config.usage.toggle12to8characterVFD = ConfigYesNo(default=False)
 		config.usage.toggle12to8characterVFD.addNotifier(set12to8characterVFD)
+
+	if BoxInfo.getItem("LcdLiveTVMode"):
+		def setLcdLiveTVMode(configElement):
+			with open(BoxInfo.getItem("LcdLiveTVMode"), "w") as fd:
+				fd.write(configElement.value)
+		config.usage.LcdLiveTVMode = ConfigSelection(default="0", choices=[str(x) for x in range(0, 9)])
+		config.usage.LcdLiveTVMode.addNotifier(setLcdLiveTVMode)
+
+	if BoxInfo.getItem("LcdLiveDecoder"):
+		def setLcdLiveDecoder(configElement):
+			with open(BoxInfo.getItem("LcdLiveDecoder"), "w") as fd:
+				fd.write(configElement.value)
+		config.usage.LcdLiveDecoder = ConfigSelection(default="0", choices=[str(x) for x in range(0, 4)])
+		config.usage.LcdLiveDecoder.addNotifier(setLcdLiveDecoder)
 
 	config.epg = ConfigSubsection()
 	config.epg.eit = ConfigYesNo(default=True)
@@ -805,7 +908,14 @@ def InitUsageConfig():
 
 # storm - previous code were placed in VideoHardware to where its belong
 
-	config.osd.dst_left = ConfigSelectionNumber(default=0, stepwidth=1, min=0, max=720, wraparound=False)
+	if BoxInfo.getItem("AmlogicFamily"):
+		limits = [int(x) for x in iAVSwitch.getWindowsAxis().split()]
+		config.osd.dst_left = ConfigSelectionNumber(default=limits[0], stepwidth=1, min=limits[0] - 255, max=limits[0] + 255, wraparound=False)
+		config.osd.dst_top = ConfigSelectionNumber(default=limits[1], stepwidth=1, min=limits[1] - 255, max=limits[1] + 255, wraparound=False)
+		config.osd.dst_width = ConfigSelectionNumber(default=limits[2], stepwidth=1, min=limits[2] - 255, max=limits[2] + 255, wraparound=False)
+		config.osd.dst_height = ConfigSelectionNumber(default=limits[3], stepwidth=1, min=limits[3] - 255, max=limits[3] + 255, wraparound=False)
+	else:
+		config.osd.dst_left = ConfigSelectionNumber(default=0, stepwidth=1, min=0, max=720, wraparound=False)
 	config.osd.dst_width = ConfigSelectionNumber(default=720, stepwidth=1, min=0, max=720, wraparound=False)
 	config.osd.dst_top = ConfigSelectionNumber(default=0, stepwidth=1, min=0, max=576, wraparound=False)
 	config.osd.dst_height = ConfigSelectionNumber(default=576, stepwidth=1, min=0, max=576, wraparound=False)
@@ -1014,6 +1124,130 @@ def InitUsageConfig():
 		config.misc.zapmodeDM.addNotifier(setZapmodeDM, immediate_feedback = False)
 
 	config.usage.historymode = ConfigSelection(default="1", choices=[("0", _("Just zap")), ("1", _("Show menu"))])
+
+	if BoxInfo.getItem("VFD_scroll_repeats"):
+		def scroll_repeats(el):
+			with open(BoxInfo.getItem("VFD_scroll_repeats"), "w") as fd:
+				fd.write(el.value)
+		choicelist = []
+		for i in range(1, 11, 1):
+			choicelist.append((str(i)))
+		config.usage.vfd_scroll_repeats = ConfigSelection(default="3", choices=choicelist)
+		config.usage.vfd_scroll_repeats.addNotifier(scroll_repeats, immediate_feedback=False)
+
+	if BoxInfo.getItem("VFD_scroll_delay"):
+		def scroll_delay(el):
+			with open(BoxInfo.getItem("VFD_scroll_delay"), "w") as fd:
+				fd.write(el.value)
+		choicelist = []
+		for i in range(0, 1001, 50):
+			choicelist.append((str(i)))
+		config.usage.vfd_scroll_delay = ConfigSelection(default="150", choices=choicelist)
+		config.usage.vfd_scroll_delay.addNotifier(scroll_delay, immediate_feedback=False)
+
+	if BoxInfo.getItem("VFD_initial_scroll_delay"):
+		def initial_scroll_delay(el):
+			with open(BoxInfo.getItem("VFD_initial_scroll_delay"), "w") as fd:
+				fd.write(el.value)
+		choicelist = []
+		for i in range(0, 20001, 500):
+			choicelist.append((str(i)))
+		config.usage.vfd_initial_scroll_delay = ConfigSelection(default="1000", choices=choicelist)
+		config.usage.vfd_initial_scroll_delay.addNotifier(initial_scroll_delay, immediate_feedback=False)
+
+	if BoxInfo.getItem("VFD_final_scroll_delay"):
+		def final_scroll_delay(el):
+			with open(BoxInfo.getItem("VFD_final_scroll_delay"), "w") as fd:
+				fd.write(el.value)
+		choicelist = []
+		for i in range(0, 20001, 500):
+			choicelist.append((str(i)))
+		config.usage.vfd_final_scroll_delay = ConfigSelection(default="1000", choices=choicelist)
+		config.usage.vfd_final_scroll_delay.addNotifier(final_scroll_delay, immediate_feedback=False)
+
+	if BoxInfo.getItem("HasBypassEdidChecking"):
+		def setHasBypassEdidChecking(configElement):
+			with open(BoxInfo.getItem("HasBypassEdidChecking"), "w") as fd:
+				fd.write("00000001" if configElement.value else "00000000")
+		config.av.bypassEdidChecking = ConfigYesNo(default=False)
+		config.av.bypassEdidChecking.addNotifier(setHasBypassEdidChecking)
+
+	if BoxInfo.getItem("HasColorspace"):
+		def setHaveColorspace(configElement):
+			with open(BoxInfo.getItem("HasColorspace"), "w") as fd:
+				fd.write(configElement.value)
+		if BoxInfo.getItem("HasColorspaceSimple"):
+			config.av.hdmicolorspace = ConfigSelection(default="Edid(Auto)", choices={"Edid(Auto)": _("auto"), "Hdmi_Rgb": "RGB", "444": "YCbCr 4:4:4", "422": "YCbCr 4:2:2", "420": "YCbCr 4:2:0"})
+		else:
+			config.av.hdmicolorspace = ConfigSelection(default="auto", choices={"auto": _("auto"), "rgb": "RGB", "420": "4:2:0", "422": "4:2:2", "444": "4:4:4"})
+		config.av.hdmicolorspace.addNotifier(setHaveColorspace)
+
+	if BoxInfo.getItem("HasColordepth"):
+		def setHaveColordepth(configElement):
+			with open(BoxInfo.getItem("HasColordepth"), "w") as fd:
+				fd.write(configElement.value)
+		config.av.hdmicolordepth = ConfigSelection(default="auto", choices={"auto": _("auto"), "8bit": "8bit", "10bit": "10bit", "12bit": "12bit"})
+		config.av.hdmicolordepth.addNotifier(setHaveColordepth)
+
+	if BoxInfo.getItem("HasHDMIpreemphasis"):
+		def setHDMIpreemphasis(configElement):
+			with open(BoxInfo.getItem("HasHDMIpreemphasis"), "w") as fd:
+				fd.write("on" if configElement.value else "off")
+		config.av.hdmipreemphasis = ConfigYesNo(default=False)
+		config.av.hdmipreemphasis.addNotifier(setHDMIpreemphasis)
+
+	if BoxInfo.getItem("HasColorimetry"):
+		def setColorimetry(configElement):
+			with open(BoxInfo.getItem("HasColorimetry"), "w") as fd:
+				fd.write(configElement.value)
+		config.av.hdmicolorimetry = ConfigSelection(default="auto", choices=[("auto", _("auto")), ("bt2020ncl", "BT 2020 NCL"), ("bt2020cl", "BT 2020 CL"), ("bt709", "BT 709")])
+		config.av.hdmicolorimetry.addNotifier(setColorimetry)
+
+	if BoxInfo.getItem("HasHdrType"):
+		def setHdmiHdrType(configElement):
+			with open(BoxInfo.getItem("HasHdrType"), "w") as fd:
+				fd.write(configElement.value)
+		config.av.hdmihdrtype = ConfigSelection(default="auto", choices={"auto": _("auto"), "none": "SDR", "hdr10": "HDR10", "hlg": "HLG", "dolby": "Dolby Vision"})
+		config.av.hdmihdrtype.addNotifier(setHdmiHdrType)
+
+	if BoxInfo.getItem("HDRSupport"):
+		def setHlgSupport(configElement):
+			with open("/proc/stb/hdmi/hlg_support", "w") as fd:
+				fd.write(configElement.value)
+		config.av.hlg_support = ConfigSelection(default="auto(EDID)",
+			choices=[("auto(EDID)", _("controlled by HDMI")), ("yes", _("force enabled")), ("no", _("force disabled"))])
+		config.av.hlg_support.addNotifier(setHlgSupport)
+
+		def setHdr10Support(configElement):
+			with open("/proc/stb/hdmi/hdr10_support", "w") as fd:
+				fd.write(configElement.value)
+		config.av.hdr10_support = ConfigSelection(default="auto(EDID)",
+			choices=[("auto(EDID)", _("controlled by HDMI")), ("yes", _("force enabled")), ("no", _("force disabled"))])
+		config.av.hdr10_support.addNotifier(setHdr10Support)
+
+		def setDisable12Bit(configElement):
+			with open("/proc/stb/video/disable_12bit", "w") as fd:
+				fd.write("on" if configElement.value else "off")
+		config.av.allow_12bit = ConfigYesNo(default=False)
+		config.av.allow_12bit.addNotifier(setDisable12Bit)
+
+		def setDisable10Bit(configElement):
+			with open("/proc/stb/video/disable_10bit", "w") as fd:
+				fd.write("on" if configElement.value else "off")
+		config.av.allow_10bit = ConfigYesNo(default=False)
+		config.av.allow_10bit.addNotifier(setDisable10Bit)
+
+	if BoxInfo.getItem("CanSyncMode"):
+		def setSyncMode(configElement):
+			print("[UsageConfig] Read /proc/stb/video/sync_mode")
+			with open("/proc/stb/video/sync_mode", "w") as fd:
+				fd.write(configElement.value)
+		config.av.sync_mode = ConfigSelection(default="slow", choices={
+			"slow": _("Slow motion"),
+			"hold": _("Hold first frame"),
+			"black": _("Black screen")
+		})
+		config.av.sync_mode.addNotifier(setSyncMode)
 
 	config.subtitles = ConfigSubsection()
 	config.subtitles.ttx_subtitle_colors = ConfigSelection(default="1", choices=[

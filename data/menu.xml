@@ -105,9 +105,8 @@ self.session.openWithCallback(msgClosed, EpgDeleteMsg)
 			</menu>
 			<menu key="display" level="0" text="Front Panel Display" weight="5" requires="Display">
 				<item key="display_setup" level="0" text="Settings" weight="1"><setup id="display" /></item>
+				<item key="led_setup" level="1" text="LED Setup" weight="15"><setup id="ledsetup" /></item>
 				<item key="lcd_skin_setup" level="0" text="Skin" weight="2" requires="LCDSKINSetup"><screen module="SkinSelector" screen="LcdSkinSelector" /></item>
-			</menu>
-			<menu key="leddisplay" level="0" text="LED Display Panel" weight="6" requires="DisplayLED">
 			</menu>
 			<item key="buttonsetup_setup" level="2" text="Button Setup" weight="7"><screen module="ButtonSetup" /></item>
 			<item key="subtitle_setup" level="2" text="Subtitles" weight="8"><setup id="subtitlesetup" /></item>
