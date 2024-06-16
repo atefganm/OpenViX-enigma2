@@ -1,4 +1,4 @@
-from enigma import eAVSwitch, iServiceInformation, iPlayableService, eServiceReference
+from enigma import eAVControl, iServiceInformation, iPlayableService, eServiceReference
 from Components.Converter.Converter import Converter
 from Components.Converter.Poll import Poll
 from Components.Converter.VAudioInfo import StdAudioDesc
@@ -10,41 +10,41 @@ WIDESCREEN = [1, 3, 4, 7, 8, 0xB, 0xC, 0xF, 0x10]
 
 
 def getVideoHeight(info):
-	val = eAVSwitch.getInstance().getResolutionY(0)
+	val = eAVControl.getInstance().getResolutionY(0)
 	return val if val else info.getInfo(iServiceInformation.sVideoHeight)
 
 
 def getVideoHeightStr(info, convert=lambda x: "%d" % x if x > 0 else "?", instance=None):
-	val = eAVSwitch.getInstance().getResolutionY(0)
+	val = eAVControl.getInstance().getResolutionY(0)
 	return convert(val) if val else instance.getServiceInfoString(info, iServiceInformation.sVideoHeight, convert)
 
 
 def getVideoWidth(info):
-	val = eAVSwitch.getInstance().getResolutionX(0)
+	val = eAVControl.getInstance().getResolutionX(0)
 	return val if val else info.getInfo(iServiceInformation.sVideoWidth)
 
 
 def getVideoWidthStr(info, convert=lambda x: "%d" % x if x > 0 else "?", instance=None):
-	val = eAVSwitch.getInstance().getResolutionX(0)
+	val = eAVControl.getInstance().getResolutionX(0)
 	return convert(val) if val else instance.getServiceInfoString(info, iServiceInformation.sVideoWidth, convert)
 
 
 def getFrameRate(info):
-	val = eAVSwitch.getInstance().getFrameRate(0)
+	val = eAVControl.getInstance().getFrameRate(0)
 	return val if val else info.getInfo(iServiceInformation.sFrameRate)
 
 
 def getFrameRateStr(info, convert=lambda x: "%d" % x if x > 0 else "", instance=None):
-	val = eAVSwitch.getInstance().getFrameRate(0)
+	val = eAVControl.getInstance().getFrameRate(0)
 	return convert(val) if val else instance.getServiceInfoString(info, iServiceInformation.sFrameRate, convert)
 
 
 def getProgressive(info):
-	return eAVSwitch.getInstance().getProgressive()
+	return eAVControl.getInstance().getProgressive()
 
 
 def getProgressiveStr(info):
-	return "p" if eAVSwitch.getInstance().getProgressive() else "i"
+	return "p" if eAVControl.getInstance().getProgressive() else "i"
 
 
 class ServiceInfo(Poll, Converter):
