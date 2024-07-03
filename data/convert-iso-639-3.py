@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pickle
 import sys
 infilename = "iso-639-3.tab"
@@ -12,7 +11,7 @@ if len(sys.argv) > 2:
 data = {}
 
 with open(infilename, 'r') as f:
-	f.readline() # throw away header line
+	f.readline()  # throw away header line
 	for line in f:
 		item = line.split('\t')
 		name = (item[6],)
