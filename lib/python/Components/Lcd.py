@@ -12,6 +12,7 @@ from Components.SystemInfo import BoxInfo
 from Screens.InfoBar import InfoBar
 from Screens.Screen import Screen
 from Screens.Standby import inTryQuitMainloop
+import Screens.Standby
 from Tools.Directories import fileReadLine, fileWriteLine
 
 MACHINEBUILD = BoxInfo.getItem("machinebuild")
