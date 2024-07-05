@@ -2,7 +2,7 @@
 <!--suppress XmlUnboundNsPrefix, XmlUnboundNsPrefix -->
 <!--  Skin: LCD -->
 <skin>
-	<windowstyle id="3" type="skinned">
+	<windowstyle id="2" type="skinned">
 		<color color="#000000" name="Background"/>
 		<color color="#ffffff" name="LabelForeground"/>
 		<color color="#000000" name="ListboxBackground"/>
