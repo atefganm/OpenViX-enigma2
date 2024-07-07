@@ -586,13 +586,18 @@ void eDVBScan::addKnownGoodChannel(const eDVBChannelID &chid, iDVBFrontendParame
 
 void eDVBScan::addLcnToDB(eDVBNamespace ns, eOriginalNetworkID onid, eTransportStreamID tsid, eServiceID sid, uint16_t lcn, uint32_t signal)
 {
-	char row[40];
-	sprintf(row, "%08x:%04x:%04x:%04x:%05d:%08d\n", ns.get(), onid.get(), tsid.get(), sid.get(), lcn, signal);
 	if (m_lcn_file)
 	{
-		SCAN_eDebug("[eDVBScan] [LCN] File is present, trying to write...");
 		int size = 0;
+		char row[40];
 		bool added = false;
+		[[maybe_unused]] size_t ret; /* dummy value to store fread return values */
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-overflow"
+		sprintf(row, "%08x:%04x:%04x:%04x:%05d:%08d\n", ns.get(), onid.get(), tsid.get(), sid.get(), lcn, signal);
+#pragma GCC diagnostic pop
+
 		fseek(m_lcn_file, 0, SEEK_END);
 		size = ftell(m_lcn_file);
 		
@@ -600,11 +605,9 @@ void eDVBScan::addLcnToDB(eDVBNamespace ns, eOriginalNetworkID onid, eTransportS
 		{
 			char tmp[40];
 			fseek(m_lcn_file, i*39, SEEK_SET);
-			fread (tmp, 1, 39, m_lcn_file);
+			ret = fread (tmp, 1, 39, m_lcn_file);
 			if (memcmp(tmp, row, 23) == 0)
 			{
-				tmp[38] = 0;
-				SCAN_eDebugNoNewLine("[eDVBScan] [LCN] replacing %s with %s", tmp, row);
 				fseek(m_lcn_file, i*39, SEEK_SET);
 				fwrite(row, 1, 39, m_lcn_file);
 				added = true;
@@ -614,16 +617,12 @@ void eDVBScan::addLcnToDB(eDVBNamespace ns, eOriginalNetworkID onid, eTransportS
 			
 		if (!added)
 		{
-			SCAN_eDebug("[eDVBScan] [LCN] adding %s", row);
 			fseek(m_lcn_file, 0, SEEK_END);
 			fwrite(row, 1, 39, m_lcn_file);
 		}
-		fflush(m_lcn_file);
-	} else
-	{
-		SCAN_eDebug("[eDVBScan] [LCN] File is not present, will NOT add %s", row);
 	}
 }
+
 
 void eDVBScan::addChannelToScan(iDVBFrontendParameters *feparm)
 {
@@ -805,9 +804,11 @@ void eDVBScan::channelDone()
 			{
 				SCAN_eDebug("[eDVBScan] TSID: %04x ONID: %04x", (*tsinfo)->getTransportStreamId(),
 					(*tsinfo)->getOriginalNetworkId());
-				eDVBNamespace ns(0);
 				bool T2 = false;
 				eDVBFrontendParametersTerrestrial t2transponder;
+				eOriginalNetworkID onid = (*tsinfo)->getOriginalNetworkId();
+				eTransportStreamID tsid = (*tsinfo)->getTransportStreamId();
+				eDVBNamespace ns(0);
 
 				for (DescriptorConstIterator desc = (*tsinfo)->getDescriptors()->begin();
 						desc != (*tsinfo)->getDescriptors()->end(); ++desc)
@@ -823,9 +824,7 @@ void eDVBScan::channelDone()
 						eDVBFrontendParametersCable cable;
 						cable.set(d);
 						feparm->setDVBC(cable);
-						unsigned long hash=0;
-						feparm->getHash(hash);
-						ns = buildNamespace(onid, tsid, hash);
+
 						addChannelToScan(feparm);
 						break;
 					}
@@ -838,7 +837,9 @@ void eDVBScan::channelDone()
 						eDVBFrontendParametersTerrestrial terr;
 						terr.set(d);
 						feparm->setDVBT(terr);
-
+						unsigned long hash=0;
+						feparm->getHash(hash);
+						ns = buildNamespace(onid, tsid, hash);
 						addChannelToScan(feparm);
 						break;
 					}
@@ -958,49 +959,74 @@ void eDVBScan::channelDone()
 					}
 				}
 				// we do this after the main loop because we absolutely need the namespace
-				for (DescriptorConstIterator desc = (*tsinfo)->getDescriptors()->begin();desc != (*tsinfo)->getDescriptors()->end(); ++desc)
+				eDVBChannelID chid = eDVBChannelID(ns, tsid, onid);
+				for (DescriptorConstIterator desc = (*tsinfo)->getDescriptors()->begin();
+					desc != (*tsinfo)->getDescriptors()->end(); ++desc)
 				{
-					//SCAN_eDebug("[eDVBScan] [LCN] Test 1");
 					switch ((*desc)->getTag())
 					{
 						case LOGICAL_CHANNEL_DESCRIPTOR:
 						{
-							//SCAN_eDebug("[eDVBScan] [LCN] Test 2");
 							if (system != iDVBFrontend::feTerrestrial)
-							{
-								SCAN_eDebug("[eDVBScan] [LCN] when current locked transponder is no terrestrial transponder ignore this descriptor");
 								break; // when current locked transponder is no terrestrial transponder ignore this descriptor
-							}	
+								
 							if (ns.get() == 0)
-							{
-								SCAN_eDebug("[eDVBScan] [LCN] invalid namespace");
 								break; // invalid namespace
-							}
 								
 							int signal = 0;
 							ePtr<iDVBFrontend> fe;
 							
 							if (!m_channel->getFrontend(fe))
-								signal = fe->readFrontendData(iFrontendInformation_ENUMS::signalPower);
+								signal = fe->readFrontendData(iFrontendInformation_ENUMS::signalQuality);
 							
 							LogicalChannelDescriptor &d = (LogicalChannelDescriptor&)**desc;
 							for (LogicalChannelListConstIterator it = d.getChannelList()->begin(); it != d.getChannelList()->end(); it++)
 							{
-								//SCAN_eDebug("[eDVBScan] [LCN] Test 3");
 								LogicalChannel *ch = *it;
 								if (ch->getVisibleServiceFlag())
 								{
 									addLcnToDB(ns, onid, tsid, eServiceID(ch->getServiceId()), ch->getLogicalChannelNumber(), signal);
-								} else
-								{
-									SCAN_eDebug("[eDVBScan] [LCN] marked as not visible - not adding NAMESPACE: %08x TSID: %04x ONID: %04x SID: %04x LCN: %05d SIGNAL: %08d", ns.get(), onid.get(), tsid.get(), ch->getServiceId(), ch->getLogicalChannelNumber(), signal);
+									SCAN_eDebug("NAMESPACE: %08x TSID: %04x ONID: %04x SID: %04x LCN: %05d SIGNAL: %08d", ns.get(), onid.get(), tsid.get(), ch->getServiceId(), ch->getLogicalChannelNumber(), signal);
 								}
 							}
+							break;
+						}
+						case PRIVATE_DATA_SPECIFIER_DESCRIPTOR:
+						{
+							PrivateDataSpecifierDescriptor &d = (PrivateDataSpecifierDescriptor&)**desc;
+							uint32_t priv = d.getPrivateDataSpecifier();
+							SCAN_eDebug("[eDVBScan]   NIT TS private %08x", priv);
+							// ZZ if (priv >= 0x3200 && priv <= 0x320f)
+							if (priv)
+							{
+								m_aus_da_flags.insert(std::pair<eDVBChannelID,uint32_t>(chid, priv));
+							}
+							break;
+						}
+						case DEFAULT_AUTHORITY_DESCRIPTOR:
+						{
+							DefaultAuthorityDescriptor &d = (DefaultAuthorityDescriptor&)**desc;
+							const DefaultAuthorityByteVector *da = d.getAuthorityBytes();
+							std::string default_authority = std::string((char*)da->data(), da->size());
+							std::transform(default_authority.begin(), default_authority.end(), default_authority.begin(), ::tolower);
+							SCAN_eDebug("[eDVBScan] NIT TS da <%s>", default_authority.c_str());
+							m_default_authorities.insert(std::pair<eDVBChannelID,std::string>(chid, default_authority));
 							break;
 						}
 						default:
 							break;
 					}
+				}
+				std::map<eDVBChannelID, uint32_t>::iterator flags_it = m_aus_da_flags.find(chid);
+				if (flags_it == m_aus_da_flags.end() && aus_da_flag)
+				{
+					m_aus_da_flags.insert(std::pair<eDVBChannelID,uint32_t>(chid, aus_da_flag));
+				}
+				std::map<eDVBChannelID, std::string>::iterator da_it = m_default_authorities.find(chid);
+				if (da_it == m_default_authorities.end() && !nit_default_authority.empty())
+				{
+					chid.transport_stream_id = 0;
+					m_default_authorities.insert(std::pair<eDVBChannelID,std::string>(chid, nit_default_authority));
 				}
 			}
 
@@ -1239,8 +1265,7 @@ void eDVBScan::start(const eSmartPtrList<iDVBFrontendParameters> &known_transpon
 		
 	if (m_flags & scanRemoveServices)
 	{
-		SCAN_eDebug("[eDVBScan] clearing lcndb");
-		m_lcn_file = fopen(eEnv::resolve("${sysconfdir}/enigma2/lcndb").c_str(), "w+");
+		m_lcn_file = fopen(eEnv::resolve("${sysconfdir}/enigma2/lcndb").c_str(), "w");
 		if (!m_lcn_file)
 			eDebug("[eDVBScan] couldn't open file lcndb");
 	}
@@ -1249,7 +1274,7 @@ void eDVBScan::start(const eSmartPtrList<iDVBFrontendParameters> &known_transpon
 		m_lcn_file = fopen(eEnv::resolve("${sysconfdir}/enigma2/lcndb").c_str(), "r+");
 		if (!m_lcn_file)
 		{
-			m_lcn_file = fopen(eEnv::resolve("${sysconfdir}/enigma2/lcndb").c_str(), "w+");
+			m_lcn_file = fopen(eEnv::resolve("${sysconfdir}/enigma2/lcndb").c_str(), "w");
 			if (!m_lcn_file)
 				eDebug("[eDVBScan] couldn't open file lcndb");
 		}
