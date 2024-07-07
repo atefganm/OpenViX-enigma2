@@ -145,6 +145,8 @@ public:
 
 		// not implemented (yet)
 	RESULT setTarget(int target, bool noaudio = false) { return -1; }
+	RESULT startAudio() { return -1; }
+	RESULT stopAudio() { return -1; }
 	RESULT frontendInfo(ePtr<iFrontendInformation> &ptr) { ptr = 0; return -1; }
 	RESULT subServices(ePtr<iSubserviceList> &ptr) { ptr = 0; return -1; }
 	RESULT timeshift(ePtr<iTimeshiftService> &ptr) { ptr = 0; return -1; }

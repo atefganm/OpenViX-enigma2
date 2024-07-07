@@ -2107,6 +2107,29 @@ int eDVBServicePlay::getInfo(int w)
 	return -1;
 }
 
+RESULT eDVBServicePlay::startAudio()
+{
+    if (m_noaudio)
+	{
+		m_noaudio = false;
+		updateDecoder(m_noaudio);
+	}
+	return 0;
+}
+
+RESULT eDVBServicePlay::stopAudio()
+{
+    if (m_decoder && !m_noaudio)
+	{
+		m_noaudio = true;
+		m_decoder->setSyncPCR(-1);
+		m_decoder->stopAudio();
+		m_decoder->set();
+		return 0;
+	}
+	return -1;
+}
+
 std::string eDVBServicePlay::getInfoString(int w)
 {
 	switch (w)
