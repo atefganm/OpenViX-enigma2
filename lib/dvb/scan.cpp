@@ -6,14 +6,11 @@
 #include <dvbsi++/s2_satellite_delivery_system_descriptor.h>
 #include <dvbsi++/terrestrial_delivery_system_descriptor.h>
 #include <dvbsi++/t2_delivery_system_descriptor.h>
-#include <dvbsi++/logical_channel_descriptor.h>
 #include <dvbsi++/cable_delivery_system_descriptor.h>
 #include <dvbsi++/ca_identifier_descriptor.h>
 #include <dvbsi++/registration_descriptor.h>
 #include <dvbsi++/extension_descriptor.h>
 #include <dvbsi++/frequency_list_descriptor.h>
-#include <dvbsi++/default_authority_descriptor.h>
-#include <dvbsi++/private_data_specifier_descriptor.h>
 #include <lib/base/nconfig.h> // access to python config
 #include <lib/dvb/specs.h>
 #include <lib/dvb/esection.h>
@@ -26,7 +23,6 @@
 #include <lib/base/estring.h>
 #include <lib/dvb/dvb.h>
 #include <lib/dvb/db.h>
-#include <lib/python/python.h>
 #include <errno.h>
 #include "absdiff.h"
 
@@ -50,13 +46,10 @@ eDVBScan::eDVBScan(iDVBChannel *channel, bool usePAT, bool debug)
 	if (m_channel->getDemux(m_demux))
 		SCAN_eDebug("[eDVBScan] failed to allocate demux!");
 	m_channel->connectStateChange(sigc::mem_fun(*this, &eDVBScan::stateChange), m_stateChanged_connection);
-	m_lcn_file = NULL;
 }
 
 eDVBScan::~eDVBScan()
 {
-	if (m_lcn_file)
-		fclose(m_lcn_file);
 }
 
 int eDVBScan::isValidONIDTSID(int orbital_position, eOriginalNetworkID onid, eTransportStreamID tsid)
@@ -258,31 +251,6 @@ RESULT eDVBScan::nextChannel()
 		{
 			SCAN_eDebug("[eDVBScan] no channels left: %zd scanned, %zd unavailable, %zd database.",
 				m_ch_scanned.size(), m_ch_unavailable.size(), m_new_channels.size());
-			for (std::map<eServiceReferenceDVB, ePtr<eDVBService> >::const_iterator
-				service(m_new_services.begin()); service != m_new_services.end(); ++service)
-			{
-				eDVBChannelID chid(service->first.getDVBNamespace(), service->first.getTransportStreamID(), service->first.getOriginalNetworkID());
-				std::map<eDVBChannelID, uint32_t>::iterator it = m_aus_da_flags.find(chid);
-				if (it != m_aus_da_flags.end())
-				{
-					SCAN_eDebug("[eDVBScan] use NIT da.au %08x:%04x:%04x 0x%08x %s", chid.dvbnamespace.get(), chid.original_network_id.get(), chid.transport_stream_id.get(), it->second, service->second->m_service_name.c_str());
-					service->second->m_aus_da_flag = it->second;
-				}
-				if (service->second->m_default_authority.empty())
-				{
-					for (int i = 0; i < 2; i++)
-					{
-						std::map<eDVBChannelID, std::string>::iterator it = m_default_authorities.find(chid);
-						if (it != m_default_authorities.end())
-						{
-							SCAN_eDebug("[eDVBScan] use NIT da %08x:%04x:%04x <%s> %s", chid.dvbnamespace.get(), chid.original_network_id.get(), chid.transport_stream_id.get(), it->second.c_str(), service->second->m_service_name.c_str());
-							service->second->m_default_authority = it->second;
-							break;
-						}
-						chid.transport_stream_id = 0;
-					}
-				}
-			}
 			m_event(evtFinish);
 			return -ENOENT;
 		}
@@ -534,23 +502,22 @@ void eDVBScan::PMTready(int err)
 								isvideo = 1;
 								break;
 							case REGISTRATION_DESCRIPTOR: /* some services don't have a separate AC3 descriptor */
+							{
+								RegistrationDescriptor *d = (RegistrationDescriptor*)(*desc);
+								switch (d->getFormatIdentifier())
 								{
-									RegistrationDescriptor *d = (RegistrationDescriptor*)(*desc);
-									switch (d->getFormatIdentifier())
-									{
-									case 0x44545331 ... 0x44545333: // DTS1/DTS2/DTS3
-									case 0x41432d33: // == 'AC-3'
-									case 0x42535344: // == 'BSSD' (LPCM)
-										isaudio = 1;
-										break;
-									case 0x56432d31: // == 'VC-1'
-										isvideo = 1;
-										break;
-									default:
-										break;
-									}
+								case 0x44545331 ... 0x44545333: // DTS1/DTS2/DTS3
+								case 0x41432d33: // == 'AC-3'
+								case 0x42535344: // == 'BSSD' (LPCM)
+									isaudio = 1;
+									break;
+								case 0x56432d31: // == 'VC-1'
+									isvideo = 1;
+									break;
+								default:
+									break;
 								}
-								[[fallthrough]];
+							}
 							default:
 								break;
 							}
@@ -558,7 +525,6 @@ void eDVBScan::PMTready(int err)
 						if (tag == CA_DESCRIPTOR)
 							is_scrambled = 1;
 					}
-					[[fallthrough]];
 				default:
 					break;
 				}
@@ -613,41 +579,6 @@ void eDVBScan::addKnownGoodChannel(const eDVBChannelID &chid, iDVBFrontendParame
 	if (chid)
 		m_new_channels.insert(std::pair<eDVBChannelID,ePtr<iDVBFrontendParameters> >(chid, feparm));
 }
-
-void eDVBScan::addLcnToDB(eDVBNamespace ns, eOriginalNetworkID onid, eTransportStreamID tsid, eServiceID sid, uint16_t lcn, uint32_t signal)
-{
-	if (m_lcn_file)
-	{
-		int size = 0;
-		char row[40];
-		bool added = false;
-		size_t ret; /* dummy value to store fread return values */
-		sprintf(row, "%08x:%04x:%04x:%04x:%05d:%08d\n", ns.get(), onid.get(), tsid.get(), sid.get(), lcn, signal);
-		fseek(m_lcn_file, 0, SEEK_END);
-		size = ftell(m_lcn_file);
-		
-		for (int i = 0; i < size / 39; i++)
-		{
-			char tmp[40];
-			fseek(m_lcn_file, i*39, SEEK_SET);
-			ret = fread (tmp, 1, 39, m_lcn_file);
-			if (memcmp(tmp, row, 23) == 0)
-			{
-				fseek(m_lcn_file, i*39, SEEK_SET);
-				fwrite(row, 1, 39, m_lcn_file);
-				added = true;
-				break;
-			}
-		}
-			
-		if (!added)
-		{
-			fseek(m_lcn_file, 0, SEEK_END);
-			fwrite(row, 1, 39, m_lcn_file);
-		}
-	}
-}
-
 
 void eDVBScan::addChannelToScan(iDVBFrontendParameters *feparm)
 {
@@ -822,37 +753,6 @@ void eDVBScan::channelDone()
 				SCAN_eDebug("[eDVBScan] m_networkid %d getTableIdExtension %d", m_networkid, (*i)->getTableIdExtension());
 			}
 
-			uint32_t aus_da_flag = 0;
-			std::string nit_default_authority;
-			const DescriptorList& descriptors = *(*i)->getDescriptors();
-			for (DescriptorConstIterator desc = descriptors.begin();
-					desc != descriptors.end(); ++desc)
-			{
-				switch ((*desc)->getTag())
-				{
-					case PRIVATE_DATA_SPECIFIER_DESCRIPTOR:
-					{
-						PrivateDataSpecifierDescriptor &d = (PrivateDataSpecifierDescriptor&)**desc;
-						eDebug("[eDVBScan]   NIT private %08x", d.getPrivateDataSpecifier());
-						uint32_t priv = d.getPrivateDataSpecifier();
-						// ZZ if (priv >= 0x3200 && priv <= 0x320f)
-						if (priv)
-						{
-							aus_da_flag = priv;
-						}
-						break;
-					}
-					case DEFAULT_AUTHORITY_DESCRIPTOR:
-					{
-						DefaultAuthorityDescriptor &d = (DefaultAuthorityDescriptor&)**desc;
-						const DefaultAuthorityByteVector *da = d.getAuthorityBytes();
-						nit_default_authority = std::string((char*)da->data(), da->size());
-						std::transform(nit_default_authority.begin(), nit_default_authority.end(), nit_default_authority.begin(), ::tolower);
-						SCAN_eDebug("[eDVBScan] NIT da <%s>", nit_default_authority.c_str());
-						break;
-					}
-				}
-			}
 			const TransportStreamInfoList &tsinfovec = *(*i)->getTsInfo();
 
 			for (TransportStreamInfoConstIterator tsinfo(tsinfovec.begin());
@@ -862,9 +762,6 @@ void eDVBScan::channelDone()
 					(*tsinfo)->getOriginalNetworkId());
 				bool T2 = false;
 				eDVBFrontendParametersTerrestrial t2transponder;
-				eOriginalNetworkID onid = (*tsinfo)->getOriginalNetworkId();
-				eTransportStreamID tsid = (*tsinfo)->getTransportStreamId();
-				eDVBNamespace ns(0);
 
 				for (DescriptorConstIterator desc = (*tsinfo)->getDescriptors()->begin();
 						desc != (*tsinfo)->getDescriptors()->end(); ++desc)
@@ -893,38 +790,8 @@ void eDVBScan::channelDone()
 						eDVBFrontendParametersTerrestrial terr;
 						terr.set(d);
 						feparm->setDVBT(terr);
-						
-						unsigned long hash=0;
-						feparm->getHash(hash);
-						ns = buildNamespace(onid, tsid, hash);
-						
+
 						addChannelToScan(feparm);
-						break;
-					}
-					case FREQUENCY_LIST_DESCRIPTOR:
-					{
-						if (system != iDVBFrontend::feTerrestrial)
-							break; // when current locked transponder is no terrestrial transponder ignore this descriptor
-						if (!T2)
-							break;
-
-						FrequencyListDescriptor &d = (FrequencyListDescriptor&)**desc;
-						if (d.getCodingType() != 0x03)
-							break;
-
-						for (CentreFrequencyConstIterator it = d.getCentreFrequencies()->begin();
-								it != d.getCentreFrequencies()->end(); ++it)
-						{
-							t2transponder.frequency = (*it) * 10;
-							ePtr<eDVBFrontendParameters> feparm = new eDVBFrontendParameters;
-							feparm->setDVBT(t2transponder);
-							addChannelToScan(feparm);
-						}
-						break;
-					}
-					case LOGICAL_CHANNEL_DESCRIPTOR:
-					{
-						// we handle it later
 						break;
 					}
 					case S2_SATELLITE_DELIVERY_SYSTEM_DESCRIPTOR:
@@ -932,8 +799,20 @@ void eDVBScan::channelDone()
 						eDebug("[eDVBScan] S2_SATELLITE_DELIVERY_SYSTEM_DESCRIPTOR found");
 						if (system != iDVBFrontend::feSatellite)
 							break; // when current locked transponder is no satellite transponder ignore this descriptor
-
 						S2SatelliteDeliverySystemDescriptor &d = (S2SatelliteDeliverySystemDescriptor&)**desc;
+						ePtr<eDVBFrontendParameters> feparm = new eDVBFrontendParameters;
+						eDVBFrontendParametersSatellite sat;
+						sat.set(d);
+
+						eDVBFrontendParametersSatellite p;
+						m_ch_current->getDVBS(p);
+
+						if (p.is_id != sat.is_id || p.pls_mode != sat.pls_mode || p.pls_code != sat.pls_code)
+						{
+							p.set(d); //set multistream descriptor to current tuned data
+							feparm->setDVBS(p);
+							addChannelToScan(feparm);
+						}
 						[[fallthrough]];
 					}
 					case SATELLITE_DELIVERY_SYSTEM_DESCRIPTOR:
@@ -999,10 +878,25 @@ void eDVBScan::channelDone()
 						}
 						break;
 					}
-					case PRIVATE_DATA_SPECIFIER_DESCRIPTOR:
-					case DEFAULT_AUTHORITY_DESCRIPTOR:
+					case FREQUENCY_LIST_DESCRIPTOR:
 					{
-						// later, when we have the namespace
+						if (system != iDVBFrontend::feTerrestrial)
+							break; // when current locked transponder is no terrestrial transponder ignore this descriptor
+						if (!T2)
+							break;
+
+						FrequencyListDescriptor &d = (FrequencyListDescriptor&)**desc;
+						if (d.getCodingType() != 0x03)
+							break;
+
+						for (CentreFrequencyConstIterator it = d.getCentreFrequencies()->begin();
+								it != d.getCentreFrequencies()->end(); ++it)
+						{
+							t2transponder.frequency = (*it) * 10;
+							ePtr<eDVBFrontendParameters> feparm = new eDVBFrontendParameters;
+							feparm->setDVBT(t2transponder);
+							addChannelToScan(feparm);
+						}
 						break;
 					}
 					default:
@@ -1010,80 +904,9 @@ void eDVBScan::channelDone()
 						break;
 					}
 				}
-				// we do this after the main loop because we absolutely need the namespace
-				eDVBChannelID chid = eDVBChannelID(ns, tsid, onid);
-				for (DescriptorConstIterator desc = (*tsinfo)->getDescriptors()->begin();
-					desc != (*tsinfo)->getDescriptors()->end(); ++desc)
-				{
-					switch ((*desc)->getTag())
-					{
-						case LOGICAL_CHANNEL_DESCRIPTOR:
-						{
-							if (system != iDVBFrontend::feTerrestrial)
-								break; // when current locked transponder is no terrestrial transponder ignore this descriptor
-								
-							if (ns.get() == 0)
-								break; // invalid namespace
-								
-							int signal = 0;
-							ePtr<iDVBFrontend> fe;
-							
-							if (!m_channel->getFrontend(fe))
-								signal = fe->readFrontendData(iFrontendInformation_ENUMS::signalQuality);
-							
-							LogicalChannelDescriptor &d = (LogicalChannelDescriptor&)**desc;
-							for (LogicalChannelListConstIterator it = d.getChannelList()->begin(); it != d.getChannelList()->end(); it++)
-							{
-								LogicalChannel *ch = *it;
-								if (ch->getVisibleServiceFlag())
-								{
-									addLcnToDB(ns, onid, tsid, eServiceID(ch->getServiceId()), ch->getLogicalChannelNumber(), signal);
-									SCAN_eDebug("NAMESPACE: %08x TSID: %04x ONID: %04x SID: %04x LCN: %05d SIGNAL: %08d", ns.get(), onid.get(), tsid.get(), ch->getServiceId(), ch->getLogicalChannelNumber(), signal);
-								}
-							}
-							break;
-						}
-						case PRIVATE_DATA_SPECIFIER_DESCRIPTOR:
-						{
-							PrivateDataSpecifierDescriptor &d = (PrivateDataSpecifierDescriptor&)**desc;
-							uint32_t priv = d.getPrivateDataSpecifier();
-							SCAN_eDebug("[eDVBScan]   NIT TS private %08x", priv);
-							// ZZ if (priv >= 0x3200 && priv <= 0x320f)
-							if (priv)
-							{
-								m_aus_da_flags.insert(std::pair<eDVBChannelID,uint32_t>(chid, priv));
-							}
-							break;
-						}
-						case DEFAULT_AUTHORITY_DESCRIPTOR:
-						{
-							DefaultAuthorityDescriptor &d = (DefaultAuthorityDescriptor&)**desc;
-							const DefaultAuthorityByteVector *da = d.getAuthorityBytes();
-							std::string default_authority = std::string((char*)da->data(), da->size());
-							std::transform(default_authority.begin(), default_authority.end(), default_authority.begin(), ::tolower);
-							SCAN_eDebug("[eDVBScan] NIT TS da <%s>", default_authority.c_str());
-							m_default_authorities.insert(std::pair<eDVBChannelID,std::string>(chid, default_authority));
-							break;
-						}
-						default:
-							break;
-					}
-				}
-				std::map<eDVBChannelID, uint32_t>::iterator flags_it = m_aus_da_flags.find(chid);
-				if (flags_it == m_aus_da_flags.end() && aus_da_flag)
-				{
-					m_aus_da_flags.insert(std::pair<eDVBChannelID,uint32_t>(chid, aus_da_flag));
-				}
-				std::map<eDVBChannelID, std::string>::iterator da_it = m_default_authorities.find(chid);
-				if (da_it == m_default_authorities.end() && !nit_default_authority.empty())
-				{
-					chid.transport_stream_id = 0;
-					m_default_authorities.insert(std::pair<eDVBChannelID,std::string>(chid, nit_default_authority));
-				}
 			}
 
 		}
-
 
 			/* a pitfall is to have the clearToScanOnFirstNIT-flag set, and having channels which have
 			   no or invalid NIT. this code will not erase the toScan list unless at least one valid entry
@@ -1264,18 +1087,17 @@ void eDVBScan::channelDone()
 				case iDVBFrontend::feTerrestrial:
 				case iDVBFrontend::feCable:
 				case iDVBFrontend::feATSC:
+				{
+					ePtr<iDVBFrontend> fe;
+					if (!m_channel->getFrontend(fe))
 					{
-						ePtr<iDVBFrontend> fe;
-						if (!m_channel->getFrontend(fe))
-						{
-							int frequency = fe->readFrontendData(iFrontendInformation_ENUMS::frequency);
-	//						eDebug("[eDVBScan] add tuner data for tsid %04x, onid %04x, ns %08x",
-	//							m_chid_current.transport_stream_id.get(), m_chid_current.original_network_id.get(),
-	//							m_chid_current.dvbnamespace.get());
-							m_tuner_data.insert(std::pair<eDVBChannelID, int>(m_chid_current, frequency));
-						}
+						int frequency = fe->readFrontendData(iFrontendInformation_ENUMS::frequency);
+//						eDebug("[eDVBScan] add tuner data for tsid %04x, onid %04x, ns %08x",
+//							m_chid_current.transport_stream_id.get(), m_chid_current.original_network_id.get(),
+//							m_chid_current.dvbnamespace.get());
+						m_tuner_data.insert(std::pair<eDVBChannelID, int>(m_chid_current, frequency));
 					}
-					[[fallthrough]];
+				}
 				default:
 					break;
 			}
@@ -1312,26 +1134,6 @@ void eDVBScan::start(const eSmartPtrList<iDVBFrontendParameters> &known_transpon
 	m_new_services.clear();
 	m_new_servicerefs.clear();
 	m_last_service = m_new_services.end();
-
-	if (m_lcn_file)
-		fclose(m_lcn_file);
-		
-	if (m_flags & scanRemoveServices)
-	{
-		m_lcn_file = fopen(eEnv::resolve("${sysconfdir}/enigma2/lcndb").c_str(), "w");
-		if (!m_lcn_file)
-			eDebug("[eDVBScan] couldn't open file lcndb");
-	}
-	else
-	{
-		m_lcn_file = fopen(eEnv::resolve("${sysconfdir}/enigma2/lcndb").c_str(), "r+");
-		if (!m_lcn_file)
-		{
-			m_lcn_file = fopen(eEnv::resolve("${sysconfdir}/enigma2/lcndb").c_str(), "w");
-			if (!m_lcn_file)
-				eDebug("[eDVBScan] couldn't open file lcndb");
-		}
-	}
 
 	if (m_flags & scanBlindSearch)
 	{
@@ -1548,15 +1350,6 @@ void eDVBScan::insertInto(iDVBChannelList *db, bool backgroundscanresult)
 				dvb_service->m_service_name_sort = service->second->m_service_name_sort;
 			}
 			dvb_service->m_provider_name = service->second->m_provider_name;
-			if (!service->second->m_default_authority.empty())
-			{
-				SCAN_eDebug("[eDVBScan] set da %08x:%04x:%04x:%04x <%s> %s", service->first.getDVBNamespace().get(), service->first.getOriginalNetworkID().get(), service->first.getTransportStreamID().get(), service->first.getServiceID().get(), service->second->m_default_authority.c_str(), dvb_service->m_service_name.c_str());
-				dvb_service->m_default_authority = service->second->m_default_authority;
-			}
-			if (service->second->m_aus_da_flag) {
-				SCAN_eDebug("[eDVBScan] set da.au %08x:%04x:%04x:%04x %08x %s", service->first.getDVBNamespace().get(), service->first.getOriginalNetworkID().get(), service->first.getTransportStreamID().get(), service->first.getServiceID().get(), service->second->m_aus_da_flag, dvb_service->m_service_name.c_str());
-				dvb_service->m_aus_da_flag = service->second->m_aus_da_flag;
-			}
 			if (service->second->m_ca.size())
 				dvb_service->m_ca = service->second->m_ca;
 			if (!backgroundscanresult) // do not remove new found flags when this is the result of a 'background scan'
@@ -1602,10 +1395,10 @@ void eDVBScan::insertInto(iDVBChannelList *db, bool backgroundscanresult)
 		{
 			bouquet->m_bouquet_name = "Last Scanned";
 
-			for (std::map<eServiceReferenceDVB, ePtr<eDVBService> >::const_iterator
-				service(m_new_services.begin()); service != m_new_services.end(); ++service)
+			for (std::vector<eServiceReferenceDVB>::const_iterator
+				service(m_new_servicerefs.begin()); service != m_new_servicerefs.end(); ++service)
 			{
-				bouquet->m_services.push_back(service->first);
+				bouquet->m_services.push_back(*service);
 			}
 			bouquet->flushChanges();
 			eDVBDB::getInstance()->renumberBouquet();
@@ -1705,15 +1498,6 @@ RESULT eDVBScan::processSDT(eDVBNamespace dvbnamespace, const ServiceDescription
 						service->m_ca.push_front(*i);
 					}
 					SCAN_eDebugNoNewLine("\n");
-					break;
-				}
-				case DEFAULT_AUTHORITY_DESCRIPTOR:
-				{
-					DefaultAuthorityDescriptor &d = (DefaultAuthorityDescriptor&)**desc;
-					const DefaultAuthorityByteVector *da = d.getAuthorityBytes();
-					service->m_default_authority = std::string((char*)da->data(), da->size());
-					std::transform(service->m_default_authority.begin(), service->m_default_authority.end(), service->m_default_authority.begin(), ::tolower);
-					SCAN_eDebug("[eDVBScan]   SDT da <%s>", service->m_default_authority.c_str());
 					break;
 				}
 				default:
