@@ -13,6 +13,7 @@ from Components.Sources.StaticText import StaticText
 from Screens.HelpMenu import HelpableScreen
 from Screens.MessageBox import MessageBox
 from Screens.Screen import Screen, ScreenSummary
+from Screens.Setup import Setup
 from Screens.Standby import TryQuitMainloop, QUIT_RESTART
 from Tools.Directories import resolveFilename, SCOPE_CURRENT_SKIN, SCOPE_LCDSKIN, SCOPE_SKIN
 
@@ -28,7 +29,7 @@ class SkinSelector(Screen, HelpableScreen):
 			self.skinName = [skin_name] + self.skinName
 		self.rootDir = resolveFilename(SCOPE_SKIN)
 		self.config = config.skin.primary_skin
-		from skin import currentPrimarySkin # value types are imported by value at import time
+		from skin import currentPrimarySkin  # value types are imported by value at import time
 		self.currentSkin = currentPrimarySkin
 		self.xmlList = ["skin.xml"]
 		self.onChangedEntry = []
@@ -36,8 +37,9 @@ class SkinSelector(Screen, HelpableScreen):
 		self["preview"] = Pixmap()
 		self["key_red"] = StaticText(_("Cancel"))
 		self["key_green"] = StaticText(_("Save"))
+		self["key_menu"] = StaticText(_("MENU"))
 		self["description"] = StaticText(_("Please wait... Loading list..."))
-		self["skinActions"] = HelpableActionMap(self, ["CancelSaveActions", "OkActions", "NavigationActions"], {
+		self["skinActions"] = HelpableActionMap(self, ["CancelSaveActions", "OkActions", "NavigationActions", "MenuActions"], {
 			"cancel": (self.keyCancel, _("Cancel any changes to the currently active skin")),
 			"close": (self.closeRecursive, _("Cancel any changes to the currently active skin and exit all menus")),
 			"save": (self.keySave, _("Save and activate the currently selected skin")),
@@ -51,7 +53,8 @@ class SkinSelector(Screen, HelpableScreen):
 			"last": (self.keyPageDown, _("Move down a screen")),
 			"down": (self.keyDown, _("Move down a line")),
 			"pageDown": (self.keyPageDown, _("Move down a screen")),
-			"bottom": (self.keyPageDown, _("Move down a screen"))
+			"bottom": (self.keyPageDown, _("Move down a screen")),
+			"menu": (self.keyMenu, _("Open menu"))
 		}, prio=-1, description=_("Skin Selection Actions"))
 		self.picload = ePicLoad()
 		self.picload.PictureData.get().append(self.showPic)
@@ -126,7 +129,7 @@ class SkinSelector(Screen, HelpableScreen):
 					skinEntry.append("%s  %s" % (skinEntry[0], skinEntry[1]))
 					# 0=SortKey, 1=Label, 2=Flag, 3=Directory, 4=Skin, 5=Resolution, 6=SkinSize, 7=Preview, 8=Label + Flag
 					skinList.append(tuple([skinEntry[0].upper()] + skinEntry))
-		skinList.sort()
+		skinList.sort(key=lambda s: tuple([(int(x) if x.isnumeric() else x.lower()) for x in re.split(r'(\d+)', s[0]) if x]))
 		self["skins"].setList(skinList)
 		# Set the list pointer to the current skin...
 		for index in range(len(skinList)):
@@ -164,8 +167,7 @@ class SkinSelector(Screen, HelpableScreen):
 				self.close()
 			else:
 				print("[SkinSelector] Selected skin: '%s' (Trying to restart again!)" % pathjoin(self.rootDir, skin))
-				restartBox = self.session.openWithCallback(self.restartGUI, MessageBox, _("To apply the selected '%s' skin the GUI needs to restart. Would you like to restart the GUI now?") % label, MessageBox.TYPE_YESNO)
-				restartBox.setTitle(_("SkinSelector: Restart GUI"))
+				self.showRestartMessage(_("To apply the selected '%s' skin the GUI needs to restart. Would you like to restart the GUI now?") % label)
 		elif skin == self.currentSkin:
 			print("[SkinSelector] Selected skin: '%s' (Pending skin '%s' cancelled!)" % (pathjoin(self.rootDir, skin), pathjoin(self.rootDir, self.config.value)))
 			self.config.value = skin
@@ -173,12 +175,15 @@ class SkinSelector(Screen, HelpableScreen):
 			self.close()
 		else:
 			print("[SkinSelector] Selected skin: '%s'" % pathjoin(self.rootDir, skin))
-			if config.usage.fast_skin_reload.value:
-				self.saveConfig()
-				self.session.reloadSkin()
-			else:
-				restartBox = self.session.openWithCallback(self.restartGUI, MessageBox, _("To save and apply the selected '%s' skin the GUI needs to restart. Would you like to save the selection and restart the GUI now?") % label, MessageBox.TYPE_YESNO)
-				restartBox.setTitle(_("SkinSelector: Restart GUI"))
+			self.showRestartMessage(_("To save and apply the selected '%s' skin the GUI needs to restart. Would you like to save the selection and restart the GUI now?") % label)
+
+	def showRestartMessage(self, msg):
+		if config.usage.fast_skin_reload.value:
+			self.saveConfig()
+			self.session.reloadSkin()
+		else:
+			restartBox = self.session.openWithCallback(self.restartGUI, MessageBox, msg, MessageBox.TYPE_YESNO)
+			restartBox.setTitle(_("SkinSelector: Restart GUI"))
 
 	def restartGUI(self, answer):
 		if answer is True:
@@ -214,6 +219,9 @@ class SkinSelector(Screen, HelpableScreen):
 		self["skins"].moveEnd()
 		self.loadPreview()
 
+	def keyMenu(self):
+		self.session.open(Setup, setup="skinselection")
+
 	def changedEntry(self):
 		for x in self.onChangedEntry:
 			x()
@@ -228,7 +236,7 @@ class LcdSkinSelector(SkinSelector):
 		self.skinName = ["LcdSkinSelector"] + self.skinName
 		self.rootDir = resolveFilename(SCOPE_LCDSKIN)
 		self.config = config.skin.display_skin
-		from skin import currentDisplaySkin # value types are imported by value at import time
+		from skin import currentDisplaySkin  # value types are imported by value at import time
 		self.currentSkin = currentDisplaySkin
 		self.xmlList = ["skin_display.xml", "skin_display_picon.xml"]
 
