@@ -7,7 +7,7 @@ import struct
 
 from boxbranding import getDriverDate, getImageVersion, getMachineBuild, getBoxType
 
-from enigma import getEnigmaVersionString
+from enigma import getEnigmaLastCommitDate, getEnigmaLastCommitHash
 
 from Tools.Directories import fileReadLine, fileReadLines
 
@@ -32,8 +32,12 @@ def driversDate():
 	return _formatDate(SystemInfo["driversdate"])
 
 
-def getLastUpdate():
-	return _formatDate(getEnigmaVersionString().replace("-", ""))
+def getLastCommitDate():
+	return _formatDate(getEnigmaLastCommitDate().replace("-", ""))
+
+
+def getLastCommitHash():
+	return getEnigmaLastCommitHash()[:7]
 
 
 def _formatDate(Date):
