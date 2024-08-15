@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-26 02:07+0200\n"
+"POT-Creation-Date: 2021-05-18 14:44+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -14297,9 +14297,6 @@ msgstr ""
 msgid "Enable EIT EPG"
 msgstr ""
 
-msgid "Enable Focus Animation"
-msgstr ""
-
 msgid "Enable FreeSat EPG"
 msgstr ""
 
@@ -14675,9 +14672,6 @@ msgid "Maximum total space used (MB)"
 msgstr ""
 
 msgid "Media playback Remaining/Elapsed as"
-msgstr ""
-
-msgid "Miscellaneous languages"
 msgstr ""
 
 msgid "Modulator"
@@ -16842,9 +16836,6 @@ msgstr ""
 msgid "Multiboot only able to restore this backup to mmc slot1"
 msgstr ""
 
-msgid "Multiple languages"
-msgstr ""
-
 #: ../src/RestoreWizard.py:107 ../src/RestoreWizard.py:110
 msgid "NO, do not restore plugins"
 msgstr ""
@@ -17047,9 +17038,6 @@ msgstr ""
 
 #: ../src/ui.py:55
 msgid "Run your shell scripts."
-msgstr ""
-
-msgid "Same behavior as current animation"
 msgstr ""
 
 #: ../src/SwapManager.py:266
