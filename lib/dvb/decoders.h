@@ -28,31 +28,31 @@ class eAudioDecoder
 {
 
 public:
-    eAudioDecoder();
-    ~eAudioDecoder();
-    bool started;
+	eAudioDecoder();
+	~eAudioDecoder();
+	bool started;
 
 
-    int start(int sample_rate, int channels, int bit_rate, enum AVCodecID codec_id);
-    int decode(const AVPacket *avpkt);
-    
-    unsigned int m_channels;
-    unsigned int m_sample_rate;
-    unsigned int m_bits;
+	int start(int sample_rate, int channels, int bit_rate, enum AVCodecID codec_id);
+	int decode(const AVPacket *avpkt);
+	
+	unsigned int m_channels;
+	unsigned int m_sample_rate;
+	unsigned int m_bits;
 
-    class AVCodec		 *m_codec;
-    class AVCodecContext *m_codec_ctx;
-    class SwrContext     *m_swr_ctx;
-    
-    eAlsaOutput *m_AlsaOutput;
-    unsigned int m_alsa_channels;
-    unsigned int m_alsa_sample_rate;
-    
-    
-    uint16_t m_spdif[24576 / 2];		///< SPDIF output buffer
-    int m_spdifindex;			///< index into SPDIF output buffer
-    int m_spdifcount;			///< SPDIF repeat counter
-    
+	class AVCodec		 *m_codec;
+	class AVCodecContext *m_codec_ctx;
+	class SwrContext     *m_swr_ctx;
+	
+	eAlsaOutput *m_AlsaOutput;
+	unsigned int m_alsa_channels;
+	unsigned int m_alsa_sample_rate;
+	
+	
+	uint16_t m_spdif[24576 / 2];		///< SPDIF output buffer
+	int m_spdifindex;			///< index into SPDIF output buffer
+	int m_spdifcount;			///< SPDIF repeat counter
+	
 
 };
 
