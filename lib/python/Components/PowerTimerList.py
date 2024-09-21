@@ -82,7 +82,7 @@ class PowerTimerList(GUIComponent):
 				if self.iconRepeat:
 					res.append((eListboxPythonMultiContent.TYPE_PIXMAP_ALPHABLEND, 2, self.rowSplit, self.iconWidth, self.iconHeight, self.iconRepeat))
 			else:
-				repeatedtext = begin[0] # date
+				repeatedtext = begin[0]  # date
 			text = repeatedtext + ((" %s ... %s (%d " + _("mins") + ")") % (begin[1], FuzzyTime(timer.end)[1], (timer.end - timer.begin) / 60))
 			res.append((eListboxPythonMultiContent.TYPE_TEXT, 148, self.itemHeight - self.rowSplit, width - 150, self.rowSplit, 2, RT_HALIGN_RIGHT | RT_VALIGN_BOTTOM, text))
 			icon = None
@@ -152,13 +152,13 @@ class PowerTimerList(GUIComponent):
 			self.itemHeight = parseScale(value)
 
 		def setServiceNameFont(value):
-			self.serviceNameFont = parseFont(value, ((1, 1), (1, 1)))
+			self.serviceNameFont = parseFont(value, parent.scale)
 
 		def setEventNameFont(value):
-			self.eventNameFont = parseFont(value, ((1, 1), (1, 1)))
+			self.eventNameFont = parseFont(value, parent.scale)
 
 		def setFont(value):
-			self.font = parseFont(value, ((1, 1), (1, 1)))
+			self.font = parseFont(value, parent.scale)
 
 		def rowSplit(value):
 			self.rowSplit = parseScale(value)

@@ -91,6 +91,7 @@ class EPGListGrid(EPGListBase):
 		self.eventBorderWidth = 1
 		self.eventNamePadding = 3
 		self.serviceNumberWidth = 0
+		self.eventTextSidesMargin = 0
 
 		self.l.setBuildFunc(self.buildEntry)
 		self.loadConfig()
@@ -112,11 +113,11 @@ class EPGListGrid(EPGListBase):
 			attribs = []
 			for (attrib, value) in self.skinAttributes:
 				if attrib == ("ServiceFontInfobar" if self.isInfobar else "ServiceFontGraphical"):
-					font = parseFont(value, ((1, 1), (1, 1)))
+					font = parseFont(value, screen.scale)
 					self.serviceFontName = font.family
 					self.serviceFontSize = font.pointSize
 				elif attrib == ("EntryFontInfobar" if self.isInfobar else "EntryFontGraphical"):
-					font = parseFont(value, ((1, 1), (1, 1)))
+					font = parseFont(value, screen.scale)
 					self.eventFontName = font.family
 					self.eventFontSize = font.pointSize
 
@@ -145,6 +146,9 @@ class EPGListGrid(EPGListBase):
 					self.foreColorNow = parseColor(value).argb()
 				elif attrib == "EntryForegroundColorNowSelected":
 					self.foreColorNowSelected = parseColor(value).argb()
+
+				elif attrib == "EventTextSidesMargin":
+					self.eventTextSidesMargin = parseScale(value)
 
 				elif attrib == "ServiceBorderColor":
 					self.borderColorService = parseColor(value).argb()
@@ -616,7 +620,7 @@ class EPGListGrid(EPGListBase):
 						png=infoPix, flags=BT_ALIGN_CENTER))
 				else:
 					res.append(MultiContentEntryText(
-						pos=(evX, evY), size=(evW, evH),
+						pos=(evX + self.eventTextSidesMargin, evY), size=(evW - self.eventTextSidesMargin * 2, evH),
 						font=1, flags=int(config.epgselection.grid.event_alignment.value),
 						text=ev[1],
 						color=foreColor, color_sel=foreColorSel,
@@ -655,16 +659,19 @@ class EPGListGrid(EPGListBase):
 						pix_size = timerIcon.size()
 						pix_width = pix_size.width()
 						pix_height = pix_size.height()
+						isTimerIconAdded = False
 						if config.epgselection.grid.rec_icon_height.value == "middle":
 							recIconHeight = top + (height - pix_height) // 2
 						elif config.epgselection.grid.rec_icon_height.value == "top":
 							recIconHeight = top + 3
 						else:
-							recIconHeight = top + height - pix_height - applySkinFactor(5)
+							recIconHeight = top + height - pix_height - 10
 						if matchType == 0:
-							pos = (left + xpos + ewidth - pix_width - applySkinFactor(5), recIconHeight)
+							pos = (left + xpos + ewidth - pix_width - 10, recIconHeight)
+							isTimerIconAdded = True
 						else:
-							pos = (left + xpos + ewidth - pix_width - applySkinFactor(5), recIconHeight)
+							pos = (left + xpos + ewidth - pix_width - 10, recIconHeight)
+							isTimerIconAdded = True
 						res.append(MultiContentEntryPixmapAlphaBlend(
 							pos=pos, size=(pix_width, pix_height),
 							png=timerIcon))
@@ -673,7 +680,7 @@ class EPGListGrid(EPGListBase):
 							pix_width = pix_size.width()
 							pix_height = pix_size.height()
 							res.append(MultiContentEntryPixmapAlphaBlend(
-								pos=(pos[0] - pix_width - applySkinFactor(5), pos[1]), size=(pix_width, pix_height),
+								pos=(pos[0] - pix_width - (5 if isTimerIconAdded else 10), pos[1]), size=(pix_width, pix_height),
 								png=autoTimerIcon))
 		return res
 
@@ -892,7 +899,7 @@ class TimelineText(GUIComponent):
 				elif attrib == "borderWidth":
 					self.borderWidth = parseScale(value)
 				elif attrib == "TimelineFont":
-					font = parseFont(value, ((1, 1), (1, 1)))
+					font = parseFont(value, screen.scale)
 					self.timelineFontName = font.family
 					self.timelineFontSize = font.pointSize
 				elif attrib == "itemHeight":
@@ -982,7 +989,6 @@ class TimelineText(GUIComponent):
 						color=foreColor,
 						backcolor=backColor,
 						border_width=self.borderWidth, border_color=self.borderColor))
-				
 
 			res.append(MultiContentEntryText(
 				pos=(5, 0),
@@ -991,11 +997,11 @@ class TimelineText(GUIComponent):
 				text=_(datestr),
 				color=foreColor,
 				backcolor=backColor))
-				
+
 			if not self.fullBorder:
 				res.append(MultiContentEntryText(
-					pos=(serviceRect.width() - self.borderWidth*2, 0),
-					size=(self.borderWidth, self.listHeight + self.borderWidth*2),
+					pos=(serviceRect.width() - self.borderWidth * 2, 0),
+					size=(self.borderWidth, self.listHeight + self.borderWidth * 2),
 					text=" ",
 					color=foreColor,
 					backcolor=self.borderColor,
