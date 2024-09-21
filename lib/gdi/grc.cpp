@@ -918,6 +918,9 @@ void gDC::exec(const gOpcode *o)
 			int correction = o->parm.renderText->area.height() - bbox.height() - 2;
 			offset += ePoint(0, correction);
 		}
+
+		para->setBlend(flags & gPainter::RT_BLEND);
+
 		if (markedpos != -1)
 		{
 			int glyphs = para->size();
