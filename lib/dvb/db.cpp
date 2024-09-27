@@ -1500,7 +1500,7 @@ eDVBDB::eDVBDB()
 	: m_numbering_mode(false), m_load_unlinked_userbouquets(1)
 {
 	instance = this;
-	
+
 	iptv_services.clear();
 	std::ifstream iptv_services_store_file;
 	iptv_services_store_file.open("/etc/enigma2/config_av");
@@ -1516,7 +1516,7 @@ eDVBDB::eDVBDB()
 		sscanf(line.c_str(), "%d:%d:%x:%x:%x:%x:%x:%d:%d:%x|%d|%d|%d|%d|%d|%d|%d|%d|%d", &service_type, &service_bit, &service_res, &service_id, 
 					  &dvb_namespace, &transport_stream_id, &original_network_id, &service_tsid, &service_number, &source_id, &video_pid, 
 					  &ampeg_pid, &aac3_pid, &aac4_pid, &addp_pid, &aaach_pid, &aaac_pid, &adra_pid, &subtitle_pid);
-		
+
 		sprintf(buffer, "%d:%d:%x:%x:%x:%x:%x:%d:%d:%x", service_type, service_bit, service_res, service_id, 
 					  dvb_namespace, transport_stream_id, original_network_id, service_tsid, service_number, source_id);
 
@@ -2213,7 +2213,7 @@ PyObject *eDVBDB::getLcnDBData()
 			PyList_Append(dest, tuple);
 			Py_DECREF(tuple);
 		}
-	} 
+	}
 	else
 		Py_RETURN_NONE;
 	return dest;
@@ -2616,7 +2616,7 @@ RESULT eDVBDB::appendServicesToBouquet(const std::string &filename, ePyObject se
 	eBouquet *bouquet = NULL;
 	if (!db->getBouquet(bouquetref, bouquet) && bouquet)
 	{
-		
+
 		if (!PyList_Check(services)) {
 			const char *errstr = "eDVBDB::appendServicesToBouquet second parameter is not a python list!!!";
 			PyErr_SetString(PyExc_TypeError, errstr);
@@ -2709,7 +2709,7 @@ RESULT eDVBDB::removeBouquet(const std::string &filename_regex)
 			}
 		}
 	closedir(dir);
-	
+
 	return 0;
 }
 
