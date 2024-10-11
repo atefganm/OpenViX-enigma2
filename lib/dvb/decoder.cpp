@@ -1691,7 +1691,7 @@ int eTSMPEGDecoder::getVideoAspect()
 {
 #ifdef DREAMNEXTGEN
 	int m_aspect = -1;
-	CFile::parseIntHex(&m_aspect, "/sys/class/video/frame_aspect_ratio"); //0x90 (16:9) 
+	CFile::parseIntHex(&m_aspect, "/sys/class/video/frame_aspect_ratio"); //0x90 (16:9)
 	//eDebug("[eTSMPEGDecoder] m_aspect - %d", m_aspect);
 	if (!m_aspect)
 		return -1;
@@ -1725,7 +1725,7 @@ int eTSMPEGDecoder::getVideoGamma()
 
 RESULT eTSMPEGDecoder::prepareFCC(int fe_id, int vpid, int vtype, int pcrpid)
 {
-	//eDebug("[eTSMPEGDecoder] prepareFCC vp : %d, vt : %d, pp : %d, fe : %d", vpid, vtype, pcrpid, fe_id); 
+	//eDebug("[eTSMPEGDecoder] prepareFCC vp : %d, vt : %d, pp : %d, fe : %d", vpid, vtype, pcrpid, fe_id);
 
 	if ((fccGetFD() == -1) || (fccSetPids(fe_id, vpid, vtype, pcrpid) < 0) || (fccStart() < 0))
 	{

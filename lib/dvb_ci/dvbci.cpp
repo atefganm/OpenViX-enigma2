@@ -265,7 +265,7 @@ int eDVBCIInterfaces::reset(int slotid)
 	eDebug("[dvbci][eDVBCIInterfaces::reset][CI]1 Slot %d: getslot %d", slot, slot->getSlotID());
 	if( (slot = getSlot(slotid)) == 0 )
 	{
-		eDebug("[dvbci][eDVBCIInterfaces::reset][CI]2 Slot %d: slot 0 NO reset", slot->getSlotID());	
+		eDebug("[dvbci][eDVBCIInterfaces::reset][CI]2 Slot %d: slot 0 NO reset", slot->getSlotID());
 		return -1;
 	}
 	return slot->reset();
@@ -805,7 +805,7 @@ void eDVBCIInterfaces::removePMTHandler(eDVBServicePMTHandler *pmthandler)
 						{
 #ifdef DREAMBOX_DUAL_TUNER
 							finish_source = getTunerLetterDM(0);
-#else  
+#else
 							finish_source = "A";
 #endif
 							break;
@@ -834,7 +834,7 @@ void eDVBCIInterfaces::removePMTHandler(eDVBServicePMTHandler *pmthandler)
 						finish_source = getTunerLetterDM(0);
 #else
 						finish_source = "A";
-#endif  
+#endif
 					}
 
 					slot->setSource(finish_source);
@@ -1324,7 +1324,7 @@ void eDVBCISlot::data(int what)
 
 	if (state == stateInvalid)
 	{
-		eDebug("[dvbci][data][CI%d] non Dreambox stateInvalid .....reset requested", slotid);	
+		eDebug("[dvbci][data][CI%d] non Dreambox stateInvalid .....reset requested", slotid);
 		reset();
 	}
 
@@ -1332,7 +1332,7 @@ void eDVBCISlot::data(int what)
 	{
 		eDebug("[dvbci][data][CI%d] ci inserted state= %d", slotid, state);
 		state = stateInserted;
-		eDebug("[dvbci][data][CI%d] ci inserted reset stateInserted state= %d", slotid, state);		
+		eDebug("[dvbci][data][CI%d] ci inserted reset stateInserted state= %d", slotid, state);
 		/* emit */ eDVBCI_UI::getInstance()->m_messagepump.send(eDVBCIInterfaces::Message(eDVBCIInterfaces::Message::slotStateChanged, getSlotID(), 1));
 		notifier->setRequested(eSocketNotifier::Read|eSocketNotifier::Priority);
 		/* enable PRI to detect removal or errors */
@@ -1446,7 +1446,7 @@ void eDVBCISlot::closeDevice()
 	notifier->stop();
 	data(eSocketNotifier::Priority);
 	state = stateDisabled;
-	eTrace("[dvbci][closedevice][CI] has state %d", state);	
+	eTrace("[dvbci][closedevice][CI] has state %d", state);
 }
 
 void eDVBCISlot::setAppManager(eDVBCIApplicationManagerSession *session)
