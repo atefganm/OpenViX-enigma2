@@ -64,7 +64,8 @@ eDVBCICcSession::eDVBCICcSession(eDVBCISlot *slot, int version):
 eDVBCICcSession::~eDVBCICcSession()
 {
 	m_slot->setCCManager(0);
-	descrambler_deinit(m_descrambler_fd);
+	if (m_slot->getDescramblingOptions() != 1 && m_slot->getDescramblingOptions() != 3)
+		descrambler_deinit(m_descrambler_fd);
 
 	if (m_root_ca_store)
 		X509_STORE_free(m_root_ca_store);
@@ -139,7 +140,7 @@ void eDVBCICcSession::addProgram(uint16_t program_number, std::vector<uint16_t>&
 	eDebugNoNewLine("\n");
 
 	for (std::vector<uint16_t>::iterator it = pids.begin(); it != pids.end(); ++it)
-		descrambler_set_pid(m_descrambler_fd, m_slot->getSlotID(), 1, *it);
+		descrambler_set_pid(m_descrambler_fd, m_slot, 1, *it);
 }
 
 void eDVBCICcSession::removeProgram(uint16_t program_number, std::vector<uint16_t>& pids)
@@ -150,7 +151,10 @@ void eDVBCICcSession::removeProgram(uint16_t program_number, std::vector<uint16_
 	eDebugNoNewLine("\n");
 
 	for (std::vector<uint16_t>::iterator it = pids.begin(); it != pids.end(); ++it)
-		descrambler_set_pid(m_descrambler_fd, m_slot->getSlotID(), 0, *it);
+		descrambler_set_pid(m_descrambler_fd, m_slot, 0, *it);
+
+	if (m_slot->getDescramblingOptions() == 1 || m_slot->getDescramblingOptions() == 3)
+		descrambler_deinit(m_descrambler_fd);
 
 	// removing program means probably decoding on this slot is ending. So mark this slot as not descrambling
 	eDVBCI_UI::getInstance()->setDecodingState(m_slot->getSlotID(), 0);
@@ -502,7 +506,7 @@ int eDVBCICcSession::generate_akh()
 int eDVBCICcSession::compute_dh_key()
 {
 	int len = DH_size(m_dh);
-	eWarning("[dvbci_ccmgr][CI%d RCC][compute_dh_key()] DH_size(m_dh: %x", m_slot->getSlotID(), len);
+	eWarning("[dvbci_ccmgr][CI%d RCC][compute_dh_key()] DH_size(m_dh: %x", m_slot->getSlotID(), len);	
 	if (len > 256)
 	{
 		eWarning("[dvbci_ccmgr][CI%d RCC] too long shared key", m_slot->getSlotID());
@@ -800,13 +804,13 @@ void eDVBCICcSession::set_descrambler_key()
 	if (m_descrambler_fd != -1 && m_current_ca_demux_id != m_slot->getCADemuxID())
 	{
 		descrambler_deinit(m_descrambler_fd);
-		m_descrambler_fd = descrambler_init(m_slot->getSlotID(), m_slot->getCADemuxID());
+		m_descrambler_fd = descrambler_init(m_slot, m_slot->getCADemuxID());
 		m_current_ca_demux_id = m_slot->getCADemuxID();
 	}
 
 	if (m_descrambler_fd == -1 && m_slot->getCADemuxID() > -1)
 	{
-		m_descrambler_fd = descrambler_init(m_slot->getSlotID(), m_slot->getCADemuxID());
+		m_descrambler_fd = descrambler_init(m_slot, m_slot->getCADemuxID());
 		m_current_ca_demux_id = m_slot->getCADemuxID();
 	}
 

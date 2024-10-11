@@ -232,7 +232,6 @@ fi
 
 if test "$BOXTYPE" == "dm920"; then
 	AC_DEFINE(DM920, 1, [Dreambox hardware])
-	AC_DEFINE(USE_ALTERNATE_CA_HANDLING, 1,[define it so to use additional ca device freeing])
 fi
 
 if test "$BOXTYPE" == "dm7080" -o "$BOXTYPE" == "dm820" -o "$BOXTYPE" == "dm900" -o "$BOXTYPE" == "dm920"; then
