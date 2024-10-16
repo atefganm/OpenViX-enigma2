@@ -144,7 +144,7 @@ eDVBCIInterfaces::eDVBCIInterfaces()
 	for (eSmartPtrList<eDVBCISlot>::iterator it(m_slots.begin()); it != m_slots.end(); ++it)
 #ifdef DREAMBOX_DUAL_TUNER
 		it->setSource(getTunerLetterDM(0));
-#else 
+#else
 		it->setSource("A");
 #endif
 
@@ -671,7 +671,7 @@ void eDVBCIInterfaces::recheckPMTHandlers()
 								setInputSource(tunernum, ci_source.str());
 #ifdef DREAMBOX_DUAL_TUNER
 								ci_it->setSource(getTunerLetterDM(tunernum));
-#else 
+#else
 								ci_it->setSource(eDVBCISlot::getTunerLetter(tunernum));
 #endif
 							}

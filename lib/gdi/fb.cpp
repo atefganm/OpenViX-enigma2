@@ -279,8 +279,8 @@ int fbClass::SetMode(int nxRes, int nyRes, int nbpp)
 	stride=fix.line_length;
 
 #ifdef CONFIG_ION
-    m_phys_mem = fix.smem_start;
-    available = fix.smem_len;
+	m_phys_mem = fix.smem_start;
+	available = fix.smem_len;
 	/* map new framebuffer */
 	lfb=(unsigned char*)mmap(0, stride * screeninfo.yres_virtual, PROT_WRITE|PROT_READ, MAP_SHARED, fbFd, 0);
 #endif
@@ -397,4 +397,3 @@ void fbClass::disableManualBlit()
 		m_manual_blit = 0;
 #endif
 }
-
