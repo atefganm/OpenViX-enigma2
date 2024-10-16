@@ -1602,7 +1602,7 @@ void eTSMPEGDecoder::parseVideoInfo()
 		event.framerate = m_framerate;
 		video_event(event);
 	}
-	else if (m_width > 0 && m_progressive == -1) 
+	else if (m_width > 0 && m_progressive == -1)
 	{
 		CFile::parseInt(&m_progressive, "/proc/stb/vmpeg/0/progressive");
 		if (m_progressive != 2)

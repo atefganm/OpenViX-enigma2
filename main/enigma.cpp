@@ -140,7 +140,7 @@ public:
 	}
 };
 
-bool replace(std::string& str, const std::string& from, const std::string& to) 
+bool replace(std::string& str, const std::string& from, const std::string& to)
 {
 	size_t start_pos = str.find(from);
 	if(start_pos == std::string::npos)
@@ -153,8 +153,8 @@ static const std::string getConfigCurrentSpinner(const char* key)
 {
 	auto value = eSimpleConfig::getString(key);
 
-	 // if value is NOT empty, means config.skin.primary_skin exists in settings file, so return SCOPE_CURRENT_SKIN + "/spinner"
-	 // ( /usr/share/enigma2/MYSKIN/spinner ) BUT check if /usr/share/enigma2/MYSKIN/spinner/wait1.png exist
+	// if value is NOT empty, means config.skin.primary_skin exists in settings file, so return SCOPE_CURRENT_SKIN + "/spinner"
+	// ( /usr/share/enigma2/MYSKIN/spinner ) BUT check if /usr/share/enigma2/MYSKIN/spinner/wait1.png exist
 	if (!value.empty())
 	{
 		replace(value, "skin.xml", "spinner");
@@ -320,7 +320,7 @@ int main(int argc, char **argv)
 			rfilename = eEnv::resolve(filename);
 			loadPNG(wait[i], rfilename.c_str());
 
-			if (!wait[i]) 
+			if (!wait[i])
 			{
 				// spinner failed
 				if (i==0)
