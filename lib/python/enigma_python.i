@@ -127,20 +127,20 @@ is usually caused by not marking PSignals as immutable.
 
 %define %typemap_output_simple(Type)
  %typemap(in,numinputs=0) Type *OUTPUT ($*1_ltype temp),
-              Type &OUTPUT ($*1_ltype temp)
+			  Type &OUTPUT ($*1_ltype temp)
    "$1 = new Type; (void)temp;";
  %fragment("t_out_helper"{Type},"header",
-     fragment="t_output_helper") {}
+	 fragment="t_output_helper") {}
  %typemap(argout,fragment="t_out_helper"{Type}) Type *OUTPUT, Type &OUTPUT
    "$result = t_output_helper($result, (SWIG_NewPointerObj((void*)($1), $1_descriptor, 1)));"
 %enddef
 
 %define %typemap_output_ptr(Type)
  %typemap(in,numinputs=0) Type *OUTPUT ($*1_ltype temp),
-              Type &OUTPUT ($*1_ltype temp)
+			  Type &OUTPUT ($*1_ltype temp)
    "$1 = new Type; (void)temp;";
  %fragment("t_out_helper"{Type},"header",
-     fragment="t_output_helper") {}
+	 fragment="t_output_helper") {}
  %typemap(argout,fragment="t_out_helper"{Type}) Type *OUTPUT, Type &OUTPUT
 		// generate None if smartpointer is NULL
    "$result = t_output_helper($result, ((*$1) ? SWIG_NewPointerObj((void*)($1), $1_descriptor, 1) : (delete $1, Py_INCREF(Py_None), Py_None)));"
@@ -349,24 +349,24 @@ RESULT SwigFromPython(ePtr<gPixmap> &result, PyObject *obj)
 }
 PyObject *New_eServiceReference(const eServiceReference &ref)
 {
-    eServiceReference *result = new eServiceReference(ref);
-    return SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_eServiceReference, 1);
+	eServiceReference *result = new eServiceReference(ref);
+	return SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_eServiceReference, 1);
 }
 PyObject *New_iRecordableServicePtr(const ePtr<iRecordableService> &ptr)
 {
-    ePtr<iRecordableService> *result = new ePtr<iRecordableService>(ptr);
+	ePtr<iRecordableService> *result = new ePtr<iRecordableService>(ptr);
 #ifndef SWIGTYPE_p_ePtrT_iRecordableService_t
 #define SWIGTYPE_p_ePtrT_iRecordableService_t SWIGTYPE_p_ePtrTiRecordableService_t
 #endif
-    return SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_ePtrT_iRecordableService_t, 1);
+	return SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_ePtrT_iRecordableService_t, 1);
 }
 PyObject *New_iCECMessagePtr(const ePtr<iCECMessage> &ptr)
 {
-    ePtr<iCECMessage> *result = new ePtr<iCECMessage>(ptr);
+	ePtr<iCECMessage> *result = new ePtr<iCECMessage>(ptr);
 #ifndef SWIGTYPE_p_ePtrT_iCECMessage_t
 #define SWIGTYPE_p_ePtrT_iCECMessage_t SWIGTYPE_p_ePtrTiCECMessage_t
 #endif
-    return SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_ePtrT_iCECMessage_t, 1);
+	return SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_ePtrT_iCECMessage_t, 1);
 }
 %}
 
@@ -442,8 +442,8 @@ void setFCCEnable(int);
 %{
 void setFCCEnable(int enable)
 {
-        eFCCServiceManager *fcc_mng = eFCCServiceManager::getInstance();
-        if (fcc_mng) setFCCEnable(enable);
+		eFCCServiceManager *fcc_mng = eFCCServiceManager::getInstance();
+		if (fcc_mng) setFCCEnable(enable);
 }
 %}
 
@@ -455,7 +455,7 @@ PyObject *getFontFaces()
 	ePyObject result = PyList_New(v.size());
 	for (size_t i = 0; i < v.size(); i++)
 		PyList_SET_ITEM(result, i, PyUnicode_FromString(v[i].c_str()));
-        return result;
+		return result;
 }
 %}
 
@@ -475,7 +475,7 @@ PyObject *getDeviceDB()
 	for (const auto & [ key, value ] : HardwareDB) {
 		PutToDict(result, key.c_str(), value.c_str());
 	}
-    return result;
+	return result;
 }
 %}
 
