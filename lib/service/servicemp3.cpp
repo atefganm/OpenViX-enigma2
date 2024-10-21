@@ -457,7 +457,7 @@ void eServiceMP3InfoContainer::setBuffer(GstBuffer *buffer)
 
 // eServiceMP3
 int eServiceMP3::ac3_delay = 0,
-    eServiceMP3::pcm_delay = 0;
+	eServiceMP3::pcm_delay = 0;
 
 eServiceMP3::eServiceMP3(eServiceReference ref):
 	m_nownext_timer(eTimer::create(eApp)),
@@ -1105,7 +1105,7 @@ RESULT eServiceMP3::trickSeek(gdouble ratio)
 		gst_element_set_state(m_gst_playbin, GST_STATE_PAUSED);
 		/* pipeline sometimes block due to audio track issue off gstreamer.
 		If the pipeline is blocked up on pending state change to paused ,
-        this issue is solved be just reslecting the current audio track.*/
+		this issue is solved be just reslecting the current audio track.*/
 		gst_element_get_state(m_gst_playbin, &state, &pending, 1 * GST_SECOND);
 		if (state == GST_STATE_PLAYING && pending == GST_STATE_PAUSED)
 		{
@@ -1656,7 +1656,7 @@ RESULT eServiceMP3::audioDelay(ePtr<iAudioDelay> &ptr)
 
 int eServiceMP3::getNumberOfTracks()
 {
- 	return m_audioStreams.size();
+	return m_audioStreams.size();
 }
 
 int eServiceMP3::getCurrentTrack()
@@ -2765,7 +2765,7 @@ void eServiceMP3::subtitle_redraw(int page_id)
 				eTrace("[eServiceMP3] DVB subtitles found correct region");
 				break;
 			}
-				
+
 			reg = reg->next;
 		}
 		if (reg)
@@ -3203,7 +3203,7 @@ void eServiceMP3::pullSubtitle(GstBuffer *buffer)
 					segment_type = data[pos++];
 					page_id = (data[pos] << 8) | data[pos + 1];
 					pos += 2;
-    				segment_len = (data[pos] << 8) | data[pos + 1];
+					segment_len = (data[pos] << 8) | data[pos + 1];
 					pos += 2;
 					if ((len - pos) < segment_len) {
 						eWarning("segment_length was told to be %u, but we only have %d bytes left", segment_len, len - pos);
@@ -3291,7 +3291,7 @@ void eServiceMP3::pullSubtitle(GstBuffer *buffer)
 							while (processed_length < segment_len)
 							{
 								uint8_t region_id = *segment++;
-    							segment += 1;
+								segment += 1;
 								subtitle_page_region *pr;
 
 									// append new entry to list
@@ -3757,7 +3757,7 @@ void eServiceMP3::pushDVBSubtitles()
 		}
 		else
 			return;
-		
+
 		decoder_ms = running_pts / 90;
 
 		// If subtitle is overdue or within 20ms the video timing then display it.

@@ -19,7 +19,7 @@ ePyObject eListboxServiceContent::m_GetPiconNameFunc;
 std::string toLower(std::string& data) {
 	std::string data_tmp = data;
 	std::transform(data_tmp.begin(), data_tmp.end(), data_tmp.begin(), tolower);
-    return data_tmp;
+	return data_tmp;
 }
 
 // Next two functions are used for finding correct recording in case of dynamic iptv service url
