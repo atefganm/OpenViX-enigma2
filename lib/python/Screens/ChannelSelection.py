@@ -2930,8 +2930,8 @@ class SimpleChannelSelection(ChannelSelectionBase):
 			{
 				"cancel": self.close,
 				"ok": self.channelSelected,
-				"keyRadio": self.setModeRadio,
-				"keyTV": self.setModeTv,
+				"keyRadio": self.keyRadio,
+				"keyTV": self.keyTV,
 			})  # noqa: E123
 		self.bouquet_mark_edit = OFF
 		self.title = title
