@@ -2069,6 +2069,7 @@ class ChannelSelection(ChannelSelectionEdit, ChannelSelectionBase, ChannelSelect
 				"ok": self.channelSelected,
 				"keyRadio": self.keyRadio,
 				"keyTV": self.keyTV,
+				"toggleTvRadio": self.toggleTvRadio,
 			})  # noqa: E123
 
 		self.__event_tracker = ServiceEventTracker(screen=self, eventmap={
@@ -2932,6 +2933,7 @@ class SimpleChannelSelection(ChannelSelectionBase):
 				"ok": self.channelSelected,
 				"keyRadio": self.keyRadio,
 				"keyTV": self.keyTV,
+				"toggleTvRadio": self.toggleTvRadio,
 			})  # noqa: E123
 		self.bouquet_mark_edit = OFF
 		self.title = title
