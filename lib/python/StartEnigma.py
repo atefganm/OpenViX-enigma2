@@ -437,9 +437,6 @@ def runScreenTest():
 	session.nav.shutdown()
 	profile("configfile.save")
 	configfile.save()
-	if not VuRecovery:
-		from Screens import InfoBarGenerics
-		InfoBarGenerics.saveResumePoints()
 	return 0
 
 
