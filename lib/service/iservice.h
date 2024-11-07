@@ -22,8 +22,8 @@ public:
 		idStructure,	// service_id == 0 is root
 		idDVB,
 		idFile,
-		idUser=0x1000,
-		idServiceMP3=0x1001
+		idServiceMP3=0x1001,
+		idServiceHDMIIn       = 0x2000				// 8192
 	};
 	int type;
 

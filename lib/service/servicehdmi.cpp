@@ -2,6 +2,7 @@
 #include <lib/base/eerror.h>
 #include <lib/base/init_num.h>
 #include <lib/base/init.h>
+#include <lib/base/modelinformation.h>
 #include <lib/base/nconfig.h>
 #include <lib/base/object.h>
 #include <lib/driver/avswitch.h>
@@ -107,7 +108,8 @@ long long eStaticServiceHDMIInfo::getFileSize(const eServiceReference &ref)
 eServiceHDMI::eServiceHDMI(eServiceReference ref)
  : m_ref(ref), m_decoder_index(0), m_noaudio(false)
 {
-
+	eModelInformation &modelinformation = eModelInformation::getInstance();
+	m_b_hdmiin_fhd = modelinformation.getValue("hdmifhdin") == "True";
 }
 
 eServiceHDMI::~eServiceHDMI()
@@ -133,6 +135,8 @@ RESULT eServiceHDMI::start()
 	m_decoder->play();
 #endif
 	m_event(this, evStart);
+	m_event((iPlayableService*)this, evVideoSizeChanged);
+	m_event((iPlayableService*)this, evVideoGammaChanged);
 	return 0;
 }
 
@@ -174,6 +178,16 @@ RESULT eServiceHDMI::getName(std::string &name)
 
 int eServiceHDMI::getInfo(int w)
 {
+	switch (w)
+	{
+		case sVideoHeight: return m_b_hdmiin_fhd ? 1080 : 720;
+		case sVideoWidth: return m_b_hdmiin_fhd ? 1920 : 1280;
+		case sFrameRate: return 50;
+		case sProgressive: return 1;
+		case sGamma: return 0;
+		case sAspect: return 1;
+	}
+
 	return resNA;
 }
 
@@ -181,6 +195,16 @@ std::string eServiceHDMI::getInfoString(int w)
 {
 	switch (w)
 	{
+	case sVideoInfo:
+	{
+		char buff[100];
+		snprintf(buff, sizeof(buff), "%d|%d|50|1|0|1",
+				m_b_hdmiin_fhd ? 1080 : 720,
+				m_b_hdmiin_fhd ? 1920 : 1280
+				);
+		std::string videoInfo = buff;
+		return videoInfo;
+	}
 	case sServiceref:
 		return m_ref.toString();
 	default:
