@@ -497,7 +497,7 @@ void eListboxPythonConfigContent::paint(gPainter &painter, eWindowStyle &style, 
 	// Draw frame here so to be drawn under icons
 	if (selected && (!local_style || !local_style->m_selection) && (!local_style || !local_style->m_border_set))
 			style.drawFrame(painter, eRect(offset, m_itemsize), eWindowStyle::frameListboxEntry);
-		
+
 	bool sep = false;
 
 	if (m_list && cursorValid)
