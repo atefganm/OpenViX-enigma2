@@ -1,8 +1,8 @@
 from ast import literal_eval
-from os import listdir
+from os import listdir, R_OK, access
 from hashlib import md5
-from os import R_OK, access
 from os.path import exists as fileAccess, isdir, isfile, join as pathjoin
+from re import split
 from boxbranding import getBoxType, getBrandOEM, getDisplayType, getHaveAVJACK, getHaveHDMIinFHD, getHaveHDMIinHD, getHaveRCA, getHaveSCART, getHaveSCARTYUV, getHaveYUV, getImageType, getMachineBrand, getMachineBuild, getMachineMtdRoot, getMachineName, getHaveDVI, getHaveHDMI
 from enigma import Misc_Options, eDVBCIInterfaces, eDVBResourceManager, eGetEnigmaDebugLvl
 
@@ -72,7 +72,6 @@ class BoxInformation:
 
 BoxInfo = BoxInformation()
 
-
 #This line makes the BoxInfo backwards compatible with SystemInfo without duplicating the dictionary.
 SystemInfo = BoxInfo.boxInfo
 
@@ -81,11 +80,13 @@ ARCHITECTURE = BoxInfo.getItem("architecture")
 BRAND = BoxInfo.getItem("brand")
 MODEL = BoxInfo.getItem("model")
 SOC_FAMILY = BoxInfo.getItem("socfamily")
+SOC_BRAND = split('(\d.*)', SOC_FAMILY)[0]
 DISPLAYTYPE = BoxInfo.getItem("displaytype")
 MTDROOTFS = BoxInfo.getItem("mtdrootfs")
 DISPLAYMODEL = BoxInfo.getItem("displaymodel")
 DISPLAYBRAND = BoxInfo.getItem("displaybrand")
 MACHINEBUILD = BoxInfo.getItem("machinebuild")
+OEA = split('(\d.*)', BoxInfo.getItem("oe"))[1]
 
 
 def getBoxType():  # this function mimics the function of the same name in branding module
@@ -204,8 +205,9 @@ SystemInfo["DeveloperImage"] = SystemInfo["imagetype"].lower() != "release"
 SystemInfo["CommonInterface"] = eDVBCIInterfaces.getInstance().getNumOfSlots()
 SystemInfo["CommonInterfaceCIDelay"] = fileCheck("/proc/stb/tsmux/rmx_delay")
 for cislot in range(0, SystemInfo["CommonInterface"]):
-	SystemInfo["CI%dSupportsHighBitrates" % cislot] = fileCheck("/proc/stb/tsmux/ci%d_tsclk" % cislot)
-	SystemInfo["CI%dRelevantPidsRoutingSupport" % cislot] = fileCheck("/proc/stb/tsmux/ci%d_relevant_pids_routing" % cislot)
+	SystemInfo[f"CI{cislot}SupportsHighBitrates"] = fileCheck(f"/proc/stb/tsmux/ci{cislot}_tsclk")
+	SystemInfo[f"CI{cislot}SupportsHighBitratesChoices"] = fileCheck(f"/proc/stb/tsmux/ci{cislot}_tsclk_choices")
+	SystemInfo[f"CI{cislot}RelevantPidsRoutingSupport"] = fileCheck(f"/proc/stb/tsmux/ci{cislot}_relevant_pids_routing")
 SystemInfo["NumVideoDecoders"] = getNumVideoDecoders()
 SystemInfo["Udev"] = not fileExists("/dev/.devfsd")
 SystemInfo["HasFullHDSkinSupport"] = SystemInfo["boxtype"] not in ("vipertwin",)
@@ -213,27 +215,18 @@ SystemInfo["PIPAvailable"] = MODEL not in ("i55plus") and SystemInfo["NumVideoDe
 SystemInfo["CanMeasureFrontendInputPower"] = eDVBResourceManager.getInstance().canMeasureFrontendInputPower()
 SystemInfo["12V_Output"] = Misc_Options.getInstance().detected_12V_output()
 SystemInfo["ZapMode"] = fileCheck("/proc/stb/video/zapmode") or fileCheck("/proc/stb/video/zapping_mode")
-SystemInfo["NumFrontpanelLEDs"] = countFrontpanelLEDs()
-SystemInfo["FrontpanelDisplay"] = fileExists("/dev/dbox/oled0") or fileExists("/dev/dbox/lcd0")
+BoxInfo.setItem("NumFrontpanelLEDs", countFrontpanelLEDs())
+BoxInfo.setItem("FrontpanelDisplay", fileExists("/dev/dbox/oled0") or fileExists("/dev/dbox/lcd0"))
+BoxInfo.setItem("FrontpanelDisplayGrayscale", fileExists("/dev/dbox/oled0"))
 SystemInfo["7segment"] = SystemInfo["displaytype"] in ("7segment")
 SystemInfo["ConfigDisplay"] = SystemInfo["FrontpanelDisplay"] and SystemInfo["displaytype"] not in ("7segment")
 SystemInfo["LCDSKINSetup"] = pathExists("/usr/share/enigma2/display") and not SystemInfo["7segment"]
-SystemInfo["OledDisplay"] = fileExists("/dev/dbox/oled0")
 SystemInfo["LcdDisplay"] = fileExists("/dev/dbox/lcd0")
 SystemInfo["LCDsymbol_hdd"] = SystemInfo["boxtype"] in ("mutant51",) and fileCheck("/proc/stb/lcd/symbol_hdd")
 SystemInfo["HasNoDisplay"] = SystemInfo["boxtype"] in ("et4x00", "et5x00", "et6x00", "gb800se", "gb800solo", "gbx34k", "iqonios300hd", "mbmicro", "sf128", "sf138", "tmsingle", "tmnano2super", "tmnanose", "tmnanoseplus", "tmnanosem2", "tmnanosem2plus", "tmnanosecombo", "vusolo")
-SystemInfo["DisplayLED"] = SystemInfo["boxtype"] in ("gb800se", "gb800solo", "gbx1", "gbx2", "gbx3", "gbx3h")
-SystemInfo["LEDButtons"] = False  # SystemInfo["boxtype"] == "vuultimo", For some reason this causes a cpp crash on vuultimo (which we no longer build). The cause needs investigating or the dead code in surrounding modules that this change causes should be removed.
 SystemInfo["DeepstandbySupport"] = HardwareInfo().has_deepstandby()
 SystemInfo["Fan"] = fileCheck("/proc/stb/fp/fan")
 SystemInfo["FanPWM"] = SystemInfo["Fan"] and fileCheck("/proc/stb/fp/fan_pwm")
-SystemInfo["PowerLED"] = fileExists("/proc/stb/power/powerled")
-SystemInfo["PowerLED2"] = fileExists("/proc/stb/power/powerled2")
-SystemInfo["StandbyLED"] = fileExists("/proc/stb/power/standbyled")
-SystemInfo["SuspendLED"] = fileExists("/proc/stb/power/suspendled")
-SystemInfo["LedPowerColor"] = fileExists("/proc/stb/fp/ledpowercolor")
-SystemInfo["LedStandbyColor"] = fileExists("/proc/stb/fp/ledstandbycolor")
-SystemInfo["LedSuspendColor"] = fileExists("/proc/stb/fp/ledsuspendledcolor")
 SystemInfo["Power24x7On"] = fileExists("/proc/stb/fp/power4x7on")
 SystemInfo["Power24x7Standby"] = fileExists("/proc/stb/fp/power4x7standby")
 SystemInfo["Power24x7Suspend"] = fileExists("/proc/stb/fp/power4x7suspend")
@@ -259,8 +252,6 @@ SystemInfo["HasH265Encoder"] = fileHas("/proc/stb/encoder/0/vcodec_choices", "h2
 SystemInfo["CanNotDoSimultaneousTranscodeAndPIP"] = SystemInfo["boxtype"] in ("vusolo4k", "gbquad4k", "gbue4k")
 SystemInfo["hasXcoreVFD"] = SystemInfo["boxtype"] in ("osmega", "spycat4k", "spycat4kmini", "spycat4kcomb") and fileCheck("/sys/module/brcmstb_%s/parameters/pt6302_cgram" % SystemInfo["boxtype"])
 SystemInfo["HasHDMIin"] = SystemInfo["hdmifhdin"] or SystemInfo["hdmihdin"]
-SystemInfo["HDMIinPiP"] = SystemInfo["HasHDMIin"] and BRAND != "dreambox"
-SystemInfo["CanHDMIinRecord"] = fileExists("/proc/stb/encoder/0/decoder")
 SystemInfo["Has24hz"] = fileCheck("/proc/stb/video/videomode_24hz")
 SystemInfo["canBackupEMC"] = MODEL in ("hd51", "h7") and ("disk.img", "%s" % SystemInfo["MBbootdevice"]) or MODEL in ("osmio4k", "osmio4kplus", "osmini4k") and ("emmc.img", "%s" % SystemInfo["MBbootdevice"]) or SystemInfo["HasHiSi"] and ("usb_update.bin", "none")
 SystemInfo["canMode12"] = MODEL in ("hd51", "h7") and ("brcm_cma=440M@328M brcm_cma=192M@768M", "brcm_cma=520M@248M brcm_cma=200M@768M")
@@ -305,6 +296,8 @@ BoxInfo.setItem("PowerLED", fileCheck("/proc/stb/power/powerled") or MODEL in ("
 BoxInfo.setItem("StandbyLED", fileCheck("/proc/stb/power/standbyled") or MODEL in ("gbue4k", "gbquad4k") and fileCheck("/proc/stb/fp/led0_pattern"))
 BoxInfo.setItem("SuspendLED", fileCheck("/proc/stb/power/suspendled") or fileCheck("/proc/stb/fp/enable_led"))
 BoxInfo.setItem("Display", BoxInfo.getItem("FrontpanelDisplay") or BoxInfo.getItem("StandbyLED") or MODEL in ("dreamone", "dreamtwo"))
+BoxInfo.setItem("LEDControl", MODEL not in ("dreamone", "dreamtwo"))
+BoxInfo.setItem("LEDColorControl", fileExists("/proc/stb/fp/led_color"))
 BoxInfo.setItem("LedPowerColor", fileCheck("/proc/stb/fp/ledpowercolor"))
 BoxInfo.setItem("LedStandbyColor", fileCheck("/proc/stb/fp/ledstandbycolor"))
 BoxInfo.setItem("LedSuspendColor", fileCheck("/proc/stb/fp/ledsuspendledcolor"))
@@ -331,7 +324,6 @@ BoxInfo.setItem("HasScaler_sharpness", pathExists("/proc/stb/vmpeg/0/pep_scaler_
 BoxInfo.setItem("HasColorimetryChoices", fileCheck("/proc/stb/video/hdmi_colorimetry_choices"))
 BoxInfo.setItem("HasColorspaceChoices", fileCheck("/proc/stb/video/hdmi_colorspace_choices"))
 BoxInfo.setItem("HasColordepthChoices", fileCheck("/proc/stb/video/hdmi_colordepth_choices"))
-SystemInfo["HaveTouchSensor"] = getBoxType() in ("dm520", "dm525", "dm900", "dm920")
 BoxInfo.setItem("DefaultDisplayBrightness", MACHINEBUILD in ("dm900", "dm920", "dreamone", "dreamtwo") and 8 or 5)
 BoxInfo.setItem("HasHDMIin", BoxInfo.getItem("hdmifhdin") or BoxInfo.getItem("hdmihdin"))
 BoxInfo.setItem("HasHDMIin", BoxInfo.getItem("hdmifhdin") or BoxInfo.getItem("hdmihdin"))
@@ -345,6 +337,10 @@ BoxInfo.setItem("HasHDMI-CEC", BoxInfo.getItem("hdmi") and fileExists(resolveFil
 BoxInfo.setItem("HasYPbPr", MODEL in ("dm8000", "et5000", "et6000", "et6500", "et9000", "et9200", "et9500", "et10000", "formuler1", "mbtwinplus", "spycat", "vusolo", "vuduo", "vuduo2", "vuultimo"))
 BoxInfo.setItem("HasScart", MODEL in ("dm8000", "et4000", "et6500", "et8000", "et9000", "et9200", "et9500", "et10000", "formuler1", "hd1100", "hd1200", "hd1265", "hd2400", "vusolo", "vusolo2", "vuduo", "vuduo2", "vuultimo", "vuuno", "xp1000"))
 BoxInfo.setItem("HasSVideo", MODEL in ("dm8000"))
+BoxInfo.setItem("FrontpanelLEDBlinkControl", fileExists("/proc/stb/fp/led_blink"))
+BoxInfo.setItem("FrontpanelLEDBrightnessControl", fileExists("/proc/stb/fp/led_brightness"))
+BoxInfo.setItem("FrontpanelLEDColorControl", fileExists("/proc/stb/fp/led_color"))
+BoxInfo.setItem("FrontpanelLEDFadeControl", fileExists("/proc/stb/fp/led_fade"))
 SystemInfo["HaveRCA"] = getHaveRCA() in ('True',)
 SystemInfo["HaveDVI"] = getHaveDVI() in ('True',)
 SystemInfo["HAVEYUV"] = getHaveYUV() in ('True',)
