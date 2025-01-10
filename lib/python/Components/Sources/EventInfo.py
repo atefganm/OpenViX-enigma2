@@ -116,6 +116,7 @@ class EventInfo(PerServiceBase, Source):
 	NEXT = 1
 
 	def __init__(self, navcore, now_or_next):
+		self.now_or_next = now_or_next
 		Source.__init__(self)
 		PerServiceBase.__init__(self, navcore,
 			{
@@ -124,7 +125,6 @@ class EventInfo(PerServiceBase, Source):
 				iPlayableService.evUpdatedEventInfo: self.gotEvent,
 				iPlayableService.evEnd: self.gotEvent
 			}, with_event=True)
-		self.now_or_next = now_or_next
 		self.epgQuery = eEPGCache.getInstance().lookupEventTime
 		self.__service = None
 
@@ -151,6 +151,8 @@ class EventInfo(PerServiceBase, Source):
 	event = property(getEvent)
 
 	def gotEvent(self, what):
+		# Temporary debug
+		print("[EventInfo] gotEvent", "'now'" if self.now_or_next == self.NOW else "'next'", {iPlayableService.evStart: "evStart", iPlayableService.evUpdatedInfo: "evUpdatedInfo", iPlayableService.evUpdatedEventInfo: "evUpdatedEventInfo", iPlayableService.evEnd: "evEnd"}.get(what, "Unknown"))
 		if what == iPlayableService.evEnd:
 			self.changed((self.CHANGED_CLEAR,))
 		else:
