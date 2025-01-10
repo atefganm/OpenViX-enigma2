@@ -772,6 +772,22 @@ def InitUsageConfig():
 	config.usage.boolean_graphic = ConfigSelection(default="no", choices={"no": _("no"), "yes": _("yes"), "only_bool": _("yes, but not in multi selections")})
 	config.usage.fast_skin_reload = ConfigYesNo(default=False)
 
+	# boot power state actions
+	config.usage.power = ConfigSubsection()
+	config.usage.power.wake_up_to_standby = ConfigYesNo()
+	config.usage.power.was_controlled_shutdown = ConfigBoolean(default=True)
+	config.usage.power.uncontrolled_shutdown_action = ConfigSelection(default="last", choices=[
+		("normal", _("Boot normally")),
+		("standby", _("Go to standby")),
+		("deep", _("Go to deep standby")),
+		("last", _("Go to last known state"))
+	])
+	config.usage.power.last_known_state = ConfigSelection(default="normal", choices=[
+		"normal",
+		"standby",
+		"deep",
+	])
+
 	if BoxInfo.getItem("PowerLED"):
 		def powerLEDChanged(configElement):
 			if "fp" in BoxInfo.getItem("PowerLED"):
