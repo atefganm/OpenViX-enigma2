@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-12-13 14:09+0100\n"
-"PO-Revision-Date: 2024-12-14 22:34+0100\n"
+"PO-Revision-Date: 2024-12-15 00:43+0100\n"
 "Last-Translator: Andy Blackburn <andyblac@icloud.com>\n"
 "Language-Team: www.CostaBlancaTranslations.com <maria@CostaBlancaTranslations.com>\n"
 "Language: es\n"
@@ -1094,7 +1094,7 @@ msgstr "%s%d Min"
 
 #, python-format
 msgid "%s%s - Select to access recovery options"
-msgstr "%s%s - Seleccione para acceder a las opciones de recuperación"
+msgstr "%s%s - Seleccionar para acceder a las opciones de recuperación"
 
 #, python-format
 msgid "%s%s(Default: %s)"
@@ -1586,7 +1586,7 @@ msgid ""
 "A finished powertimer wants to reboot your %s %s.\n"
 "Do that now?"
 msgstr ""
-"Un temporizador de alimentación terminado quiere reiniciar la\n"
+"Un temporizador de corriente terminado quiere reiniciar la\n"
 "%s %s en modo espera. ¿Hacerlo ahora?"
 
 #
@@ -1594,7 +1594,7 @@ msgid ""
 "A finished powertimer wants to restart the user interface.\n"
 "Do that now?"
 msgstr ""
-"Un temporizador de alimentación finalizado quiere reiniciar la interfaz de usuario.\n"
+"Un temporizador de corriente finalizado quiere reiniciar la interfaz de usuario.\n"
 "¿Hacerlo ahora?"
 
 #
@@ -1718,7 +1718,7 @@ msgid "AAC+ downmix"
 msgstr "Mezcla descendente AAC+"
 
 msgid "ABOUT"
-msgstr "ACERCA DE"
+msgstr "ABOUT"
 
 msgid "AC3"
 msgstr "AC3"
@@ -1792,7 +1792,7 @@ msgstr "Abortar la edición de favoritos."
 
 #
 msgid "About"
-msgstr "Acerca de"
+msgstr "Elemental"
 
 #
 msgid "About screen setup"
@@ -3052,7 +3052,7 @@ msgid "Blue button function"
 msgstr "Función de la tecla azaul"
 
 msgid "Blue long"
-msgstr "Azul largo"
+msgstr "Azul (largo)"
 
 msgid "Bolivia (Plurinational State of)"
 msgstr "Bolivia"
@@ -3119,7 +3119,7 @@ msgstr "Isla de Bouvet"
 
 #
 msgid "BoxInfo"
-msgstr "Info de deco"
+msgstr "Enigma.Info"
 
 msgid "Boxe"
 msgstr "Boxe"
@@ -5491,7 +5491,7 @@ msgid "Disable Animations"
 msgstr "Desactivar Animaciones"
 
 msgid "Disable Autostart"
-msgstr "Desactivar puesta en marcha auto"
+msgstr "Desactivar Autoinicio"
 
 #
 msgid "Disable FCC during recordings"
@@ -5520,7 +5520,7 @@ msgid "Disable operator profiles"
 msgstr "Desactivar perfiles de operador"
 
 msgid "Disable startup"
-msgstr "Desactivar puesta en marcha"
+msgstr "Desactivar inicio"
 
 #
 msgid "Disabled"
@@ -5549,7 +5549,7 @@ msgid "Display >16:9 content as"
 msgstr "Visualizar los contenido >16:9 como"
 
 msgid "Display Skin"
-msgstr "Skin de la pantalla frontal"
+msgstr "Skin de el panel frontal"
 
 msgid "Display message before playing next movie"
 msgstr "Mostrar un mensaje antes de reproducir la siguiente película"
@@ -6367,7 +6367,7 @@ msgstr "Nivel de depuración de Enigma2."
 #
 #, python-format
 msgid "Enigma2 uptime:\t%s\n"
-msgstr "Última actualización: \t%s\n"
+msgstr "Tiempo de actividad: \t%s\n"
 
 msgid "Enough Retries, delaying till next schedule."
 msgstr "Suficientes reintentos. Se eperará hasta la proxima programación."
@@ -6451,7 +6451,7 @@ msgid "Enter the service pin"
 msgstr "Introduce el pin del canal"
 
 msgid "Enter the streaming port of the host receiver (normally '8001')."
-msgstr "Introduzca el puerto de transmisión del receptor host (normalmente '8001')."
+msgstr "Introduzca el puerto de streaming del receptor host (normalmente '8001')."
 
 msgid "Enter valid ONID/TSID"
 msgstr "Introduzca un ONID/TSID válido"
@@ -6810,26 +6810,26 @@ msgid "F1/LAN"
 msgstr "F1/LAN"
 
 msgid "F1/LAN long"
-msgstr "F1/LAN largo"
+msgstr "F1/LAN (largo)"
 
 msgid "F2"
 msgstr "F2"
 
 msgid "F2 long"
-msgstr "F2 largo"
+msgstr "F2 (largo)"
 
 msgid "F3"
 msgstr "F3"
 
 msgid "F3 long"
-msgstr "F3 largo"
+msgstr "F3 (largo)"
 
 #
 msgid "F4"
 msgstr "F4"
 
 msgid "F4 long"
-msgstr "F4 largo"
+msgstr "F4 (largo)"
 
 msgid "FAILED"
 msgstr "FAILED"
@@ -6965,7 +6965,7 @@ msgid "Fallback receiver IP address"
 msgstr "IP de sintonizador remoto"
 
 msgid "Fallback receiver streaming port"
-msgstr "Puerto de transmisión del sintonizador remote"
+msgstr "Puerto de streaming del sintonizador remoto"
 
 msgid "Fallback remote receiver URL"
 msgstr "URL del sintonizador remote"
@@ -7087,7 +7087,7 @@ msgid "Filename"
 msgstr "Nombre de archivo"
 
 msgid "Filesystem Check"
-msgstr "Chequear sistema de ficheros"
+msgstr "Comprobar sistema de archivos"
 
 msgid "Film"
 msgstr "Película"
@@ -7628,10 +7628,10 @@ msgid "Green button (long)"
 msgstr "Tecla verde (largo)"
 
 msgid "Green button (short)"
-msgstr "Tecla verde (corta)"
+msgstr "Tecla verde (corto)"
 
 msgid "Green long"
-msgstr "Verde largo"
+msgstr "Verde (largo)"
 
 msgid "Greenland"
 msgstr "Groenlandia"
@@ -8029,7 +8029,7 @@ msgid "Host receiver address type"
 msgstr "Dirección de host FTP"
 
 msgid "Host receiver streaming port"
-msgstr "Puerta de host de transmisión"
+msgstr "Puerta de host de streaming"
 
 msgid "Hostname:"
 msgstr "Nombre del servidor:"
@@ -8429,13 +8429,13 @@ msgstr "Info (EPG)"
 
 #
 msgid "Info (EPG) Long"
-msgstr "Info (EPG) Largo"
+msgstr "Info (EPG) (largo)"
 
 msgid "Info button (long)"
 msgstr "Tecla de información (largo)"
 
 msgid "Info button (short)"
-msgstr "Tecla de información (corta)"
+msgstr "Tecla de información (corto)"
 
 msgid "Info icon width"
 msgstr "Anchura de icon de info"
@@ -9098,7 +9098,7 @@ msgid "Left from servicename"
 msgstr "A la izquierda del nombre de canal"
 
 msgid "Left long"
-msgstr "Izquierda larga"
+msgstr "Izquierda (largo)"
 
 msgid "Leichtathletik"
 msgstr "Atletismo ligero"
@@ -9232,7 +9232,7 @@ msgid "Load"
 msgstr "Cargar"
 
 msgid "Load EPG Cache"
-msgstr "Cargar caché EPG"
+msgstr "Cargar caché de EPG"
 
 #
 msgid "Load playlist"
@@ -10451,7 +10451,7 @@ msgid "No card inserted!"
 msgstr "No se ha introducido ninguna tarjeta."
 
 msgid "No clients streaming"
-msgstr "No hay clientes transmitiendo"
+msgstr "No hay clientes streaming"
 
 msgid ""
 "No config files found, please setup CCcam first\n"
@@ -11864,7 +11864,7 @@ msgstr "Error en la lista de complementos (por ejemplo, destino de copia de segu
 
 #
 msgid "Plugins"
-msgstr "complementos"
+msgstr "Complementos"
 
 msgid "Poker"
 msgstr "Póker"
@@ -12009,10 +12009,10 @@ msgid "Power Timer List"
 msgstr "Lista de temporizadores de corriente"
 
 msgid "Power Timers"
-msgstr "Temporizadores de alimentación"
+msgstr "Temporizadores de corriente"
 
 msgid "Power long"
-msgstr "Tecla de encender largo"
+msgstr "Tecla de encender (largo)"
 
 msgid "Power management. Consult your receiver's manual for more information."
 msgstr "Gestión de energía. Consulta el manual del receptor para obtener más información."
@@ -12632,7 +12632,7 @@ msgstr "Grabación limitada en el tiempo por un conflicto de grabación %s."
 
 #
 msgid "Recording"
-msgstr "Grabando"
+msgstr "Grabación"
 
 msgid "Recording 4097, 5001 and 5002 streams not possible with external players, so convert recordings to servicetype 1."
 msgstr "No es posible grabar transmisiones 4097, 5001 y 5002 con reproductores externos, por lo que se deben convertir las grabaciones al tipo de servicio 1."
@@ -13526,7 +13526,7 @@ msgid "Save / Enter text and exit"
 msgstr "Guardar / Ingresar texto y salir"
 
 msgid "Save EPG Cache"
-msgstr "Guardando caché EPG"
+msgstr "Guardar caché de EPG"
 
 msgid "Save all changed settings and exit"
 msgstr "Guarde todas las configuraciones modificadas y salga"
@@ -13592,7 +13592,7 @@ msgstr "Búsqueda"
 
 #
 msgid "Scan "
-msgstr "Buscar"
+msgstr "Buscar "
 
 #. TRANSLATORS: option name, indicating which type of (DVB-C) modulation should be scanned. The modulation type is printed in '%s'. E.g.: 'Scan QAM16'
 #, python-format
@@ -14297,7 +14297,7 @@ msgid "Selection and exit"
 msgstr "Seleccionar y salir"
 
 msgid "Send 'sourceactive' before zap timers"
-msgstr "Envía 'sourceactive' antes de los temporizadores de zap"
+msgstr "Enviar 'fuenteactiva' antes de los temporizadores de zap"
 
 #
 msgid "Send DiSEqC"
@@ -14587,7 +14587,7 @@ msgid "Set the repeat interval of the schedule."
 msgstr "Establezca el intervalo de repetición de la programación."
 
 msgid "Set the scrolling speed of text on the front display, this uses a software render in some skins."
-msgstr "Establece la velocidad de desplazamiento del texto en la pantalla frontal, esto utiliza un renderizador de software en algunas skins."
+msgstr "Establece la velocidad de desplazamiento del texto en el panel frontal, esto utiliza un renderizador de software en algunas skins."
 
 msgid "Set the scrolling speed of text on the front display."
 msgstr "Configura la velocidad de desplazamiento del panel frontal."
@@ -14747,7 +14747,7 @@ msgid "Show Log"
 msgstr "Ver historial"
 
 msgid "Show Log Manager in extensions list ?"
-msgstr "¿Ver el administrador de historial en la lista de extensiones?"
+msgstr "Ver el administrador de historial en la lista de extensiones"
 
 msgid "Show Media playback Remaining/Elapsed as"
 msgstr "Ver reproducción de medios restante/transcurrida como..."
@@ -14760,7 +14760,7 @@ msgid "Show Multi EPG"
 msgstr "Mostrar EPG Múltiple"
 
 msgid "Show OScam/Ncam Info in extensions?"
-msgstr "¿Ver OScam/Ncam en extensiones?"
+msgstr "Ver OScam/Ncam en extensiones"
 
 msgid "Show PIP"
 msgstr "Ver PiP"
@@ -14911,7 +14911,7 @@ msgid "Show in Standby"
 msgstr "Mostrar en modo de espera"
 
 msgid "Show in extensions"
-msgstr "¿Ver en lista de extensiones?"
+msgstr "Ver en lista de extensiones"
 
 #
 msgid "Show info"
@@ -15512,10 +15512,10 @@ msgid "SoftcamCheck"
 msgstr "Prueba de Softcam"
 
 msgid "SoftcamScript enable/disable cam restart"
-msgstr "SoftcamScript habilita/deshabilita el reinicio de la softcam"
+msgstr "Habilitar/deshabilitar el reinicio de la softcam"
 
 msgid "SoftcamScript select camscript"
-msgstr "SoftcamScript seleccionar camscript"
+msgstr "Seleccionar camscript"
 
 msgid "Software Update"
 msgstr "Actualización de software"
@@ -15771,7 +15771,7 @@ msgstr "Empezar desde el principio"
 
 #
 msgid "Start instant recording"
-msgstr "¿Iniciar grabación intantánea?"
+msgstr "Iniciar grabación intantánea"
 
 msgid "Start offline decode"
 msgstr "Iniciar descodificación offline."
@@ -15969,7 +15969,7 @@ msgid "Stream"
 msgstr "\"Stream\""
 
 msgid "Stream Relay Settings"
-msgstr "Configuración de streanmrelay"
+msgstr "Configuración de streamrelay"
 
 msgid "Stream Relay Setup Actions"
 msgstr "Configuración de acciones de streanmrelay"
@@ -16000,10 +16000,10 @@ msgid "Streaming"
 msgstr "Streaming"
 
 msgid "Streaming Clients"
-msgstr "Clientes de streaming"
+msgstr "Clientes streaming"
 
 msgid "Streaming Clients Info"
-msgstr "Información de clientes de streaming"
+msgstr "Información de clientes streaming"
 
 msgid "Strict DLNA"
 msgstr "DLNA estricto"
@@ -16038,7 +16038,7 @@ msgstr "Subtítulo"
 
 #
 msgid "Subtitle Long"
-msgstr "Subtítulo Largo"
+msgstr "Subtítulo (largo)"
 
 msgid "Subtitle alignment"
 msgstr "Alineación de subtítulos"
@@ -16263,7 +16263,7 @@ msgid "Sync failure moving back to origin !"
 msgstr "Fallo de sincronización en la vuelta al origen."
 
 msgid "Sync time using"
-msgstr "Sincronizar tiempo con..."
+msgstr "Sincronizar tiempo con"
 
 msgid "Synchronize system time using transponder or internet."
 msgstr "Sincronizar hora de sistema mediante transpondedor o internet."
@@ -17292,7 +17292,7 @@ msgstr "Tarjetas totales:"
 
 #, python-format
 msgid "Total clients streaming: %d (%s)"
-msgstr "Total de clientes transmitiendo: %d (%s)"
+msgstr "Total de clientes streaming: %d (%s)"
 
 msgid "Total handled client ecm's"
 msgstr "Total de ECM gestionadas del cliente"
@@ -17892,14 +17892,14 @@ msgid "Use power measurement"
 msgstr "Usar la medida de potencia."
 
 msgid "Use separate Picon pack for Front Display"
-msgstr "Utilice un paquete de Picones separado para la pantalla frontal"
+msgstr "Utilice un paquete de Picones separado para el panel frontal"
 
 #
 msgid "Use skin default"
 msgstr "Por defecto usar configuración de la skin"
 
 msgid "Use skin setting"
-msgstr "¿Usar configuración de la skin?"
+msgstr "Usar configuración de la skin"
 
 msgid "Use slim screen"
 msgstr "Usar la pantalla estrecha."
@@ -18328,7 +18328,7 @@ msgid "WWW"
 msgstr "WWW"
 
 msgid "WWW long"
-msgstr "WWW largo"
+msgstr "WWW (largo)"
 
 msgid "Waffen"
 msgstr "Armas"
@@ -18914,13 +18914,13 @@ msgid "Yellow button (long)"
 msgstr "Tecla amarilla (largo)"
 
 msgid "Yellow button (short)"
-msgstr "Tecla amarilla (corta)"
+msgstr "Tecla amarilla (corto)"
 
 msgid "Yellow button function"
 msgstr "Función de tecla amarilla"
 
 msgid "Yellow long"
-msgstr "Amarillo largo"
+msgstr "Amarillo (largo)"
 
 #
 msgid "Yemen"
@@ -19517,7 +19517,7 @@ msgstr "Auto"
 
 #
 msgid "auto deepstandby"
-msgstr "Hibernación automática."
+msgstr "Hibernación automática"
 
 #
 msgid "auto standby"
@@ -20238,7 +20238,7 @@ msgstr "sin retraso"
 
 #
 msgid "no module found"
-msgstr "Módulo no encontrado."
+msgstr "Ningún módulo encontrado."
 
 msgid "no or unknown card inserted"
 msgstr "No se ha insertado ninguna tarjeta o es desconocida."
@@ -20441,7 +20441,7 @@ msgstr "Repetido"
 
 #
 msgid "restart GUI"
-msgstr "¿Reiniciar GUI ahora?"
+msgstr "Reiniciar GUI"
 
 msgid "reverse alphabetic then newest first"
 msgstr "alfabética inversa y más nueva primero"
