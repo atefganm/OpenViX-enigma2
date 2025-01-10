@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-12-27 23:35+0000\n"
-"PO-Revision-Date: 2024-12-10 11:23+0200\n"
+"PO-Revision-Date: 2024-12-10 19:05+0200\n"
 "Last-Translator: Orlandox\n"
 "Language-Team: timoj/Kojo/Samzam/Orlandox\n"
 "Language: fi\n"
@@ -19703,3 +19703,27 @@ msgstr "png, sitten svg"
 
 msgid "svg, then png"
 msgstr "svg, sitten png"
+
+msgid "Wake up to standby"
+msgstr "Käynnisty valmiustilaan"
+
+msgid "When waking from deep standby, should the %s %s go directly to standby mode?"
+msgstr "Pitäisikö %s %s siirtyä suoraan valmiustilaan käynnistyessään virransäästötilasta?"
+
+msgid "After power loss"
+msgstr "Sähkökatkon jälkeen"
+
+msgid "When in normal use or standby (not deep standby), what should the %s %s do when booting after a power loss or other uncontrolled shutdown?"
+msgstr "Mitä %s %s:n tulee tehdä normaalikäytössä tai valmiustilassa (ei virransäästötilassa), kun se käynnistyy sähkökatkon tai muun hallitsemattoman sammutuksen jälkeen?"
+
+msgid "Boot normally"
+msgstr "Käynnistyä normaalisti"
+
+msgid "Go to standby"
+msgstr "Mennä valmiustilaan"
+
+msgid "Go to deep standby"
+msgstr "Mennä virransäästötilaan"
+
+msgid "Go to last known state"
+msgstr "Mennä viimeiseen tunnettuun tilaan"
