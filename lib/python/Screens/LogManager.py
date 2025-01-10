@@ -179,10 +179,10 @@ class LogManager(Screen):
 		self["LogsSize"].update(config.crash.debug_path.value)
 		idx = 0
 		self["list"].moveToIndex(idx)
-		self.setWindowTitle()
+		self.setWindowTitle(_("Crash Logs"))
 
-	def setWindowTitle(self):
-		self.setTitle(self.defaultDir)
+	def setWindowTitle(self, text):
+		self.setTitle(self.defaultDir + " - " + text)
 
 	def up(self):
 		self["list"].up()
@@ -221,10 +221,12 @@ class LogManager(Screen):
 			self["key_red"].setText(_("Crash Logs"))
 			self.logtype = "debuglogs"
 			self.matchingPattern = "Enigma2_debug_"
+			self.setWindowTitle(_("Debug Logs"))
 		else:
 			self["key_red"].setText(_("Debug Logs"))
 			self.logtype = "crashlogs"
 			self.matchingPattern = "Enigma2_crash_"
+			self.setWindowTitle(_("Crash Logs"))
 		self["list"].matchingPattern = re.compile(self.matchingPattern)
 		self["list"].changeDir(self.defaultDir)
 
