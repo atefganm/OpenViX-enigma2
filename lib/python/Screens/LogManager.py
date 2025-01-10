@@ -154,8 +154,7 @@ class LogManager(Screen):
 		self.selectedFiles = config.logmanager.sentfiles.value
 		self.defaultDir = config.crash.debug_path.value
 		self.matchingPattern = 'Enigma2_crash_'
-		self.filelist = MultiFileSelectList(self.selectedFiles, self.defaultDir, showDirectories=False, matchingPattern=self.matchingPattern)
-		self["list"] = self.filelist
+		self["list"] = MultiFileSelectList(self.selectedFiles, self.defaultDir, showDirectories=False, matchingPattern=self.matchingPattern)
 		self["LogsSize"] = self.logsinfo = LogInfo(config.crash.debug_path.value, LogInfo.USED, update=False)
 		self.onLayoutFinish.append(self.layoutFinished)
 		if self.selectionChanged not in self["list"].onSelectionChanged:
