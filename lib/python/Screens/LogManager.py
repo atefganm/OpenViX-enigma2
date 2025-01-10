@@ -176,6 +176,7 @@ class LogManager(Screen):
 
 	def layoutFinished(self):
 		self["LogsSize"].update(config.crash.debug_path.value)
+		self.listReverse()
 		idx = 0
 		self["list"].moveToIndex(idx)
 		self.setWindowTitle(_("Crash Logs"))
@@ -228,6 +229,7 @@ class LogManager(Screen):
 			self.setWindowTitle(_("Crash Logs"))
 		self["list"].matchingPattern = re.compile(self.matchingPattern)
 		self["list"].changeDir(self.defaultDir)
+		self.listReverse()
 
 	def showLog(self):
 		try:
@@ -286,6 +288,10 @@ class LogManager(Screen):
 				remove(self.defaultDir + self.sel[0])
 			self["list"].changeDir(self.defaultDir)
 			self["LogsSize"].update(config.crash.debug_path.value)
+
+	def listReverse(self):
+		self["list"].list.reverse()
+		self["list"].l.setList(self["list"].list)
 
 
 class LogManagerViewLog(Screen):
