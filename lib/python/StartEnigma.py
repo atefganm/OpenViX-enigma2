@@ -399,6 +399,7 @@ def runScreenTest():
 
 	config.usage.power.was_controlled_shutdown.value = False
 	config.usage.power.was_controlled_shutdown.save()
+	configfile.save()
 
 	profile("RunReactor")
 	profile_final()
