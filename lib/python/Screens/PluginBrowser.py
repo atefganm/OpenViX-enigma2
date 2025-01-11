@@ -308,16 +308,18 @@ class PluginDownloadBrowser(Screen):
 		elif self.type == self.REMOVE:
 			self["text"] = Label(_("Getting plugin information. Please wait..."))
 
-		self["key_red" if self.type == self.DOWNLOAD else "key_green"] = Label(_("Remove plugins") if self.type == self.DOWNLOAD else _("Download plugins"))
-
+		self["key_red"] = StaticText(_("Cancel"))
+		self["key_green"] = StaticText()
+		self["key_blue"] = StaticText(_("Remove plugins") if self.type == self.DOWNLOAD else _("Download plugins"))
 		self.run = 0
 		self.remainingdata = ""
-		self["actions"] = ActionMap(["WizardActions"],
+		self["actions"] = ActionMap(["SetupActions", "ColorActions"],
 		{
 			"ok": self.go,
-			"back": self.requestClose,
+			"save": self.go,
+			"cancel": self.requestClose,
+			"blue": self.delete if self.type == self.DOWNLOAD else self.download,
 		})
-		self["PluginDownloadActions"] = ActionMap(["ColorActions"], {"red": self.delete} if self.type == self.DOWNLOAD else {"green": self.download})
 		if path.isfile('/usr/bin/opkg'):
 			self.ipkg = '/usr/bin/opkg'
 			self.ipkg_install = self.ipkg + ' install'
@@ -336,10 +338,12 @@ class PluginDownloadBrowser(Screen):
 			if isinstance(item[0], str):  # category
 				name = item[0]
 				desc = ""
+				self["key_green"].text = _("Compress") if item[0] in self.expanded else _("Expand")
 			else:
 				p = item[0]
 				name = item[1][0:8][7]
 				desc = p.description
+				self["key_green"].text = _("Install plugin") if self.type == self.DOWNLOAD else _("Remove plugin")
 		except:
 			name = ""
 			desc = ""
