@@ -404,6 +404,8 @@ def runScreenTest():
 	profile_final()
 	runReactor()
 
+	# config.usage.power.was_controlled_shutdown is returned to the default option by "enigma2.sh".
+	# This entry has been left here for when enigma is being run from the command line.
 	config.usage.power.was_controlled_shutdown.value = True
 	config.usage.power.was_controlled_shutdown.save()
 
