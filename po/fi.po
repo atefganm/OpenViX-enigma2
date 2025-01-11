@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-12-27 23:35+0000\n"
-"PO-Revision-Date: 2024-12-10 19:05+0200\n"
+"PO-Revision-Date: 2024-12-28 09:39+0200\n"
 "Last-Translator: Orlandox\n"
 "Language-Team: timoj/Kojo/Samzam/Orlandox\n"
 "Language: fi\n"
@@ -883,8 +883,8 @@ msgstr "%d MB"
 #, python-format
 msgid "%d Min"
 msgid_plural "%d Mins"
-msgstr[0] "%d Min"
-msgstr[1] "%d Min"
+msgstr[0] "%d min"
+msgstr[1] "%d min"
 
 #, python-format
 msgid "%d Recording"
@@ -1160,7 +1160,7 @@ msgstr "%s webif pois käytöstä"
 
 #, python-format
 msgid "%s%d Min"
-msgstr "%s%d Min"
+msgstr "%s%d min"
 
 #, python-format
 msgid "%s%s(Default: %s)"
@@ -5757,10 +5757,10 @@ msgid "Exit movie list"
 msgstr "Poistu tallenneluettelosta"
 
 msgid "Exit movie player"
-msgstr "Poistu soittimesta"
+msgstr "Poistu elokuvasoittimesta"
 
 msgid "Exit movie player?"
-msgstr "Poistu soittimesta?"
+msgstr "Poistu elokuvasoittimesta?"
 
 msgid "Exit nameserver configuration"
 msgstr "Lopeta nimipalvelimen määritys"
@@ -7782,7 +7782,7 @@ msgstr[0] "Luetteloversio %d, löytyi %d kanava"
 msgstr[1] "Luetteloversio %d, löytyi %d kanavaa"
 
 msgid "List/Fav/PVR"
-msgstr "Kanavalista/Suosikit/Tallennukset"
+msgstr "Kanavalista/Suosikit/PVR"
 
 msgid "List/File"
 msgstr "Lista/Tiedosto"
@@ -8428,7 +8428,7 @@ msgid "Movie List Setup"
 msgstr "Tallenneluettelon asetukset"
 
 msgid "Movie player"
-msgstr "Elokuva soitin"
+msgstr "Elokuvasoitin"
 
 msgid "Movie selection"
 msgstr "Tallenteen valinta"
@@ -10344,7 +10344,7 @@ msgid "Quick zap"
 msgstr "Pika kanavanvaihto"
 
 msgid "Quit Movie Player with EXIT button"
-msgstr "Salli tallenteista poistuminen exit-napilla"
+msgstr "Lopeta elokuvasoitin EXIT-painikkeella"
 
 msgid "Quiz"
 msgstr "Visailu"
@@ -12261,7 +12261,7 @@ msgid "Show PIP in the Front Display"
 msgstr "Näytä PiP etunäytössä"
 
 msgid "Show PVR status in Movie Player infobar"
-msgstr "Näytä soittimen tila soitto-ohjelman tietopalkissa"
+msgstr "Näytä PVR:n tila elokuvasoittimen tietopalkissa"
 
 msgid "Show RFmod setup"
 msgstr "Näytä RFMod-asetukset"
@@ -13537,7 +13537,7 @@ msgstr ""
 "Suomenkielinen käännös: timoj, Kojo, Samzam, Orlandox\n"
 "\n"
 "Ylläpito : Orlandox\n"
-"--- 10.12.2024 ---\n"
+"--- 28.12.2024 ---\n"
 "\n"
 "http://www.huoltovalikko.com"
 
@@ -14067,7 +14067,7 @@ msgid "This option lets you show the option in the extension screen"
 msgstr "Tämä asetus määrittää näytetäänkö valinta laajennusvalikko"
 
 msgid "This option moves the PVR status from the separate window into the Movie Player infobar."
-msgstr "Tämä asetus määrittää näytetäänkö katseluohjelman toistotilan symbolit erillisessä ikkunassa vai tilapalkissa."
+msgstr "Tämä vaihtoehto siirtää PVR:n tilan erillisestä ikkunasta elokuvasoittimen tietopalkkiin."
 
 msgid "This option set the level of surpression of mosquito noise (Mosquito Noise is random aliasing as a result of strong compression). Obviously this goes at the cost of picture details."
 msgstr "Tämä asetus määrittää mosquito-kohinan vaimennuksen määrän (mosquito-kohina on suuren pakkauksen aiheuttama kuvavirhe). Tämä säätö pehmentää kuvan yksityiskohtia."
@@ -15542,7 +15542,7 @@ msgid "When enabled, http streams are descrambled on the server side. The (remot
 msgstr "Kun valittuna, http-streamit puretaan lähetyspäässä. Asiakas etävastaanottimen ei tarvitse purkaa salausta."
 
 msgid "When enabled, it is possible to leave the Movie Player with exit."
-msgstr "Kun päällä, on mahdollista poistua tallenteiden katselusta exit-napilla."
+msgstr "Kun tämä on käytössä, elokuvasoittimesta voi poistua EXIT:llä."
 
 msgid "When enabled, measure power consumption to detect when the rotor stops turning (when supported by the tuner)."
 msgstr "Kun päällä, mitataan virrankulutusta, jotta voidaan havaita, kun kääntömoottori pysähtyy (jos viritin tukee tätä)."
