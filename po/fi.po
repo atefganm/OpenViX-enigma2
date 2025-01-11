@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-12-27 23:35+0000\n"
-"PO-Revision-Date: 2024-12-29 10:05+0200\n"
+"PO-Revision-Date: 2024-12-29 12:05+0200\n"
 "Last-Translator: Orlandox\n"
 "Language-Team: timoj/Kojo/Samzam/Orlandox\n"
 "Language: fi\n"
@@ -15535,8 +15535,8 @@ msgstr "Kun päällä, DVB-tekstitystä suositaan teksti-tv pohjaisen tekstityks
 msgid "When enabled, graphical DVB subtitles will be displayed at their original position."
 msgstr "Kun päällä, DVB-tekstitys näytetään alkuperäisellä paikallaan."
 
-msgid "When enabled, graphical DVB subtitles will be displayed in yellow, instead of the original color."
-msgstr "Kun päällä, DVB-tekstitys näytetään keltaisena alkuperäisen värin sijaan."
+msgid "A color filter can be used for better readability of DVB subtitles."
+msgstr "Värisuodatinta voidaan käyttää DVB-tekstityksen luettavuuden parantamiseksi."
 
 msgid "When enabled, http streams are descrambled on the server side. The (remote) client receiver does not have to do descrambling."
 msgstr "Kun valittuna, http-streamit puretaan lähetyspäässä. Asiakas etävastaanottimen ei tarvitse purkaa salausta."
@@ -15766,8 +15766,8 @@ msgstr "Vuosi"
 msgid "Yellow"
 msgstr "Keltainen"
 
-msgid "Yellow DVB subtitles"
-msgstr "Keltainen DVB-tekstitys"
+msgid "DVB subtitles color filter"
+msgstr "DVB-tekstityksen värisuodatin"
 
 msgid "Yellow button (long)"
 msgstr "Keltainen näppäin (pitkä)"
@@ -19733,3 +19733,9 @@ msgstr "Asenna lisäosa"
 
 msgid "Remove plugin"
 msgstr "Poista lisäosa"
+
+msgid "Magenta"
+msgstr "Magenta"
+
+msgid "Cyan"
+msgstr "Syaani"
