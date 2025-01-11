@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-12-13 14:09+0100\n"
-"PO-Revision-Date: 2024-12-15 00:43+0100\n"
+"PO-Revision-Date: 2024-12-22 12:40+0100\n"
 "Last-Translator: Andy Blackburn <andyblac@icloud.com>\n"
 "Language-Team: www.CostaBlancaTranslations.com <maria@CostaBlancaTranslations.com>\n"
 "Language: es\n"
@@ -10918,7 +10918,7 @@ msgstr "Cambie esta configuración únicamente si está utilizando un dispositiv
 
 #
 msgid "Only free scan"
-msgstr "Sólo búsqueda libre"
+msgstr "Sólo canales gratuitos"
 
 msgid "Only move the dish quickly after this hour."
 msgstr "Sólo mueva la antena rápidamente después de esta hora."
@@ -12959,7 +12959,7 @@ msgid "Remove text for the hearing impaired from external subtitles (instrumenta
 msgstr "Eliminar el texto para personas con discapacidad auditiva de los subtítulos externos (música instrumental o sonidos ambientales, por ejemplo, cuando suena un timbre o se escucha un disparo)."
 
 msgid "Remove the services on scanned transponders before re-adding services?"
-msgstr "¿Eliminar los canales de los transpondedores escaneados antes de volver a reañadir canales?"
+msgstr "¿Eliminar los canales antiguos de los transpondedores que se están escaneando antes de agregar los actuales?"
 
 #
 msgid "Remove timer"
@@ -13617,7 +13617,7 @@ msgid "Scan options"
 msgstr "Opciones de escaneo"
 
 msgid "Scan using transponders on NIT table? 'No' will use transponders in xml file."
-msgstr "¿Escanear usando transpondedores de la tabla NIT? 'No' usará transpondedores del archivo xml."
+msgstr "'Sí' para escanear usando transpondedores de la tabla NIT. 'No' usará transpondedores del archivo xml."
 
 #
 msgid "Scan wireless networks"
