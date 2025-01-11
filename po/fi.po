@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-12-27 23:35+0000\n"
-"PO-Revision-Date: 2024-12-28 09:39+0200\n"
+"PO-Revision-Date: 2024-12-29 10:05+0200\n"
 "Last-Translator: Orlandox\n"
 "Language-Team: timoj/Kojo/Samzam/Orlandox\n"
 "Language: fi\n"
@@ -5017,7 +5017,7 @@ msgid "Do you want to do another manual service scan?"
 msgstr "Haluatko tehdä uuden manuaalihaun?"
 
 msgid "Do you want to install plugins"
-msgstr "Haluatko asentaa pluginin?"
+msgstr "Haluatko asentaa lisäosia?"
 
 msgid "Do you want to install the package:\n"
 msgstr "Haluatko asentaa ohjelmapaketin:\n"
@@ -5634,7 +5634,7 @@ msgid "Error code"
 msgstr "Virhekoodi"
 
 msgid "Error executing plugin"
-msgstr "Virhe plugin-lisäosan suorittamisessa"
+msgstr "Virhe lisäosan suorittamisessa"
 
 msgid "Error reading webpage!"
 msgstr "Virhe luettaessa web-sivua!"
@@ -9873,7 +9873,7 @@ msgid "Plugin browser"
 msgstr "Lisäosien valinta"
 
 msgid "Plugin browser settings"
-msgstr "Plugin-selaimen asetukset"
+msgstr "Lisäosa-selaimen asetukset"
 
 msgid "Plugin details"
 msgstr "Lisäosan lisätietoja"
@@ -9888,7 +9888,7 @@ msgid "Plugin manager help"
 msgstr "Lisäosien hallinnan ohje"
 
 msgid "Plugins"
-msgstr "Plugin-lisäosat"
+msgstr "Lisäosat"
 
 msgid "Poker"
 msgstr "Pokeri"
@@ -10713,7 +10713,7 @@ msgid "Remove all other data"
 msgstr "Poista kaikki muu data"
 
 msgid "Remove all plugin setting data"
-msgstr "Poista kaikki plugin-asetusten tiedot"
+msgstr "Poista kaikki lisäosan asetustiedot"
 
 msgid "Remove all resume point data"
 msgstr "Poista kaikki palautuspisteen tiedot"
@@ -12742,7 +12742,7 @@ msgid "Skip internet connection check (disables automatic package installation)"
 msgstr "Ohita internet-yhteyden tarkistus (poistaa automaattisen pakettien asennuksen käytöstä)"
 
 msgid "Skip jumping to live TV while timeshifting with plugins"
-msgstr "Ohita hyppäys live TV-lähetykseen, kun ajansiirto on lisäosilla"
+msgstr "Ohita hyppäys live-TV:n katseluun, kun siirrät ajansiirtoa lisäosilla"
 
 msgid "Skip, pause, rewind and fast forward"
 msgstr "Hyppy, pysäytys, taaksepäin kelaus ja nopea eteenpäin kelaus"
@@ -12990,7 +12990,7 @@ msgid "Sort plug-in browser alphabetically"
 msgstr "Lisäosavalikko aakkosjärjestyksessä"
 
 msgid "Sort plugins list to default?"
-msgstr "Järjestä lisäosalista oletusasetuksiin?"
+msgstr "Lajittele lisäosien lista oletusarvoon?"
 
 msgid "Sort setting screens alphabetically"
 msgstr "Asetusvalikot aakkosjärjestyksessä"
@@ -13537,7 +13537,7 @@ msgstr ""
 "Suomenkielinen käännös: timoj, Kojo, Samzam, Orlandox\n"
 "\n"
 "Ylläpito : Orlandox\n"
-"--- 28.12.2024 ---\n"
+"--- 29.12.2024 ---\n"
 "\n"
 "http://www.huoltovalikko.com"
 
@@ -13738,7 +13738,7 @@ msgid ""
 "The Linux kernel has changed, plugins are not compatible. \n"
 "Install latest image using USB stick or Image Manager."
 msgstr ""
-"Linux kernel on muuttunut. Plugin-lisäosat eivät ole yhteensopivia. \n"
+"Linux kernel on muuttunut, lisäosat eivät ole yhteensopivia. \n"
 "Asenna uusin image käyttäen USB-tikkua tai Imagen hallinnointia."
 
 msgid "The PIN code has been changed successfully."
@@ -14010,7 +14010,7 @@ msgid "This option allows you to disable sorting of the option in setting screen
 msgstr "Tällä asetuksella voit poistaa asetuksen lajittelun käytöstä asetusnäytöissä"
 
 msgid "This option allows you to disable sorting of the plugin browser."
-msgstr "Tämä asetus määrittää lisäosavalikon järjestyksen."
+msgstr "Tämä asetuksella voit poistaa lisäosaselaimen lajittelun käytöstä."
 
 msgid "This option allows you to enable 3D Surround Sound for an output."
 msgstr "Tämä asetus määrittää käyttöön 3D Surround Sound -äänet."
@@ -17252,7 +17252,7 @@ msgid "show mediaplayer on mainmenu"
 msgstr "Näytä mediatoistin päävalikossa"
 
 msgid "show softwaremanager in plugin menu"
-msgstr "Näytä ohjelmistonhallinta asetusvalikossa"
+msgstr "Näytä ohjelmistonhallinta lisäosavalikossa"
 
 msgid "show softwaremanager on blue button"
 msgstr "Näytä ohjelmistonhallinta sinisestä napista"
@@ -18707,7 +18707,7 @@ msgid "Please wait."
 msgstr "Odota."
 
 msgid "Plugin listing failed - e. g. wrong backup destination or no space left on backup device."
-msgstr "Pluginien listaus epäonnistui - väärä varmuuskopion sijainti tai levytila on lopussa."
+msgstr "Lisäosien listaus epäonnistui - väärä varmuuskopion sijainti tai levytila on lopussa."
 
 msgid "Preparing extra plugins..."
 msgstr "Valmistellaan ylimääräisiä lisäosia..."
@@ -18879,10 +18879,10 @@ msgid "Sorry the feeds are down for maintenance. Please try again later."
 msgstr "Syötteitä huolletaan, kokeile myöhemmin uudestaan."
 
 msgid "Sorry the feeds are down for maintenance. Please try using Backup manager to restore plugins later."
-msgstr "Syötteitä huolletaan. Yritä myöhemmin palauttaa pluginit käyttäen Varmuuskopioiden hallinta-työkalua."
+msgstr "Syötteitä huolletaan. Yritä myöhemmin palauttaa lisäosat käyttäen Varmuuskopioiden hallinta-työkalua."
 
 msgid "Sorry the feeds are down for maintenance. Please try using the Backup manager to restore plugins later."
-msgstr "Syötteitä huolletaan. Yritä myöhemmin palauttaa pluginit käyttäen Varmuuskopioiden hallinta-työkalua."
+msgstr "Syötteitä huolletaan. Yritä myöhemmin palauttaa lisäosat käyttäen Varmuuskopioiden hallinta-työkalua."
 
 msgid "Sorry, but the file is not compatible with this image version."
 msgstr "Tiedosto ei ole yhteensopiva tämän ohjelmaversion kanssa."
@@ -19025,7 +19025,7 @@ msgstr "Sinun pitää ensin luoda SWAP-tiedosto, ennen kuin aktivoit sen automaa
 
 #, python-format
 msgid "Your %s %s could not connect to the plugin feeds at this time. Please try using the Backup manager to restore plugins later."
-msgstr "Sinun %s %s ei saa yhteyttä plugin-syötteisiin. Yritä myöhemmin palauttaa pluginit käyttäen varmuuskopioiden hallinta-työkalua."
+msgstr "Sinun %s %s ei saa yhteyttä lisäosa-syötteisiin. Yritä myöhemmin palauttaa lisäosat käyttäen varmuuskopioiden hallinta-työkalua."
 
 #, python-format
 msgid ""
@@ -19040,7 +19040,7 @@ msgid ""
 "Your %s %s is about to run a backup of your settings and to detect your plugins.\n"
 "Do you want to allow this?"
 msgstr ""
-"Sinun %s %s ajaa varmuuskopion asetuksistasi, ja yrittää havaita pluginisi.\n"
+"Sinun %s %s ajaa varmuuskopion asetuksistasi, ja yrittää havaita lisäosasi.\n"
 "Sallitko tämän?"
 
 #, python-format
@@ -19049,7 +19049,7 @@ msgstr "Sinun %s %s ei saa yhteyttä verkkoon. Tarkista verkkoasetuksesi, ja kok
 
 #, python-format
 msgid "Your %s %s is not connected to a network. Please try using the Backup manager to restore plugins later when a network connection is available."
-msgstr "Sinun %s %s ei saa yhteyttä verkkoon. Yritä myöhemmin palauttaa pluginit käyttäen varmuuskopioiden hallinta-työkalua, kun verkkoyhteys on saatavilla."
+msgstr "Sinun %s %s ei saa yhteyttä verkkoon. Yritä myöhemmin palauttaa lisäosat käyttäen varmuuskopioiden hallinta-työkalua, kun verkkoyhteys on saatavilla."
 
 #, python-format
 msgid "Your %s %s is not connected to the Internet. Please check your network settings and try again."
@@ -19057,7 +19057,7 @@ msgstr "Sinun %s %s ei ole yhteydessä internettiin. Tarkasta verkkoasetukset ja
 
 #, python-format
 msgid "Your %s %s is not connected to the Internet. Please try using Backup manager to restore plugins later."
-msgstr "Sinun %s %s ei saa yhteyttä internettiin. Yritä myöhemmin palauttaa pluginit käyttäen varmuuskopioiden hallinta-työkalua."
+msgstr "Sinun %s %s ei saa yhteyttä internettiin. Yritä myöhemmin palauttaa lisäosat käyttäen varmuuskopioiden hallinta-työkalua."
 
 #, python-format
 msgid ""
@@ -19246,7 +19246,7 @@ msgid "Before flashing an image 'Automatic settings backup' should be enabled in
 msgstr "Ennen imagen flashausta, 'Automaattinen asetusten varmuuskopiointi' tulee ottaa käyttöön Imagen hallinnoinnin asetusvalikossa."
 
 msgid "This will make a backup of the current settings and plugins which can be used later when setting up the new image in the First Install Wizard."
-msgstr "Tämä tekee varmuuskopion nykyisistä asetuksista ja laajennuksista, joita voidaan käyttää myöhemmin, kun määrität uuden imagen ohjatussa ensimmäisessä asennustoiminnossa."
+msgstr "Tämä tekee varmuuskopion nykyisistä asetuksista ja lisäosista, joita voidaan käyttää myöhemmin, kun määrität uuden imagen ohjatussa ensimmäisessä asennustoiminnossa."
 
 msgid "To flash an image first select it from the list of images in the Image Manager main screen (the image will need to have already been downloaded) and then press BLUE."
 msgstr "Jos haluat flashata imagen, valitse se ensin Imagen hallinnoinnin päänäytön imageluettelosta (imagen on oltava jo ladattu) ja paina sitten SINISTÄ."
@@ -19258,7 +19258,7 @@ msgid "Upon completion the receiver will reboot and display the First Install Wi
 msgstr "Kun se on valmis, vastaanotin käynnistyy uudelleen ja näyttää ohjatun ensimmäisen asennustoiminnon."
 
 msgid "From here the settings backup and plugins can be restored just by selecting that option."
-msgstr "Täältä voit palauttaa asetusten varmuuskopion ja laajennukset valitsemalla vain kyseisen vaihtoehdon."
+msgstr "Täältä voit palauttaa asetusten varmuuskopion ja lisäosat valitsemalla vain kyseisen vaihtoehdon."
 
 msgid "RECOVERY MODE"
 msgstr "PALAUTUSTILA"
@@ -19727,3 +19727,9 @@ msgstr "Mennä virransäästötilaan"
 
 msgid "Go to last known state"
 msgstr "Mennä viimeiseen tunnettuun tilaan"
+
+msgid "Install plugin"
+msgstr "Asenna lisäosa"
+
+msgid "Remove plugin"
+msgstr "Poista lisäosa"
