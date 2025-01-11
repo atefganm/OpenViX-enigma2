@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-13 14:09+0100\n"
+"POT-Creation-Date: 2024-12-30 17:08+0100\n"
 "PO-Revision-Date: 2024-12-29 10:13+0100\n"
 "Last-Translator: Andy Blackburn <andyblac@icloud.com>\n"
 "Language-Team: www.CostaBlancaTranslations.com <maria@CostaBlancaTranslations.com>\n"
@@ -1562,6 +1562,9 @@ msgstr "Se ha detectado una copia de seguridad."
 
 msgid "A client is streaming from this box!"
 msgstr "¡Una clienta está streaming desde este deco!"
+
+msgid "A color filter can be used for better readability of DVB subtitles."
+msgstr "Se puede utilizar un filtro de color para una mejor legibilidad de los subtítulos DVB."
 
 #, python-format
 msgid ""
@@ -3231,7 +3234,6 @@ msgstr "Bytes recibidos:"
 msgid "Bytes sent:"
 msgstr "Bytes enviados:"
 
-#, fuzzy
 msgid "C"
 msgstr "C"
 
@@ -3239,7 +3241,6 @@ msgctxt "Abbreviation of \"Configurable\""
 msgid "C"
 msgstr "C"
 
-#
 msgid "C-Band"
 msgstr "Banda-C"
 
@@ -4851,6 +4852,9 @@ msgstr "PID de DVB subtítulos y idioma"
 msgid "DVB subtitle black transparency"
 msgstr "Transparencia negra de subtítulos DVB"
 
+msgid "DVB subtitles color filter"
+msgstr "Filtro de color de subtítulos de DVB"
+
 msgid "DVB type"
 msgstr "Tipo de DVB"
 
@@ -5594,6 +5598,10 @@ msgid ""
 msgstr ""
 "¿Seguro que quieres comprobar el sistema de archivos?\n"
 "Puede tardar mucho tiempo!"
+
+#
+msgid "Do you really want to clear this playlist?"
+msgstr "¿Seguro que quieres borrar esta lista de reproducciones?"
 
 #
 #, python-format
@@ -12947,12 +12955,12 @@ msgid "Remove new found flag"
 msgstr "Borrar la nueva marca encontrada"
 
 #
-msgid "Remove plugins"
-msgstr "Borrar complmentos"
-
-#
 msgid "Remove plugin"
 msgstr "Borrar complmento"
+
+#
+msgid "Remove plugins"
+msgstr "Borrar complmentos"
 
 #
 msgid "Remove selected"
@@ -13874,9 +13882,7 @@ msgid "Select 'Yes' to remove all other files and directories not covered by the
 msgstr "Seleccione 'Sí' para eliminar todos los demás archivos y directorios no cubiertos por las opciones anteriores."
 
 msgid "Select 'Yes' to remove all plugin configuration data. Selecting this option will remove all plugin configuration data that is stored in the Enigma2 configuration folder. This will cause all affected plugins to return to their default settings. This could cause some plugins to not function until configured."
-msgstr ""
-"Seleccione \"Sí\" para eliminar todos los datos de configuración del complemento. Al seleccionar esta opción, se eliminarán todos los datos de configuración del complemento que estén almacenados en la carpeta de configuración de Enigma2. Esto hará que todos los complementos afectados vuelvan a su configuración predeterminada. Esto podría provocar que algunos complementos no funcionen hasta que "
-"se configuren."
+msgstr "Seleccione \"Sí\" para eliminar todos los datos de configuración del complemento. Al seleccionar esta opción, se eliminarán todos los datos de configuración del complemento que estén almacenados en la carpeta de configuración de Enigma2. Esto hará que todos los complementos afectados vuelvan a su configuración predeterminada. Esto podría provocar que algunos complementos no funcionen hasta que se configuren."
 
 msgid "Select 'Yes' to remove all settings, tuning data, timers, resume pointers etc. Selecting this option will restore the configuration to the initial settings before any configuration settings were applied. This is the most reliable form of Factory Reset."
 msgstr "Seleccione \"Sí\" para eliminar todos los ajustes, datos de ajuste, temporizadores, indicadores de reanudación, etc. Al seleccionar esta opción, se restaurará la configuración a los ajustes iniciales antes de que se aplicaran los ajustes de configuración. Esta es la forma más confiable de restablecer los valores de fábrica."
@@ -18652,9 +18658,6 @@ msgstr "Cuando está activado, los subtítulos DVB se priorizan sobre los de tel
 msgid "When enabled, graphical DVB subtitles will be displayed at their original position."
 msgstr "Cuando está activado, los subtítulos gráficos DVB aparecen en su posición original."
 
-msgid "A color filter can be used for better readability of DVB subtitles."
-msgstr "Se puede utilizar un filtro de color para una mejor legibilidad de los subtítulos DVB."
-
 msgid "When enabled, http streams are descrambled on the server side. The (remote) client receiver does not have to do descrambling."
 msgstr "Cuando está habilitado, los flujos http se descifran en el lado del servidor. El receptor del cliente (remoto) no tiene que realizar la descifración."
 
@@ -18916,9 +18919,6 @@ msgstr "Año"
 #
 msgid "Yellow"
 msgstr "Amarillo"
-
-msgid "DVB subtitles color filter"
-msgstr "DVB subtitles color filter"
 
 msgid "Yellow button (long)"
 msgstr "Tecla amarilla (largo)"
