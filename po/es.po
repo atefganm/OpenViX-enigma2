@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-12-13 14:09+0100\n"
-"PO-Revision-Date: 2024-12-22 12:40+0100\n"
+"PO-Revision-Date: 2024-12-29 03:00+0100\n"
 "Last-Translator: Andy Blackburn <andyblac@icloud.com>\n"
 "Language-Team: www.CostaBlancaTranslations.com <maria@CostaBlancaTranslations.com>\n"
 "Language: es\n"
@@ -4045,7 +4045,7 @@ msgid "Composition of the recording filenames"
 msgstr "Composición de los nombres de ficheros de grabación"
 
 msgid "Compress"
-msgstr ""
+msgstr "Comprimir"
 
 #
 msgid "Computer"
@@ -4779,9 +4779,8 @@ msgstr "Checo"
 msgid "Czechia"
 msgstr "Chequia"
 
-#, fuzzy
 msgid "D"
-msgstr "HD"
+msgstr "D"
 
 msgid "DAC"
 msgstr "DAC"
@@ -6796,9 +6795,8 @@ msgstr "Extremodeporte"
 msgid "Extrude from left"
 msgstr "Extruir desde la izquierda"
 
-#, fuzzy
 msgid "F"
-msgstr "F1"
+msgstr "F"
 
 msgid "F1"
 msgstr "F1"
@@ -8589,6 +8587,9 @@ msgstr "Instalar extensión local"
 
 msgid "Install picons on"
 msgstr "Instalar Picons"
+
+msgid "Install plugin"
+msgstr "Instalar complemento"
 
 #
 msgid "Installable"
@@ -12832,25 +12833,25 @@ msgstr "Borrar"
 
 #
 msgid "Remove Confirmation"
-msgstr "Eliminar confirmación"
+msgstr "Confirmación de borrar"
 
 msgid "Remove EPG event name prefixes"
 msgstr "Eliminar prefijos de nombres de eventos de EPG"
 
 #
 msgid "Remove Plugins"
-msgstr "Quitar complementos"
+msgstr "Borrar complmentos"
 
 msgid "Remove Service"
-msgstr "Canal remoto"
+msgstr "Borrar canal"
 
 #
 msgid "Remove a mark"
-msgstr "Borrar marca"
+msgstr "Borrar marcador"
 
 #
 msgid "Remove a nameserver entry"
-msgstr "Borrar una entrada en el servidor de nombres."
+msgstr "Borrar una entrada del DNS."
 
 #
 msgid "Remove all alternatives"
@@ -12942,6 +12943,10 @@ msgstr "Borrar la nueva marca encontrada"
 #
 msgid "Remove plugins"
 msgstr "Borrar complmentos"
+
+#
+msgid "Remove plugin"
+msgstr "Borrar complmento"
 
 #
 msgid "Remove selected"
@@ -15501,7 +15506,6 @@ msgstr "Configuración del administrador de Softcam"
 msgid "Softcam settings"
 msgstr "Ajustes de Softcam"
 
-#, fuzzy
 msgid "Softcam starting..."
 msgstr "Abriendo Softcam..."
 
@@ -16119,6 +16123,8 @@ msgid ""
 "Sundtek - hardware blind scan in progress.\n"
 "Please wait(3-20 min) for the scan to finish."
 msgstr ""
+"Sundtek: blindscan de hardware en proceso.\n"
+"Espere (entre 3 y 20 minutos) hasta que finalice el escaneo."
 
 msgid "Support at"
 msgstr "Soporte en"
@@ -18266,12 +18272,11 @@ msgid "Vu+ 4K image install options"
 msgstr "Opciones de instalación de imágenes Vu+ 4K"
 
 msgid "Vu+ ImageManager wizard"
-msgstr "Asistente de administrador de Image"
+msgstr "Asistente de administrador de Image de Vu+"
 
 #
-#, fuzzy
 msgid "Vu+ Multiboot"
-msgstr "Multiboot"
+msgstr "Multiboot de Vu+"
 
 msgid ""
 "Vu+ Multiboot - PLEASE WAIT WHILE INITIALISING!\n"
@@ -18374,9 +18379,8 @@ msgid "Wake the receiver from standby when the wake command is sent from the TV.
 msgstr "Activa el receptor desde el modo de espera cuando se envía el comando de activación desde el televisor."
 
 #
-#, fuzzy
 msgid "Wake up to standby"
-msgstr "Reactivar a modo de espera."
+msgstr "Reactivar a modo de espera"
 
 msgid "Wakeup"
 msgstr "Reactivar"
@@ -18724,7 +18728,7 @@ msgid "When flashing from the recovery image it is possible to flash it to the r
 msgstr "Al actualizar desde la imagen de recuperación, es posible actualizarla a la slot de recuperación."
 
 msgid "When in normal use or standby (not deep standby), what should the %s %s do when booting after a power loss or other uncontrolled shutdown?"
-msgstr ""
+msgstr "Cuando está en uso normal o en modo de espera (no en mhibernación), ¿qué debería hacer el %s %s al iniciarse después de una pérdida de energía u otro apagado no controlado?"
 
 msgid "When maximum space for all logs is reached, the oldest logs will be deleted."
 msgstr "Si los historiales utilizan el espacio máximo configurado, se borrará el más antiguo."
@@ -18763,7 +18767,7 @@ msgid "When tuned to a service the system will normally scan the transponder for
 msgstr "Cuando esté sintonizado en un canal, el sistema busca normalmente en el transpondedor los cambios y los guarda. Marca 'Sí' sólo si estás completamente seguro."
 
 msgid "When waking from deep standby, should the %s %s go directly to standby mode?"
-msgstr ""
+msgstr "Al salir de hibernación, ¿debería el %s %s pasar directamente al modo de espera?"
 
 msgid "Where should the recording be saved?"
 msgstr "¿Dónde quieres guardar la grabación?"
@@ -20358,10 +20362,10 @@ msgid "pm"
 msgstr "pm"
 
 msgid "png only"
-msgstr ""
+msgstr "Solo png"
 
 msgid "png, then svg"
-msgstr ""
+msgstr "primero png, si no, svg"
 
 msgid "popular culture/traditional arts"
 msgstr "Cultura popular y artes tradicionales"
@@ -20670,10 +20674,10 @@ msgid "stereo"
 msgstr "Estéreo"
 
 msgid "svg only"
-msgstr ""
+msgstr "solo svg"
 
 msgid "svg, then png"
-msgstr ""
+msgstr "primero svg, si no, png"
 
 msgid "sw"
 msgstr "so"
