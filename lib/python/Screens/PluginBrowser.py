@@ -155,7 +155,7 @@ class PluginBrowser(Screen, ProtectedScreen):
 		self.run()
 
 	def run(self):
-		plugin = self["list"].l.getCurrentSelection()[0]
+		plugin = self["list"].getCurrent()[0]
 		plugin(session=self.session)
 
 	def setDefaultList(self, answer):
@@ -347,7 +347,7 @@ class PluginDownloadBrowser(Screen):
 			cb(name, desc)
 
 	def go(self):
-		sel = self["list"].l.getCurrentSelection()
+		sel = self["list"].getCurrent()
 
 		if sel is None:
 			return
@@ -401,14 +401,14 @@ class PluginDownloadBrowser(Screen):
 				Ipkg.opkgAddDestination(dest)
 			else:
 				extra = '-d ' + dest
-			self.doInstall(self.installFinished, self["list"].l.getCurrentSelection()[0].name + ' ' + extra)
+			self.doInstall(self.installFinished, self["list"].getCurrent()[0].name + ' ' + extra)
 		else:
 			self.resetPostInstall()
 
 	def runInstall(self, val):
 		if val:
 			if self.type == self.DOWNLOAD:
-				if self["list"].l.getCurrentSelection()[0].name.startswith("picons-"):
+				if self["list"].getCurrent()[0].name.startswith("picons-"):
 					supported_filesystems = frozenset(('ext4', 'ext3', 'ext2', 'reiser', 'reiser4', 'jffs2', 'ubifs', 'rootfs'))
 					candidates = []
 					import Components.Harddisk
@@ -421,7 +421,7 @@ class PluginDownloadBrowser(Screen):
 						self.postInstallCall = Picon.initPiconPaths
 						self.session.openWithCallback(self.installDestinationCallback, ChoiceBox, title=_("Install picons on"), list=candidates)
 					return
-				elif self["list"].l.getCurrentSelection()[0].name.startswith("display-picon"):
+				elif self["list"].getCurrent()[0].name.startswith("display-picon"):
 					supported_filesystems = frozenset(('ext4', 'ext3', 'ext2', 'reiser', 'reiser4', 'jffs2', 'ubifs', 'rootfs'))
 					candidates = []
 					import Components.Harddisk
@@ -434,18 +434,18 @@ class PluginDownloadBrowser(Screen):
 						self.postInstallCall = LcdPicon.initLcdPiconPaths
 						self.session.openWithCallback(self.installDestinationCallback, ChoiceBox, title=_("Install lcd picons on"), list=candidates)
 					return
-				self.install_settings_name = self["list"].l.getCurrentSelection()[0].name
-				self.install_bootlogo_name = self["list"].l.getCurrentSelection()[0].name
-				if self["list"].l.getCurrentSelection()[0].name.startswith('settings-'):
+				self.install_settings_name = self["list"].getCurrent()[0].name
+				self.install_bootlogo_name = self["list"].getCurrent()[0].name
+				if self["list"].getCurrent()[0].name.startswith('settings-'):
 					self.check_settings = True
 					self.startIpkgListInstalled(self.PLUGIN_PREFIX + 'settings-*')
-				elif self["list"].l.getCurrentSelection()[0].name.startswith('bootlogos-'):
+				elif self["list"].getCurrent()[0].name.startswith('bootlogos-'):
 					self.check_bootlogo = True
 					self.startIpkgListInstalled(self.PLUGIN_PREFIX + 'bootlogos-*')
 				else:
 					self.runSettingsInstall()
 			elif self.type == self.REMOVE:
-				self.doRemove(self.installFinished, self["list"].l.getCurrentSelection()[0].name + " --force-remove --force-depends")
+				self.doRemove(self.installFinished, self["list"].getCurrent()[0].name + " --force-remove --force-depends")
 
 	def doRemove(self, callback, pkgname):
 		if pkgname.startswith(('kernel-module-', 'enigma2-locale-')):
@@ -508,11 +508,11 @@ class PluginDownloadBrowser(Screen):
 		except:
 			pass
 		for plugin in self.pluginlist:
-			if plugin[3] == self["list"].l.getCurrentSelection()[0].name or plugin[0] == self["list"].l.getCurrentSelection()[0].name:
+			if plugin[3] == self["list"].getCurrent()[0].name or plugin[0] == self["list"].getCurrent()[0].name:
 				self.pluginlist.remove(plugin)
 				break
 		self.plugins_changed = True
-		if self["list"].l.getCurrentSelection()[0].name.startswith("settings-"):
+		if self["list"].getCurrent()[0].name.startswith("settings-"):
 			self.reload_settings = True
 		self.expanded = []
 		self.updateList()
