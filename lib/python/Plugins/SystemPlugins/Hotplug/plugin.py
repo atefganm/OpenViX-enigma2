@@ -4,15 +4,13 @@ from os.path import exists, isfile
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory, Protocol
 
-from enigma import getDeviceDB, eTimer
+from enigma import eTimer
 
 from Components.Console import Console
-from Components.Harddisk import harddiskmanager
+from Components.Harddisk import harddiskmanager, bytesToHumanReadable
 from Plugins.Plugin import PluginDescriptor
 from Screens.MessageBox import ModalMessageBox
-from Screens.FlashExpander import EXPANDER_MOUNT
 from Tools.Directories import fileReadLines, fileWriteLines
-from Tools.Conversions import scaleNumber
 
 HOTPLUG_SOCKET = "/tmp/hotplug.socket"
 
@@ -53,7 +51,6 @@ def AudiocdAdded():
 	return audiocd
 
 
-
 def autostart(reason, **kwargs):
 	if reason == 0:
 		print("[Hotplug] Starting hotplug handler.")
@@ -73,11 +70,13 @@ class HotPlugManager:
 		self.timer = eTimer()
 		self.timer.callback.append(self.processDeviceData)
 		self.deviceData = []
+		self.addedDevice = []
 
 	def processDeviceData(self):
 		self.timer.stop()
 		if self.deviceData:
 			eventData = self.deviceData.pop()
+			print(f"[Hotplug][processDeviceData] eventData:{eventData}")
 			DEVPATH = eventData.get("DEVPATH")
 			DEVNAME = eventData.get("DEVNAME")
 			ID_FS_TYPE = "auto"  # eventData.get("ID_FS_TYPE")
@@ -85,10 +84,11 @@ class HotPlugManager:
 			ID_FS_UUID = eventData.get("ID_FS_UUID")
 			ID_MODEL = eventData.get("ID_MODEL")
 			ID_PART_ENTRY_SIZE = int(eventData.get("ID_PART_ENTRY_SIZE", 0))
+			print(f"[Hotplug][processDeviceData] DEVPATH:{DEVPATH} DEVNAME:{DEVNAME} ID_FS_UUID:{ID_FS_UUID} ID_MODEL:{ID_MODEL} ID_PART_ENTRY_SIZE:{ID_PART_ENTRY_SIZE}")
 			notFound = True
 			mounts = fileReadLines("/proc/mounts")
 			mountPoint = "/media/usb"
-			mountPointDevice = f"/media/{DEVNAME.replace("/dev/", "")}"
+			mountPointDevice = DEVNAME.replace("/dev/", "/media/")
 			mountPointHdd = None if [x.split()[1] for x in mounts if "/media/hdd" in x] else "/media/hdd"
 			knownDevices = fileReadLines("/etc/udev/known_devices", default=[])
 			knownDevice = ""
@@ -105,44 +105,42 @@ class HotPlugManager:
 						notFound = False
 						break
 
-			if notFound:
-				if knownDevices:
-					for device in knownDevices:
-						deviceData = device.split(":")
-						if len(deviceData) == 2 and deviceData[0] == ID_FS_UUID:
-							print("[Hotplug] UUID found in known_devices")
-							knownDevice = deviceData[1]
-							notFound = knownDevice != "None"  # Ignore this device
-							break
+			if notFound and knownDevices:
+				for device in knownDevices:
+					deviceData = device.split(":")
+					if len(deviceData) == 2 and deviceData[0] == ID_FS_UUID:
+						print("[Hotplug] UUID found in known_devices")
+						knownDevice = deviceData[1]
+						notFound = knownDevice != "None"  # Ignore this device
+						break
 
 			if notFound:
 				fstab = fileReadLines("/etc/fstab")
-				fstabDevice = [x.split()[1] for x in fstab if ID_FS_UUID in x and EXPANDER_MOUNT not in x]
+				fstabDevice = [x.split()[1] for x in fstab if ID_FS_UUID in x]
 				if fstabDevice and fstabDevice[0] not in mounts:  # Check if device is already in fstab and if the mountpoint not used
 					Console().ePopen("/bin/mount -a")
 					notFound = False
+					self.newCount += 1
 
 			if notFound and mountPointHdd:  # If device is the first and /media/hdd not mounted
 				knownDevices.append(f"{ID_FS_UUID}:{mountPointHdd}")
 				fileWriteLines("/etc/udev/known_devices", knownDevices)
 				fstab = fileReadLines("/etc/fstab")
-				newFstab = [x for x in fstab if f"UUID={ID_FS_UUID}" not in x and EXPANDER_MOUNT not in x]
+				newFstab = [x for x in fstab if f"UUID={ID_FS_UUID}" not in x]
 				newFstab.append(f"UUID={ID_FS_UUID} {mountPointHdd} {ID_FS_TYPE} defaults 0 0")
 				fileWriteLines("/etc/fstab", newFstab)
 				Console().ePopen("/bin/mount -a")
 				notFound = False
+				self.newCount += 1
 
 			if notFound:
 				description = ""
-				for physdevprefix, pdescription in list(getDeviceDB().items()):
-					if DEVPATH.startswith(physdevprefix):
-						description = f"\n{pdescription}"
 
-				text = f"{_("A new storage device has been connected:")}\n{ID_MODEL} - ({scaleNumber(ID_PART_ENTRY_SIZE * 512, format="%.1f")})\n{description}"
+				text = f"{_("A new storage device has been connected:")}\n{ID_MODEL} - ({bytesToHumanReadable(ID_PART_ENTRY_SIZE * 512)})\n{description}"
 
 				def newDeviceCallback(answer):
 					if answer:
-						if answer in (2, 3):
+						if answer in (2, 3, 4, 5):
 							self.newCount += 1
 						fstab = fileReadLines("/etc/fstab")
 						if answer in (2, 3) and not exists(mountPoint):
@@ -155,26 +153,26 @@ class HotPlugManager:
 							Console().ePopen(f"/bin/mount -t {ID_FS_TYPE} {DEVNAME} {mountPoint}")
 						elif answer == 3:
 							knownDevices.append(f"{ID_FS_UUID}:{mountPoint}")
-							newFstab = [x for x in fstab if f"UUID={ID_FS_UUID}" not in x and EXPANDER_MOUNT not in x]
+							newFstab = [x for x in fstab if f"UUID={ID_FS_UUID}" not in x]
 							newFstab.append(f"UUID={ID_FS_UUID} {mountPoint} {ID_FS_TYPE} defaults 0 0")
 							fileWriteLines("/etc/fstab", newFstab)
 							Console().ePopen("/bin/mount -a")
 						elif answer == 4:
 							knownDevices.append(f"{ID_FS_UUID}:{mountPointHdd}")
-							newFstab = [x for x in fstab if f"UUID={ID_FS_UUID}" not in x and EXPANDER_MOUNT not in x]
+							newFstab = [x for x in fstab if f"UUID={ID_FS_UUID}" not in x]
 							newFstab.append(f"UUID={ID_FS_UUID} {mountPointHdd} {ID_FS_TYPE} defaults 0 0")
 							fileWriteLines("/etc/fstab", newFstab)
 							Console().ePopen("/bin/mount -a")
 						elif answer == 5:
 							knownDevices.append(f"{ID_FS_UUID}:{mountPointDevice}")
-							newFstab = [x for x in fstab if f"UUID={ID_FS_UUID}" not in x and EXPANDER_MOUNT not in x]
+							newFstab = [x for x in fstab if f"UUID={ID_FS_UUID}" not in x]
 							newFstab.append(f"UUID={ID_FS_UUID} {mountPointDevice} {ID_FS_TYPE} defaults 0 0")
 							fileWriteLines("/etc/fstab", newFstab)
 							Console().ePopen("/bin/mount -a")
 						if answer in (1, 3, 4, 5):
 							fileWriteLines("/etc/udev/known_devices", knownDevices)
+					self.addedDevice.append((DEVNAME, DEVPATH))
 					self.timer.start(1000)
-					# harddiskmanager.enumerateBlockDevices()
 
 				default = 3
 				choiceList = [
@@ -188,17 +186,18 @@ class HotPlugManager:
 					choiceList.append(
 						(_("Permanently mount as %s") % mountPointHdd, 4),
 					)
-				elif mountPointDevice:
-					choiceList.append(
-						(_("Permanently mount as %s") % mountPointDevice, 5),
-					)
+				choiceList.append(
+					(_("Permanently mount as %s") % mountPointDevice, 5),
+				)
 				ModalMessageBox.instance.showMessageBox(text=text, list=choiceList, default=default, windowTitle=_("New Storage Device"), callback=newDeviceCallback)
 			else:
+				self.addedDevice.append((DEVNAME, DEVPATH))
 				self.timer.start(1000)
 		else:
 			if self.newCount:
 				self.newCount = 0
-				harddiskmanager.enumerateBlockDevices()
+				for device, physicalDevicePath in self.addedDevice:
+					harddiskmanager.addHotplugPartition(device, physicalDevicePath)
 
 	def processHotplugData(self, eventData):
 		mode = eventData.get("mode")
@@ -212,7 +211,6 @@ class HotPlugManager:
 				if ID_TYPE == "disk" and DEVTYPE == "partition":
 					self.deviceData.append(eventData)
 					self.timer.start(1000)
-					return
 
 			elif action == "remove":
 				ID_TYPE = eventData.get("ID_TYPE")
@@ -222,11 +220,11 @@ class HotPlugManager:
 					device = eventData.get("DEVNAME")
 					harddiskmanager.removeHotplugPartition(device)
 			elif action == "ifup":
-				interface = eventData.get("INTERFACE")
+				interface = eventData.get("INTERFACE")  # noqa: F841
 			elif action == "ifdown":
-				interface = eventData.get("INTERFACE")
+				interface = eventData.get("INTERFACE")  # noqa: F841
 			elif action == "online":
-				state = eventData.get("STATE")
+				state = eventData.get("STATE")  # noqa: F841
 
 		else:
 			device = eventData.get("DEVPATH", "").split("/")[-1]
