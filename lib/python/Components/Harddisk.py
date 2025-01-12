@@ -1,12 +1,16 @@
 import errno
 from os import listdir, major, path as ospath, rmdir, sep as ossep, stat, statvfs, system as ossystem, unlink  # minor
 from fcntl import ioctl
+from glob import glob
+from re import search, sub
 from time import sleep, time
 
 from enigma import eTimer
-from Components.SystemInfo import SystemInfo
+from Components.Console import Console
+from Components.SystemInfo import SystemInfo, BoxInfo
 import Components.Task
 from Tools.CList import CList
+from Tools.Directories import fileReadLines, fileReadLine, fileWriteLines
 
 # DEBUG: REMINDER: This comment needs to be expanded for the benefit of readers.
 # Removable if 1 --> With motor
@@ -78,6 +82,14 @@ def runCommand(command):
 	if exitStatus:
 		print("[Harddisk] Error: Command '%s' returned error code %d!" % (command, exitStatus))
 	return exitStatus
+
+def getProcMountsNew():
+	lines = fileReadLines("/proc/mounts", default=[])
+	result = []
+	for line in [x for x in lines if x and x.startswith("/dev/")]:
+		# Replace encoded space (\040) and newline (\012) characters with actual space and newline
+		result.append([s.replace("\\040", " ").replace("\\012", "\n") for s in line.strip(" \n").split(" ")])
+	return result
 
 
 def getProcMounts():
@@ -224,8 +236,8 @@ class Harddisk:
 		return cap
 
 	def capacity(self):
-		cap = self.diskSize() # cap is in MB
-		cap *= 1000000 # convert to MB to bytes
+		cap = self.diskSize()  # cap is in MB
+		cap *= 1000000  # convert to MB to bytes
 		return bytesToHumanReadable(cap)
 
 	def model(self):
@@ -271,7 +283,7 @@ class Harddisk:
 		for mpath in mediapath:
 			print("[Harddisk][totalFree]mpath:", mpath)
 			if mpath == "/" and SystemInfo["HasKexecMultiboot"]:
-				continue	
+				continue
 			free = self.free(mpath)
 			if free > 0:
 				freetot += free
@@ -336,7 +348,6 @@ class Harddisk:
 		exitCode = runCommand("hdparm -z %s" % self.disk_path)  # We can let udev do the job, re-read the partition table.
 		sleep(3)  # Give udev some time to make the mount, which it will do asynchronously.
 		return exitCode
-
 
 	def killPartitionTable(self):
 		zero = 512 * b"\0"
@@ -745,67 +756,86 @@ class HarddiskManager:
 		self.partitions = []
 		self.cd = ""
 		self.on_partition_list_change = CList()
+		self.console = Console()
+		self.enumerateHotPlugDevices(self.init)
+
+	def init(self):
 		self.enumerateBlockDevices()
 		self.enumerateNetworkMounts()
 
-	def getBlockDevInfo(self, blockdev):
-		devpath = "/sys/block/" + blockdev
-		error = False
-		removable = False
-		BLACKLIST=[]
-		if getMachineBuild() in ('gbmv200','multibox','plus','i55se','h9se','h9combo','h9combose','h10','v8plus','hd60','hd61','vuduo4k','ustym4kpro','beyonwizv2','viper4k','dags72604','u51','u52','u53','u532','u533','u54','u56','u57','u5','u5pvr','cc1','sf8008','sf8008m','vuzero4k','et1x000','vuuno4k','vuuno4kse','vuultimo4k','vusolo4k','hd51','hd52','sf4008','dm900','dm7080','dm820', 'gb7252', 'gb72604', 'dags7252', 'vs1500','h7','8100s','et13000','sf5008'):
-			BLACKLIST=["mmcblk0"]
-		elif getMachineBuild() in ('xc7439','osmio4k','osmio4kplus','osmini4k'):
-			BLACKLIST=["mmcblk1"]
-
-		blacklisted = False
-		if blockdev[:7] in BLACKLIST:
-			blacklisted = True
-		if blockdev.startswith("mmcblk") and (re.search(r"mmcblk\dboot", blockdev) or re.search(r"mmcblk\drpmb", blockdev)):
-			blacklisted = True
-		is_cdrom = False
-		partitions = []
-		try:
-			if os.path.exists(devpath + "/removable"):
-				removable = bool(int(readFile(devpath + "/removable")))
-			if os.path.exists(devpath + "/dev"):
-				dev = int(readFile(devpath + "/dev").split(':')[0])
+	def enumerateHotPlugDevices(self, callback):
+		def parseDeviceData(inputData):
+			eventData = {}
+			if "\n" in inputData:
+				data = inputData[:-1].split("\n")
+				eventData["mode"] = 1
 			else:
-				dev = None
-			devlist = [1, 7, 31, 253, 254] # ram, loop, mtdblock, romblock, ramzswap
-			if dev in devlist:
-				blacklisted = True
-			if blockdev[0:2] == 'sr':
-				is_cdrom = True
-			if blockdev[0:2] == 'hd':
-				try:
-					media = readFile("/proc/ide/%s/media" % blockdev)
-					if "cdrom" in media:
-						is_cdrom = True
-				except IOError:
-					error = True
-			# check for partitions
-			if not is_cdrom and os.path.exists(devpath):
-				for partition in os.listdir(devpath):
-					if partition[0:len(blockdev)] != blockdev:
-						continue
-					if dev == 179 and not re.search(r"mmcblk\dp\d+", partition):
-						continue
-					partitions.append(partition)
-			else:
-				self.cd = blockdev
-		except IOError:
-			error = True
-		# check for medium
-		medium_found = True
-		try:
-			if os.path.exists("/dev/" + blockdev):
-				open("/dev/" + blockdev).close()
-		except IOError as err:
-			if err.errno == 159: # no medium present
-				medium_found = False
+				data = inputData.split("\0")[:-1]
+				eventData["mode"] = 0
+			for values in data:
+				variable, value = values.split("=", 1)
+				eventData[variable] = value
+			return eventData
 
-		return error, blacklisted, removable, is_cdrom, partitions, medium_found
+		print("[Harddisk] Enumerating hotplug devices.")
+		fileNames = glob("/tmp/hotplug_dev_*")
+		devices = []
+		for fileName in fileNames:
+			with open(fileName) as f:
+				data = f.read()
+				eventData = parseDeviceData(data)
+				device = eventData["DEVNAME"].replace("/dev/", "")
+				shortDevice = device[:7] if device.startswith("mmcblk") else sub(r"[\d]", "", device)
+				removable = fileReadLine(f"/sys/block/{shortDevice}/removable")
+				eventData["SORT"] = 0 if ("pci" in eventData["DEVPATH"] or "ahci" in eventData["DEVPATH"]) and removable == "0" else 1
+				devices.append(eventData)
+				#remove(fileName)
+
+		if devices:
+			devices.sort(key=lambda x: (x["SORT"], x["ID_PART_ENTRY_SIZE"]))
+			mounts = getProcMountsNew()
+			devmounts = [x[0] for x in mounts]
+			mounts = [x[1] for x in mounts if "/media/" in x[1]]
+			possibleMountPoints = [f"/media/{x}" for x in ("usb8", "usb7", "usb6", "usb5", "usb4", "usb3", "usb2", "usb", "hdd") if f"/media/{x}" not in mounts]
+
+			for device in devices:
+				if device["DEVNAME"] not in devmounts:
+					device["MOUNT"] = possibleMountPoints.pop()
+
+			knownDevices = fileReadLines("/etc/udev/known_devices", default=[])
+			newFstab = fileReadLines("/etc/fstab")
+			commands = []
+			for device in devices:
+				ID_FS_UUID = device.get("ID_FS_UUID")
+				DEVNAME = device.get("DEVNAME")
+				if [x for x in newFstab if DEVNAME in x]:
+					print(f"[Harddisk] Add hotplug device: {DEVNAME} ignored because device is already in fstab")
+					continue
+				if [x for x in newFstab if ID_FS_UUID in x]:
+					print(f"[Harddisk] Add hotplug device: {DEVNAME} ignored because uuid is already in fstab")
+					continue
+				mountPoint = device.get("MOUNT")
+				if mountPoint:
+					commands.append(f"/bin/umount -lf {DEVNAME.replace("/dev/", "/media/")}")
+					ID_FS_TYPE = "auto"  # eventData.get("ID_FS_TYPE")
+					knownDevices.append(f"{ID_FS_UUID}:{mountPoint}")
+					newFstab.append(f"UUID={ID_FS_UUID} {mountPoint} {ID_FS_TYPE} defaults 0 0")
+					if not exists(mountPoint):
+						mkdir(mountPoint, 0o755)
+					print(f"[Harddisk] Add hotplug device: {DEVNAME} mount: {mountPoint} to fstab")
+				else:
+					print(f"[Harddisk] Warning! hotplug device: {DEVNAME} has no mountPoint")
+
+			if commands:
+				#def enumerateHotPlugDevicesCallback(*args, **kwargs):
+				#	callback()
+				fileWriteLines("/etc/fstab", newFstab)
+				commands.append("/bin/mount -a")
+				#self.console.eBatch(cmds=commands, callback=enumerateHotPlugDevicesCallback) # eBatch is not working correctly here this needs to be fixed
+				#return
+				for command in commands:
+					self.console.ePopen(command)
+		callback()
 
 	def enumerateBlockDevices(self):
 		print("[Harddisk] Enumerating block devices...")
@@ -819,6 +849,7 @@ class HarddiskManager:
 			rootMajor = None
 			# rootMinor = None
 		# print("[Harddisk] DEBUG: rootMajor = '%s', rootMinor = '%s'" % (rootMajor, rootMinor))
+		boxModel = BoxInfo.getItem("model")
 		for device in sorted(listdir("/sys/block")):
 			try:
 				physicalDevice = ospath.realpath(ospath.join("/sys/block", device, "device"))
@@ -831,18 +862,24 @@ class HarddiskManager:
 				print("[Harddisk] Error: Device '%s' (%s) does not appear to have valid device numbers!" % (device, physicalDevice))
 				continue
 			devMajor = int(data.split(":")[0])
+			devMinor = int(data.split(":")[1])
 			if devMajor in blacklistedDisks:
 				# print("[Harddisk] DEBUG: Major device number '%s' for device '%s' (%s) is blacklisted." % (devMajor, device, physicalDevice))
 				continue
-			if devMajor == 179 and not SystemInfo["HasSDnomount"]:		# Lets handle Zgemma SD card mounts - uses SystemInfo to determine SDcard status
-				# print("[Harddisk] DEBUG: Major device number '%s' for device '%s' (%s) doesn't have 'HasSDnomount' set." % (devMajor, device, physicalDevice))
-				continue
-			if devMajor == 179 and devMajor == rootMajor and not SystemInfo["HasSDnomount"][0]:
-				# print("[Harddisk] DEBUG: Major device number '%s' for device '%s' (%s) is the root disk." % (devMajor, device, physicalDevice))
-				continue
-			if SystemInfo["HasSDnomount"] and device.startswith("%s" % (SystemInfo["HasSDnomount"][1])) and SystemInfo["HasSDnomount"][0]:
-				# print("[Harddisk] DEBUG: Major device number '%s' for device '%s' (%s) starts with 'mmcblk0' and has 'HasSDnomount' set." % (devMajor, device, physicalDevice))
-				continue
+			print(f"[Harddisk] DEBUG: boxModel:{boxModel} device:{device} devMajor = '{devMajor}', devMinor = '{devMinor}'")
+			if devMajor == 179 and boxModel in ("dm900", "dm920"):
+				if devMinor != 0:
+					continue
+			else:
+				if devMajor == 179 and not SystemInfo["HasSDnomount"]:		# Lets handle Zgemma SD card mounts - uses SystemInfo to determine SDcard status
+					# print(f"[Harddisk] DEBUG: Major device number '{devMajor,}' for device '{device}' ({physicalDevice}) doesn't have 'HasSDnomount' set.")
+					continue
+				if devMajor == 179 and devMajor == rootMajor and not SystemInfo["HasSDnomount"][0]:
+					# print(f"[Harddisk] DEBUG: Major device number '{devMajor} for device '{device} ({physicalDevice}) is the root disk.")
+					continue
+				if SystemInfo["HasSDnomount"] and device.startswith(f"{SystemInfo['HasSDnomount'][1]}") and SystemInfo["HasSDnomount"][0]:
+					# print("f[Harddisk] DEBUG: Major device number '{devMajor} for device '{device}' ({physicalDevice}) starts with 'mmcblk0' and has 'HasSDnomount' set.")
+					continue
 			description = self.getUserfriendlyDeviceName(device, physicalDevice)
 			isCdrom = devMajor in opticalDisks or device.startswith("sr")
 			if isCdrom:
@@ -886,6 +923,8 @@ class HarddiskManager:
 						# self.partitions.append(Partition(mountpoint = self.getMountpoint(device), description = description, force_mounted, device = device))
 						# print("[Harddisk] DEBUG: Partition(mountpoint=%s, description=%s, force_mounted=True, device=%s)" % (self.getMountpoint(device), description, device))
 						for partition in partitions:
+							if devMajor == 179 and boxModel in ("dm900", "dm920") and partition != "mmcblk0p3":
+								continue
 							description = self.getUserfriendlyDeviceName(partition, physicalDevice)
 							print("[Harddisk] Found partition '%s', description='%s', device='%s'." % (partition, description, physicalDevice))
 							# part = Partition(mountpoint=self.getMountpoint(partition), description=description, force_mounted=True, device=partition)
