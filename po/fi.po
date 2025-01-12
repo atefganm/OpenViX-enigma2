@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-12-27 23:35+0000\n"
-"PO-Revision-Date: 2024-12-29 14:58+0200\n"
+"PO-Revision-Date: 2025-01-03 19:28+0200\n"
 "Last-Translator: Orlandox\n"
 "Language-Team: timoj/Kojo/Samzam/Orlandox\n"
 "Language: fi\n"
@@ -13537,7 +13537,7 @@ msgstr ""
 "Suomenkielinen käännös: timoj, Kojo, Samzam, Orlandox\n"
 "\n"
 "Ylläpito : Orlandox\n"
-"--- 29.12.2024 ---\n"
+"--- 03.01.2025 ---\n"
 "\n"
 "http://www.huoltovalikko.com"
 
@@ -19742,3 +19742,18 @@ msgstr "Syaani"
 
 msgid "Do you really want to clear this playlist?"
 msgstr "Haluatko todella tyhjentää tämän soittolistan?"
+
+msgid "A new storage device has been connected:"
+msgstr "Uusi tallennuslaite on yhdistetty:"
+
+msgid "Permanently ignore this device"
+msgstr "Unohda tämä laite pysyvästi"
+
+msgid "Temporarily mount as %s"
+msgstr "Liitä tilapäisesti nimellä %s"
+
+msgid "Permanently mount as %s"
+msgstr "Liitä pysyvästi nimellä %s"
+
+msgid "New Storage Device"
+msgstr "Uusi tallennuslaite"
