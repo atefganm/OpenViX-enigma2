@@ -15,7 +15,8 @@ from Tools.Directories import resolveFilename, SCOPE_GUISKIN
 from Tools.LoadPixmap import LoadPixmap
 from Tools.Hex2strColor import Hex2strColor
 
-import NavigationInstance, re
+import NavigationInstance
+import re
 
 
 class ServiceInfoBar(GUIAddon):
