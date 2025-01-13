@@ -15,7 +15,7 @@ from Tools.Directories import fileReadLines, fileWriteLines
 HOTPLUG_SOCKET = "/tmp/hotplug.socket"
 
 hotplugNotifier = []
-audioCd = False
+audiocd = False
 
 
 class Hotplug(Protocol):
@@ -139,9 +139,7 @@ class HotPlugManager:
 				self.newCount += 1
 
 			if notFound:
-				description = ""
-
-				text = f"{_("A new storage device has been connected:")}\n{ID_MODEL} - ({bytesToHumanReadable(ID_PART_ENTRY_SIZE * 512)})\n{description}"
+				text = f"{_("A new storage device has been connected:")}\n{ID_MODEL} - ({bytesToHumanReadable(ID_PART_ENTRY_SIZE * 512)})\n"
 
 				def newDeviceCallback(answer):
 					if answer:
