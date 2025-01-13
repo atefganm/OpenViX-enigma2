@@ -49,7 +49,7 @@ class HelpMenuList(List):
 		List.__init__(self)
 		self.callback = callback
 		self.rcPos = rcPos
-		self.helplist=helplist
+		self.helplist = helplist
 		self.createHelpList()
 
 	def createHelpList(self):
