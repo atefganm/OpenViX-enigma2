@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-30 17:08+0100\n"
+"POT-Creation-Date: 2025-01-07 19:53+0100\n"
 "PO-Revision-Date: 2024-12-29 10:13+0100\n"
 "Last-Translator: Andy Blackburn <andyblac@icloud.com>\n"
 "Language-Team: www.CostaBlancaTranslations.com <maria@CostaBlancaTranslations.com>\n"
@@ -8046,9 +8046,6 @@ msgstr "Nombre del servidor:"
 msgid "Hostname: "
 msgstr "Nombre del servidor: "
 
-msgid "Hotplug"
-msgstr "Hotplug"
-
 msgid "Hour"
 msgstr "Hora"
 
@@ -9216,9 +9213,6 @@ msgstr "Lista/Archivo"
 msgid "Listen to the radio"
 msgstr "Escuchar la radio"
 
-msgid "Listener for hotplug events."
-msgstr "Oyente de eventos de conexión en caliente."
-
 msgid "Lists reloaded!"
 msgstr "¡Listas recargadas!"
 
@@ -10367,6 +10361,10 @@ msgstr "Nuevo"
 msgid "New Caledonia"
 msgstr "Nueva Caledonia"
 
+#
+msgid "New Storage Device"
+msgstr "Nuevo dispositivo de almacenamiento"
+
 msgid "New Zealand"
 msgstr "Nueva Zealanda"
 
@@ -11361,6 +11359,12 @@ msgstr "Cambios permanentes de ordenación de las teclas"
 
 msgid "Permanently delete all recordings in the trash can?"
 msgstr "¿Borrar permanentemente todas las grabaciones en la papelera?"
+
+msgid "Permanently ignore this device"
+msgstr "Ignorar este dispositivo de forma permanente"
+
+msgid "Permanently mount as %s"
+msgstr "Montar permanentemente como %s"
 
 msgid "Persian"
 msgstr "Persa"
@@ -16453,6 +16457,10 @@ msgstr "Puerto Telnet"
 msgid "Temp folder"
 msgstr "Carpeta temporal"
 
+#, python-format
+msgid "Temporarily mount as %s"
+msgstr "Montar temporalmente como %s"
+
 #
 msgid "Tennis"
 msgstr "Tennis"
@@ -16660,8 +16668,8 @@ msgstr "El nombre del receptor se puede incluir en el nombre del archivo de resp
 msgid "The new image will overwrite the previous one including any client images that were also configured, so care needs to be taken to make any full image backups (including client images) before overwriting the recovery image."
 msgstr "La nueva imagen sobrescribirá la anterior, incluidas todas las imágenes de cliente que también se configuraron, por lo que se debe tener cuidado de realizar copias de seguridad completas de la imagen (incluidas las imágenes de cliente) antes de sobrescribir la imagen de recuperación."
 
-msgid "The order and grouping of the help information list can be controlled using MENU>Setup>User Interface>Settings>Sort order for help screen."
-msgstr "El orden y la agrupación de la lista de información de ayuda se pueden controlar mediante MENÚ>Configuración>Interfaz de usuario>Configuración>Orden de clasificación para la pantalla de ayuda."
+msgid "The order and grouping of the help information list can be controlled using MENU>Setup>User Interface>Settings>Sort order for help screen or pressing long help"
+msgstr "El orden y la agrupación de la lista de información de ayuda se pueden controlar mediante MENÚ>Configuración>Interfaz de usuario>Configuración>Orden de clasificación para la pantalla de ayuda o con una pulsación larga de la tecla de ayuda."
 
 msgid "The password can not be blank."
 msgstr "La contraseña no puede estar en blanco."

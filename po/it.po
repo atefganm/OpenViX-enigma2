@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-30 17:17+0100\n"
+"POT-Creation-Date: 2025-01-07 19:53+0100\n"
 "PO-Revision-Date: 2025-01-01 09:40+0100\n"
 "Last-Translator: Rob van der Does <robvddoes@gmail.com>\n"
 "Language-Team: ViX/DAX\n"
@@ -1407,7 +1407,7 @@ msgid "5"
 msgstr "5"
 
 msgid "5. If you wish to backup eMMC slots 1,2,3 then enter 'tar -cvzf /media/hdd/linuxrootfsX.tar.gz /linuxrootfsX' where X is the slot number and repeat the command for each installed image slot in flash (so you have backup of installed flash images)"
-msgstr "5. Se desideri eseguire il backup degli slot eMMC 1,2,3, inserisci 'tar -cvzf /media/hdd/linuxrootfsX.tar.gz /linuxrootfsX' dove X è il numero dello slot e ripeti il ​​comando per ciascuno slot di immagine installato nella flash (quindi hai il backup delle immagini flash installate)"
+msgstr "5. Se desideri eseguire il backup degli slot eMMC 1,2,3, inserisci 'tar -cvzf /media/hdd/linuxrootfsX.tar.gz /linuxrootfsX' dove X è il numero dello slot e ripeti il comando per ciascuno slot di immagine installato nella flash (quindi hai il backup delle immagini flash installate)"
 
 msgid "5001 + 5002"
 msgstr ""
@@ -2128,9 +2128,7 @@ msgid "Alpha"
 msgstr "Alfabetico"
 
 msgid "Alpha blending is the process of combining an image with a background to create the appearance of partial or full transparency. 'Always' may cause receivers that don't support hardware acceleration to render images more slowly. Also some skins may show strange side effects."
-msgstr ""
-"L'alpha blending è il processo di combinazione di un'immagine con uno sfondo per creare l'aspetto di una trasparenza parziale o totale. 'Sempre' potrebbe far sì che i ricevitori che non supportano l'accelerazione hardware eseguano il rendering delle immagini più lentamente. Inoltre alcune skin potrebbero mostrare strani effetti "
-"collaterali."
+msgstr "L'alpha blending è il processo di combinazione di un'immagine con uno sfondo per creare l'aspetto di una trasparenza parziale o totale. 'Sempre' potrebbe far sì che i ricevitori che non supportano l'accelerazione hardware eseguano il rendering delle immagini più lentamente. Inoltre alcune skin potrebbero mostrare strani effetti collaterali."
 
 msgid "Alphabetical under headings"
 msgstr "Alfabetico sotto le intestazioni"
@@ -4597,9 +4595,8 @@ msgstr "Sottotitoli DVB, PID e lingua"
 msgid "DVB subtitle black transparency"
 msgstr "Trasparenza nera sottotitoli DVB"
 
-#, fuzzy
 msgid "DVB subtitles color filter"
-msgstr "Colore sottotitoli esterni"
+msgstr "Filtro colore sottotitoli DVB"
 
 msgid "DVB type"
 msgstr "Tipo di DVB"
@@ -6645,9 +6642,8 @@ msgstr "Verifica filesystem"
 msgid "Film"
 msgstr ""
 
-#, fuzzy
 msgid "Film Animazione"
-msgstr "Disabilitare animazioni"
+msgstr "Film Animazione"
 
 msgid "Film per Adulti"
 msgstr ""
@@ -7012,9 +7008,8 @@ msgstr "Germania"
 msgid "Geschichte"
 msgstr ""
 
-#, fuzzy
 msgid "Gesellschaft"
-msgstr "Deselezionare"
+msgstr ""
 
 msgid "Gesundheit"
 msgstr ""
@@ -7540,9 +7535,6 @@ msgstr "Nome Host:"
 
 msgid "Hostname: "
 msgstr "Nome Host: "
-
-msgid "Hotplug"
-msgstr ""
 
 msgid "Hour"
 msgstr "Ora"
@@ -8532,9 +8524,8 @@ msgstr "A sinistra del nome canale"
 msgid "Left long"
 msgstr "Sinistro (a lungo)"
 
-#, fuzzy
 msgid "Leichtathletik"
-msgstr "atletica"
+msgstr ""
 
 msgid "Leisure hobbies"
 msgstr "Tempo libero/Hobby"
@@ -8625,19 +8616,14 @@ msgstr "Lista/File"
 msgid "Listen to the radio"
 msgstr "Ascoltare la radio..."
 
-msgid "Listener for hotplug events."
-msgstr ""
-
 msgid "Lists reloaded!"
 msgstr "Elenchi ricaricati!"
 
-#, fuzzy
 msgid "Literatur"
-msgstr "letteratura"
+msgstr ""
 
-#, fuzzy
 msgid "Literaturverfilmung"
-msgstr "letteratura"
+msgstr ""
 
 msgid "Lithuania"
 msgstr "Lituania"
@@ -9667,6 +9653,9 @@ msgstr "Nuovo"
 msgid "New Caledonia"
 msgstr ""
 
+msgid "New Storage Device"
+msgstr "Nuovo dispositivo di archiviazione"
+
 msgid "New Zealand"
 msgstr ""
 
@@ -10587,6 +10576,12 @@ msgstr "Modifiche permanenti alla chiave di ordinamento"
 
 msgid "Permanently delete all recordings in the trash can?"
 msgstr "Rimuovere definitivamente tutte le registrazioni dal cestino?"
+
+msgid "Permanently ignore this device"
+msgstr "Ignora definitivamente questo dispositivo"
+
+msgid "Permanently mount as %s"
+msgstr "Monta definitivamente come %s"
 
 msgid "Persian"
 msgstr ""
@@ -11867,7 +11862,6 @@ msgstr "PID pertinenti di routing"
 msgid "Religion"
 msgstr "Religione"
 
-#, fuzzy
 msgid "Religione"
 msgstr "Religione"
 
@@ -12304,9 +12298,8 @@ msgstr "Romeno"
 msgid "Romantico"
 msgstr ""
 
-#, fuzzy
 msgid "Romantik"
-msgstr "Romania"
+msgstr "Romantica"
 
 msgid "Root"
 msgstr "Root"
@@ -15173,9 +15166,8 @@ msgstr "Televideo"
 msgid "Teletext subtitle color"
 msgstr "Colore sottotitoli televideo"
 
-#, fuzzy
 msgid "Televendita"
-msgstr "Televideo"
+msgstr "Televendita"
 
 msgid "Telnet"
 msgstr "Telnet"
@@ -15197,6 +15189,10 @@ msgstr "Porta telnet"
 
 msgid "Temp folder"
 msgstr "Cartella file temporanei"
+
+#, python-format
+msgid "Temporarily mount as %s"
+msgstr "Monta temporaneamente come %s"
 
 msgid "Tennis"
 msgstr ""
@@ -15391,8 +15387,8 @@ msgstr "Il nome del ricevitore può essere incluso nel nome file di backup, ma c
 msgid "The new image will overwrite the previous one including any client images that were also configured, so care needs to be taken to make any full image backups (including client images) before overwriting the recovery image."
 msgstr "La nuova immagine sovrascriverà quella precedente, comprese tutte le immagini client configurate, pertanto è necessario prestare attenzione ed effettuare backup completi delle immagini (incluse le immagini client) prima di sovrascrivere l'immagine di ripristino."
 
-msgid "The order and grouping of the help information list can be controlled using MENU>Setup>User Interface>Settings>Sort order for help screen."
-msgstr "L'ordine e il raggruppamento dell'elenco delle informazioni della guida possono essere controllati tramite MENU>Impostazioni>Interfaccia utente>Impostazioni>Ordinamento per la schermata della guida."
+msgid "The order and grouping of the help information list can be controlled using MENU>Setup>User Interface>Settings>Sort order for help screen or pressing long help"
+msgstr "L'ordine e il raggruppamento dell'elenco delle informazioni della guida possono essere controllati tramite MENU>Impostazioni>Interfaccia utente>Impostazioni>Ordinamento per la schermata della guida o con una pressione prolungata del pulsante di aiuto."
 
 msgid "The password can not be blank."
 msgstr "La password non può essere vuota."
@@ -17051,7 +17047,6 @@ msgstr "Attenzione: nessun LNB. Userò i valori predefiniti."
 msgid "Warning: the second input of this dual tuner may not support SCR LNBs. "
 msgstr "Attenzione: il secondo ingresso di questo sintonizzatore doppio potrebbe non supportare gli LNB SCR."
 
-#, fuzzy
 msgid "Wassersport"
 msgstr "Sport acquatici"
 
