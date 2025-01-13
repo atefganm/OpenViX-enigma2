@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-12-27 23:35+0000\n"
-"PO-Revision-Date: 2025-01-07 17:51+0200\n"
+"PO-Revision-Date: 2025-01-11 16:35+0200\n"
 "Last-Translator: Orlandox\n"
 "Language-Team: timoj/Kojo/Samzam/Orlandox\n"
 "Language: fi\n"
@@ -13537,7 +13537,7 @@ msgstr ""
 "Suomenkielinen käännös: timoj, Kojo, Samzam, Orlandox\n"
 "\n"
 "Ylläpito : Orlandox\n"
-"--- 07.01.2025 ---\n"
+"--- 11.01.2025 ---\n"
 "\n"
 "http://www.huoltovalikko.com"
 
@@ -19757,3 +19757,30 @@ msgstr "Liitä pysyvästi nimellä %s"
 
 msgid "New Storage Device"
 msgstr "Uusi tallennuslaite"
+
+msgid "Restore Settings Confirmation"
+msgstr "Asetusten palautuksen vahvistus"
+
+msgid "Restoring Settings Complete - will check plugins install and then Reboot"
+msgstr "Asetusten palautus valmis - tarkistetaan lisäosien asennukset ja käynnistetään laite sitten uudelleen"
+
+msgid "Restore Plugins Confirmation"
+msgstr "Lisäosien palautuksen vahvistus"
+
+msgid "Sorry, but the restore failed, exiting."
+msgstr "Pahoittelut, palautus epäonnistui, poistutaan."
+
+msgid "Feeds are OK, proceeding to restore plugins."
+msgstr "Syötteet ovat kunnossa, jatketaan lisäosien palauttamista."
+
+msgid "No plugins to restore"
+msgstr "Ei palautettavia lisäosia"
+
+msgid "Restore Plugins result"
+msgstr "Lisäosien palautuksen tulos"
+
+msgid "Restore of plugins completed "
+msgstr "Lisäosien palautus valmis "
+
+msgid "Restoring not completed - check messages or debug log"
+msgstr "Palautus ei ole valmis – tarkista viestit tai debug-loki"
