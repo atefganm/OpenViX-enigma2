@@ -94,21 +94,25 @@ config.backupmanager.number_to_keep = ConfigNumber(default=0)
 
 
 def isRestorableSettings(imageversion):
-	minimum_version = 4.2
-	try:
-		imageversion = float(imageversion)
-	except:
-		return False
-	return imageversion >= minimum_version
+	# This check should no longer be necessary
+	return True
+# 	minimum_version = 4.2
+# 	try:
+# 		imageversion = float(imageversion)
+# 	except:
+# 		return False
+# 	return imageversion >= minimum_version
 
 
 def isRestorablePlugins(imageversion):
-	minimum_version = 4.2
-	try:
-		imageversion = float(imageversion)
-	except:
-		return False
-	return imageversion >= minimum_version
+	# This check should no longer be necessary
+	return True
+# 	minimum_version = 4.2
+# 	try:
+# 		imageversion = float(imageversion)
+# 	except:
+# 		return False
+# 	return imageversion >= minimum_version
 
 
 def isRestorableKernel(kernelversion):
