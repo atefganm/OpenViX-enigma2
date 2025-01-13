@@ -164,7 +164,7 @@ class EventInfo(PerServiceBase, Source):
 		if not from_timer and what in (iPlayableService.evUpdatedInfo, iPlayableService.evUpdatedEventInfo):
 			self.timer.startLongTimer(wait := 300 - int(time() % 300) + 5)  # repeat event at nearest 5 minutes ahead + 5 seconds
 			print("[EventInfo] gotEvent, timer is set to repeat event in %s seconds" % wait)
-		if self.now_or_next == self.NOW and what in (iPlayableService.evUpdatedInfo, iPlayableService.evUpdatedEventInfo): 
+		if self.now_or_next == self.NOW and what in (iPlayableService.evUpdatedInfo, iPlayableService.evUpdatedEventInfo):
 			print("[EventInfo] current event:", str(self.event and hasattr(self.event, "getEventName") and callable(self.event.getEventName) and self.event.getEventName() or self.event))
 
 	def destroy(self):

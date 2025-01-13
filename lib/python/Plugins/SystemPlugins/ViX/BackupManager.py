@@ -1357,7 +1357,7 @@ class BackupFiles(Screen):
 		self.Stage3Completed = True
 		self.Stage4Completed = True
 		self.Stage5Completed = True
-		
+
 		# Return config.usage.power.was_controlled_shutdown to the normal running state
 		config.usage.power.was_controlled_shutdown.value = not config.usage.power.was_controlled_shutdown.default
 		config.usage.power.was_controlled_shutdown.save()
