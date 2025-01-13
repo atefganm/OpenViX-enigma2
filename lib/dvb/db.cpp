@@ -252,10 +252,6 @@ int eDVBService::isPlayable(const eServiceReference &ref, const eServiceReferenc
 		eServiceReferenceDVB currentlyPlaying = eServiceReferenceDVB(ref_s);
 		isStreamRelayService = currentlyPlaying.getSROriginal(sRelayOrigSref);
 	}
-	else
-	{
-		return 1;
-	}
 
 	ePtr<eDVBResourceManager> res_mgr;
 	bool remote_fallback_enabled = eConfigManager::getConfigBoolValue("config.usage.remote_fallback_enabled", false);
