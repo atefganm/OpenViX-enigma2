@@ -2,7 +2,7 @@ from xml.etree.cElementTree import fromstring
 
 from gettext import dgettext
 from os.path import getmtime, join as pathjoin
-from skin import findSkinScreen  # noqa: F401  used in <item conditional="..."> to check if a screen name is available in the skin
+from skin import findSkinScreen, parameters  # noqa: F401  used in <item conditional="..."> to check if a screen name is available in the skin
 
 from Components.config import ConfigBoolean, ConfigNothing, ConfigSelection, config
 from Components.ConfigList import ConfigListScreen
