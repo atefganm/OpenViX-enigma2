@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-12-27 23:35+0000\n"
-"PO-Revision-Date: 2025-01-11 16:35+0200\n"
+"PO-Revision-Date: 2025-01-14 07:33+0200\n"
 "Last-Translator: Orlandox\n"
 "Language-Team: timoj/Kojo/Samzam/Orlandox\n"
 "Language: fi\n"
@@ -13537,7 +13537,7 @@ msgstr ""
 "Suomenkielinen käännös: timoj, Kojo, Samzam, Orlandox\n"
 "\n"
 "Ylläpito : Orlandox\n"
-"--- 11.01.2025 ---\n"
+"--- 14.01.2025 ---\n"
 "\n"
 "http://www.huoltovalikko.com"
 
@@ -18421,7 +18421,7 @@ msgid "Do you want to restore your Enigma2 settings ?"
 msgstr "Haluatko palauttaa Enigma2 asetuksesi ?"
 
 msgid "Do you want to restore your enigma2 settings ?"
-msgstr "Haluatko palauttaa enigma2 -asetuksesi?"
+msgstr "Haluatko palauttaa enigma2-asetuksesi?"
 
 msgid "DownLoad"
 msgstr "Lataa"
@@ -18885,7 +18885,7 @@ msgid "Sorry the feeds are down for maintenance. Please try using the Backup man
 msgstr "Syötteitä huolletaan. Yritä myöhemmin palauttaa lisäosat käyttäen Varmuuskopioiden hallinta-työkalua."
 
 msgid "Sorry, but the file is not compatible with this image version."
-msgstr "Tiedosto ei ole yhteensopiva tämän ohjelmaversion kanssa."
+msgstr "Tiedosto ei ole yhteensopiva tämän image-version kanssa."
 
 msgid "Sorry, but the restore failed."
 msgstr "Palautus epäonnistui."
@@ -19045,7 +19045,7 @@ msgstr ""
 
 #, python-format
 msgid "Your %s %s is not connected to a network. Please check your network settings and try again."
-msgstr "Sinun %s %s ei saa yhteyttä verkkoon. Tarkista verkkoasetuksesi, ja kokeile uudestaan."
+msgstr "Sinun %s %s ei saa yhteyttä verkkoon. Tarkista verkkoasetuksesi ja kokeile uudestaan."
 
 #, python-format
 msgid "Your %s %s is not connected to a network. Please try using the Backup manager to restore plugins later when a network connection is available."
