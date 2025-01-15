@@ -403,8 +403,8 @@ class VIXBackupManager(Screen):
 		self.close()
 
 	def createRestoreJob(self):
-		self.pluginslist = ""
-		self.pluginslist2 = ""
+		self.pluginslist = []
+		self.pluginslist2 = []
 		self.didSettingsRestore = False
 		self.doPluginsRestore = False
 		self.didPluginsRestore = False
