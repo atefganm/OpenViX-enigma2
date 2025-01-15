@@ -93,31 +93,6 @@ config.backupmanager.types_to_prune = ConfigSelection(default="none", choices=[(
 config.backupmanager.number_to_keep = ConfigNumber(default=0)
 
 
-def isRestorableSettings(imageversion):
-	minimum_version = 4.2
-	try:
-		imageversion = float(imageversion)
-	except:
-		return False
-	return imageversion >= minimum_version
-
-
-def isRestorablePlugins(imageversion):
-	minimum_version = 4.2
-	try:
-		imageversion = float(imageversion)
-	except:
-		return False
-	return imageversion >= minimum_version
-
-
-def isRestorableKernel(kernelversion):
-	# This check should no longer be necessary since auto-installed packages are no longer listed in the plugins backup.
-	# For more information please consult commit https://github.com/OpenViX/vix-core/commit/53a95067677651a3f2579a1b0d1f70172ccc493b
-	return True
-	# return kernelversion == about.getKernelVersionString()
-
-
 def BackupManagerautostart(reason, session=None, **kwargs):
 	"""called with reason=1 to during /sbin/shutdown.sysvinit, with reason=0 at startup?"""
 	global autoBackupManagerTimer
@@ -359,34 +334,11 @@ class VIXBackupManager(Screen):
 		self.sel = self["list"].getCurrent()
 		if not self.BackupRunning:
 			if self.sel:
-				if path.exists("/tmp/ExtraInstalledPlugins"):
-					remove("/tmp/ExtraInstalledPlugins")
-				if path.exists("/tmp/backupkernelversion"):
-					remove("/tmp/backupkernelversion")
-				self.ConsoleB.ePopen("tar -xzvf " + self.BackupDirectory + self.sel + " -C / tmp/ExtraInstalledPlugins tmp/backupkernelversion tmp/backupimageversion", self.settingsRestoreCheck)
+				self.session.openWithCallback(self.doRestore, MessageBox, _("Are you sure you want to restore this backup:\n ") + self.sel, MessageBox.TYPE_YESNO, title=_("Restore Confirmation"))
 			else:
 				self.session.open(MessageBox, _("There is no backup to restore."), MessageBox.TYPE_INFO, timeout=10)
 		else:
 			self.session.open(MessageBox, _("Backup in progress,\nPlease wait for it to finish, before trying again."), MessageBox.TYPE_INFO, timeout=10)
-
-	def settingsRestoreCheck(self, result, retval, extra_args=None):
-		if path.exists("/tmp/backupimageversion"):
-			with open("/tmp/backupimageversion", "r") as fd:
-				imageversion = fd.read()
-			print("[BackupManager] Backup Image:", imageversion)
-			print("[BackupManager] Current Image:", about.getVersionString())
-			if imageversion == about.getVersionString() or isRestorableSettings(imageversion):
-				print("[BackupManager] Stage 1: Image ver OK")
-				self.keyRestore1()
-			else:
-				self.session.open(MessageBox, _("Sorry, but the file is not compatible with this image version."), MessageBox.TYPE_INFO, timeout=10)
-		else:
-			self.session.open(MessageBox, _("Sorry, but the file is not compatible with this image version."), MessageBox.TYPE_INFO, timeout=10)
-
-	def keyRestore1(self):
-		message = _("Are you sure you want to restore this backup:\n ") + self.sel
-		ybox = self.session.openWithCallback(self.doRestore, MessageBox, message, MessageBox.TYPE_YESNO)
-		ybox.setTitle(_("Restore Confirmation"))
 
 	def doRestore(self, answer):
 		if answer is True:
@@ -479,7 +431,7 @@ class VIXBackupManager(Screen):
 		if answer is True:
 			self.ConsoleB.ePopen("tar -xzvf " + self.BackupDirectory + self.sel + " -C /", self.Stage1SettingsComplete)
 		elif answer is False:
-			self.ConsoleB.ePopen("tar -xzvf " + self.BackupDirectory + self.sel + " -C / tmp/ExtraInstalledPlugins tmp/backupkernelversion tmp/backupimageversion  tmp/3rdPartyPlugins", self.Stage1PluginsComplete)
+			self.ConsoleB.ePopen("tar -xzvf " + self.BackupDirectory + self.sel + " -C / tmp/ExtraInstalledPlugins tmp/3rdPartyPlugins", self.Stage1PluginsComplete)
 
 	def Stage1SettingsComplete(self, result, retval, extra_args):
 		print("[BackupManager] Restoring Stage 1 RESULT:", result)
@@ -536,33 +488,12 @@ class VIXBackupManager(Screen):
 			self.Stage2Completed = True
 
 	def Stage3(self):
-		print("[BackupManager] Restoring Stage 3: Kernel Version/Feeds Checks")
+		print("[BackupManager] Restoring Stage 3: Feeds Checks")
 		if self.feeds == "OK":
 			print("[BackupManager] Restoring Stage 3: Feeds are OK")
-			if path.exists("/tmp/backupkernelversion") and path.exists("/tmp/backupimageversion"):
-				with open("/tmp/backupimageversion", "r") as fd:
-					imageversion = fd.read()
-				with open("/tmp/backupkernelversion", "r") as fd:
-					kernelversion = fd.read()
-				print("[BackupManager] Backup Image:", imageversion)
-				print("[BackupManager] Current Image:", about.getVersionString())
-				print("[BackupManager] Backup Kernel:", kernelversion)
-				print("[BackupManager] Current Kernel:", about.getKernelVersionString())
-				if isRestorableKernel(kernelversion) and (imageversion == about.getVersionString() or isRestorablePlugins(imageversion)):
-					# print("[BackupManager] Restoring Stage 3: Kernel Version is same as backup")
-					self.kernelcheck = True
-					self.Console.ePopen("opkg list-installed", self.Stage3Complete)
-				else:
-					print("[BackupManager] Restoring Stage 3: Kernel or Image Version does not match, exiting")
-					self.kernelcheck = False
-					self.Stage6()
-			else:
-				print("[BackupManager] Restoring Stage 3: Kernel or Image Version check failed")
-				self.kernelcheck = False
-				self.Stage6()
+			self.Console.ePopen("opkg list-installed", self.Stage3Complete)
 		elif self.feeds == "NONETWORK":
 			print("[BackupManager] Restoring Stage 3: No network connection, plugin restore not possible")
-			self.kernelcheck = False
 			AddPopupWithCallback(
 				self.Stage6,
 				_("Your %s %s is not connected to a network. Please check your network settings and try again.") % (SystemInfo["displaybrand"], SystemInfo["machinename"]),
@@ -572,7 +503,6 @@ class VIXBackupManager(Screen):
 			)
 		elif self.feeds == "DOWN":
 			print("[BackupManager] Restoring Stage 3: Feeds are down, plugin restore not possible")
-			self.kernelcheck = False
 			AddPopupWithCallback(
 				self.Stage6,
 				_("Sorry the feeds are down for maintenance. Please try again later."),
@@ -582,7 +512,6 @@ class VIXBackupManager(Screen):
 			)
 		elif self.feeds == "BAD":
 			print("[BackupManager] Restoring Stage 3: no network connection, plugin restore not possible")
-			self.kernelcheck = False
 			AddPopupWithCallback(
 				self.Stage6,
 				_("Your %s %s is not connected to the Internet. Please check your network settings and try again.") % (SystemInfo["displaybrand"], SystemInfo["machinename"]),
@@ -596,7 +525,7 @@ class VIXBackupManager(Screen):
 
 	def Stage3Complete(self, result, retval, extra_args):
 		plugins = []
-		if path.exists("/tmp/ExtraInstalledPlugins") and self.kernelcheck:
+		if path.exists("/tmp/ExtraInstalledPlugins"):
 			self.pluginslist = []
 			for line in result.split("\n"):
 				if line:
@@ -610,7 +539,7 @@ class VIXBackupManager(Screen):
 					if len(parts) > 0 and parts[0] not in plugins:
 						self.pluginslist.append(parts[0])
 
-		if path.exists("/tmp/3rdPartyPlugins") and self.kernelcheck:
+		if path.exists("/tmp/3rdPartyPlugins"):
 			self.pluginslist2 = []
 			self.plugfiles = []
 			self.thirdpartyPluginsLocation = " "
@@ -669,15 +598,7 @@ class VIXBackupManager(Screen):
 		self.Stage3Completed = True
 
 	def Stage4(self):
-		if len(self.pluginslist) or len(self.pluginslist2):
-			if len(self.pluginslist):
-				self.pluginslist = " ".join(self.pluginslist)
-			else:
-				self.pluginslist = ""
-			if len(self.pluginslist2):
-				self.pluginslist2 = " ".join(self.pluginslist2)
-			else:
-				self.pluginslist2 = ""
+		if self.pluginslist or self.pluginslist2:
 			print("[BackupManager] Restoring Stage 4: Plugins to restore (extra plugins)", self.pluginslist)
 			print("[BackupManager] Restoring Stage 4: Plugins to restore (3rd party plugins)", self.pluginslist2)
 			AddPopupWithCallback(
@@ -709,8 +630,9 @@ class VIXBackupManager(Screen):
 	def Stage5(self):
 		if self.doPluginsRestore:
 			print("[BackupManager] Restoring Stage 5: starting plugin restore")
-			print("[BackupManager] Console command: ", "opkg install " + self.pluginslist + " " + self.pluginslist2)
-			self.ConsoleB.ePopen("opkg install " + self.pluginslist + " " + self.pluginslist2, self.Stage5Complete)
+			cmd = "opkg install " + " ".join(self.pluginslist + self.pluginslist2)
+			print("[BackupManager] Console command: '%s'" % cmd)
+			self.ConsoleB.ePopen(cmd, self.Stage5Complete)
 		else:
 			print("[BackupManager] Restoring Stage 5: plugin restore not requested")
 			self.Stage6()
@@ -1271,14 +1193,15 @@ class BackupFiles(Screen):
 			print("[BackupManager] Plugin listing failed - e. g. wrong backup destination or no space left on backup device")
 
 	def Stage3(self):
-		print("[BackupManager] Finding kernel version:" + about.getKernelVersionString())
-		output = open("/tmp/backupkernelversion", "w")
-		output.write(about.getKernelVersionString())
-		output.close()
-		print("[BackupManager] Finding image version:" + about.about.getVersionString())
-		output = open("/tmp/backupimageversion", "w")
-		output.write(about.about.getVersionString())
-		output.close()
+		# Files for reference only. No longer used by the restore process.
+		# The version check is no longer be necessary since auto-installed packages are no longer listed in the plugins backup.
+		# For more information please consult commit https://github.com/OpenViX/vix-core/commit/53a95067677651a3f2579a1b0d1f70172ccc493b
+		print("[BackupManager] Finding kernel version:", SystemInfo["kernel"])
+		with open("/tmp/backupkernelversion", "w") as output:
+			output.write(SystemInfo["kernel"])
+		print("[BackupManager] Finding image version:", SystemInfo["imageversion"])
+		with open("/tmp/backupimageversion", "w") as output:
+			output.write(SystemInfo["imageversion"])
 		self.Stage3Completed = True
 
 	def Stage4(self):
@@ -1293,7 +1216,7 @@ class BackupFiles(Screen):
 				output.close()
 		self.Stage4Completed = True
 
-	tar_flist = "/tmp/_backup-files.list"					# Filename for backup list
+	tar_flist = "/tmp/_backup-files.list"  # Filename for backup list
 
 	def Stage5(self):
 		# Return config.usage.power.was_controlled_shutdown to the default value so it doesn't polute the settings file saved by the backup
@@ -1303,8 +1226,8 @@ class BackupFiles(Screen):
 
 		tmplist = config.backupmanager.backupdirs.value
 		tmplist.append("/tmp/ExtraInstalledPlugins")
-		tmplist.append("/tmp/backupkernelversion")
-		tmplist.append("/tmp/backupimageversion")
+		tmplist.append("/tmp/backupkernelversion")  # Files for reference only. No longer used by the restore process.
+		tmplist.append("/tmp/backupimageversion")  # Files for reference only. No longer used by the restore process.
 		if path.exists("/tmp/3rdPartyPlugins"):
 			tmplist.append("/tmp/3rdPartyPlugins")
 		if path.exists("/tmp/3rdPartyPluginsLocation"):
