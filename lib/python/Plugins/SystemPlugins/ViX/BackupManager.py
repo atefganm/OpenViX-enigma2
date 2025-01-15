@@ -5,7 +5,6 @@ import tarfile
 import glob
 from enigma import eTimer, eEnv, eDVBDB, quitMainloop
 
-from Components.About import about
 from Components.ActionMap import ActionMap
 from Components.Button import Button
 from Components.config import configfile, config, ConfigSubsection, ConfigYesNo, ConfigSelection, ConfigText, ConfigNumber, ConfigLocations, NoSave, ConfigClock, ConfigDirectory
