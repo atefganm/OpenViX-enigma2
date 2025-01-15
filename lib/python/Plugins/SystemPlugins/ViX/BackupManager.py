@@ -251,10 +251,10 @@ class VIXBackupManager(Screen):
 				["ColorActions", "OkCancelActions", "DirectionActions", "MenuActions", "TimerEditActions"],
 				{
 					"cancel": self.close,
-					"ok": self.keyResstore,
+					"ok": self.keyRestore,
 					"red": self.keyDelete,
 					"green": self.GreenPressed,
-					"yellow": self.keyResstore,
+					"yellow": self.keyRestore,
 					"menu": self.createSetup,
 					"log": self.showLog,
 				}, -1)
@@ -355,7 +355,7 @@ class VIXBackupManager(Screen):
 				self.showJobView(job)
 				break
 
-	def keyResstore(self):
+	def keyRestore(self):
 		self.sel = self["list"].getCurrent()
 		if not self.BackupRunning:
 			if self.sel:
@@ -377,13 +377,13 @@ class VIXBackupManager(Screen):
 			print("[BackupManager] Current Image:", about.getVersionString())
 			if imageversion == about.getVersionString() or isRestorableSettings(imageversion):
 				print("[BackupManager] Stage 1: Image ver OK")
-				self.keyResstore1()
+				self.keyRestore1()
 			else:
 				self.session.open(MessageBox, _("Sorry, but the file is not compatible with this image version."), MessageBox.TYPE_INFO, timeout=10)
 		else:
 			self.session.open(MessageBox, _("Sorry, but the file is not compatible with this image version."), MessageBox.TYPE_INFO, timeout=10)
 
-	def keyResstore1(self):
+	def keyRestore1(self):
 		message = _("Are you sure you want to restore this backup:\n ") + self.sel
 		ybox = self.session.openWithCallback(self.doRestore, MessageBox, message, MessageBox.TYPE_YESNO)
 		ybox.setTitle(_("Restore Confirmation"))
