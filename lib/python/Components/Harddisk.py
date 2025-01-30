@@ -5,7 +5,7 @@ from glob import glob
 from re import sub
 from time import sleep, time
 
-from enigma import eTimer
+from enigma import getDeviceDB, eTimer
 from Components.Console import Console
 from Components.SystemInfo import SystemInfo, BoxInfo
 import Components.Task
@@ -200,13 +200,26 @@ class Harddisk:
 		if self.internal:
 			busName = _("Internal")
 			if self.rotational == 0:
-				busName = "%s%s" % (busName, " (SSD)")
+				busName = f"{busName}{' (SSD)'}"
 			else:
-				busName = "%s%s" % (busName, " (HDD)")
+				busName = f"{busName}{' (HDD)'}"
 		else:
-			busName = _("External")
-			busName = "%s (%s)" % (busName, self.busType)
+			busName = self.port()
+			if not busName:
+				busName = _("External")
+				busName = f"{busName} ({self.busType})"
 		return busName
+
+	def port(self):
+		print(f"[Harddisk][port] physicalDevice:{self.phys_path}")
+		print(f"[Harddisk][port] list(getDeviceDB().items() {list(getDeviceDB().items())}")
+		portDescription = ""
+		for physdevprefix, pdescription in list(getDeviceDB().items()):
+			print(f"[Harddisk][port] physdevprefix:{physdevprefix} pdescription:{pdescription}")
+			if self.phys_path.replace("/sys", "").startswith(physdevprefix):
+				portDescription = pdescription
+		print(f"[Harddisk][bus] portDescription:{portDescription}")
+		return portDescription
 
 	def diskSize(self):
 		# output in MB
@@ -241,14 +254,14 @@ class Harddisk:
 			vendor = readFile(ospath.join(self.phys_path, "vendor"))
 			model = readFile(ospath.join(self.phys_path, "model"))
 			if vendor or model and vendor != model:
-				data = "%s (%s)" % (vendor, model)
+				data = f"{vendor} ({model})"
 		elif self.device.startswith("mmcblk"):
 			data = readFile(self.sysfsPath("device/name"))
 		else:
 			msg = "  Device not hdX or sdX or mmcX."
 		if data is None:
-			print("[Harddisk] Error: Failed to get model!%s:" % msg)
-			return "Unknown"
+			print("[Harddisk][model] Error: Failed to get model! msg:", msg)
+			return "Unknown model"
 		return data
 
 	def free(self, dev=None):
@@ -1092,12 +1105,12 @@ class HarddiskManager:
 	def HDDList(self):
 		list = []
 		for hd in self.hdd:
-			hdd = "%s - %s" % (hd.model(), hd.bus())
+			print(f"[Harddsk][HDDList] {hd.model()} {hd.bus()} /dev/{hd.device}.")
+			hdd = f"{hd.bus()}  {hd.model()}  /dev/{hd.device}"
 			cap = hd.capacity()
 			if cap != "":
-				hdd += " (%s)" % cap
+				hdd += f" {cap}"
 			list.append((hdd, hd))
-		# print("[Harddisk] HDDlist = %s." % list)
 		return list
 
 	def getCD(self):
