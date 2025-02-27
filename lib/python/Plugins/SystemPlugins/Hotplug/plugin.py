@@ -1,7 +1,6 @@
 
-from os import mkdir, remove
-from os import listdir, mkdir, rmdir
-from os.path import exists, ismount, join
+from os import listdir, mkdir, remove, rmdir
+from os.path import exists, isfile, ismount, join
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory, Protocol
 

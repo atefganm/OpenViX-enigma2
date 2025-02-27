@@ -72,7 +72,7 @@ class BoxInformation:
 
 BoxInfo = BoxInformation()
 
-#This line makes the BoxInfo backwards compatible with SystemInfo without duplicating the dictionary.
+# This line makes the BoxInfo backwards compatible with SystemInfo without duplicating the dictionary.
 SystemInfo = BoxInfo.boxInfo
 
 
@@ -80,13 +80,14 @@ ARCHITECTURE = BoxInfo.getItem("architecture")
 BRAND = BoxInfo.getItem("brand")
 MODEL = BoxInfo.getItem("model")
 SOC_FAMILY = BoxInfo.getItem("socfamily")
-SOC_BRAND = split('(\d.*)', SOC_FAMILY)[0]
+SOC_BRAND = split(r'(\d.*)', SOC_FAMILY)[0]
+CHIPSET = split(r'(\d.*)', SOC_FAMILY)[1]
 DISPLAYTYPE = BoxInfo.getItem("displaytype")
 MTDROOTFS = BoxInfo.getItem("mtdrootfs")
 DISPLAYMODEL = BoxInfo.getItem("displaymodel")
 DISPLAYBRAND = BoxInfo.getItem("displaybrand")
 MACHINEBUILD = BoxInfo.getItem("machinebuild")
-OEA = split('(\d.*)', BoxInfo.getItem("oe"))[1]
+OEA = split(r'(\d.*)', BoxInfo.getItem("oe"))[1]
 
 
 def getBoxType():  # this function mimics the function of the same name in branding module
