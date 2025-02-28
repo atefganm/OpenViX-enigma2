@@ -488,7 +488,7 @@ class AudioSelection(Screen, ConfigListScreen):
 		track = int(audio)
 		if isinstance(track, int):
 			service = self.session.nav.getCurrentService()
-			ref = self.session.nav.getCurrentServiceRef()
+			ref = self.session.nav.getCurrentServiceReferenceOriginal()
 			ref = ref and eServiceReference(ref)
 			if service.audioTracks().getNumberOfTracks() > track:
 				self.audioTracks.selectTrack(track)
@@ -593,7 +593,7 @@ class AudioSelection(Screen, ConfigListScreen):
 	def keyOk(self):
 		if self.focus == FOCUS_STREAMS and self["streams"].list:
 			cur = self["streams"].getCurrent()
-			ref = self.session.nav.getCurrentServiceRef()
+			ref = self.session.nav.getCurrentServiceReferenceOriginal()
 			ref = ref and eServiceReference(ref)
 			if self.settings.menupage.value == PAGE_AUDIO and cur[0] is not None:
 				self.changeAudio(cur[0])
