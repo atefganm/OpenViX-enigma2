@@ -22,6 +22,7 @@ public:
 		idStructure,	// service_id == 0 is root
 		idDVB,
 		idFile,
+		idUser=0x1000,
 		idServiceMP3=0x1001,
 		idServiceHDMIIn       = 0x2000				// 8192
 	};
@@ -58,7 +59,7 @@ public:
 	int data[8];
 	std::string path;
 	std::string compareSref;
-	bool isStreamRelay = false
+	bool isStreamRelay = false;
 #endif
 	std::string getPath() const { return path; }
 	void setPath( const std::string &n ) { path=n; }
