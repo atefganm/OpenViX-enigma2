@@ -79,6 +79,7 @@ SystemInfo = BoxInfo.boxInfo
 ARCHITECTURE = BoxInfo.getItem("architecture")
 BRAND = BoxInfo.getItem("brand")
 MODEL = BoxInfo.getItem("model")
+RCNAME = BoxInfo.getItem('rcname')
 SOC_FAMILY = BoxInfo.getItem("socfamily")
 SOC_BRAND = split(r'(\d.*)', SOC_FAMILY)[0]
 CHIPSET = split(r'(\d.*)', SOC_FAMILY)[1]
