@@ -1,5 +1,5 @@
 from time import time
-from os import path
+from os.path import exists
 
 from enigma import eServiceCenter, eServiceReference, eTimer, pNavigation, getBestPlayableServiceReference, iServiceInformation, iPlayableService, setPreferredTuner, eDVBLocalTimeHandler, iRecordableServicePtr
 
@@ -21,6 +21,9 @@ from Screens.InfoBarGenerics import streamrelay
 
 
 class Navigation:
+	playServiceExtensions = []
+	recordServiceExtensions = []
+
 	def __init__(self, nextRecordTimerAfterEventActionAuto=False, nextPowerManagerAfterEventActionAuto=False):
 		if NavigationInstance.instance is not None:
 			raise NavigationInstance.instance
@@ -36,6 +39,7 @@ class Navigation:
 		self.currentlyPlayingServiceReference = None
 		self.currentlyPlayingServiceOrGroup = None
 		self.currentlyPlayingService = None
+		self.originalPlayingServiceReference = None
 		self.currentServiceIsStreamRelay = False
 		self.skipServiceReferenceReset = False
 		self.RecordTimer = RecordTimer.RecordTimer()
@@ -64,14 +68,10 @@ class Navigation:
 		elif self.__nextPowerManagerAfterEventActionAuto:
 			wakeup = "/tmp/was_powertimer_wakeup"  # set wakeup flags as a PowerTimer WakeToStandby was actioned.
 		if wakeup:
-			fwakeup = open(f"{wakeup}", "w")  # set wakeup timer type
-			fwakeup.write("1")
-			fwakeup.close()
-			if path.exists(f"{wakeup}"):
+			open(f"{wakeup}", "w").write("1")  # set wakeup timer type
+			if exists(f"{wakeup}"):
 				print(f"[Navigation] TIMER: wakeup to standby detected, flag set: {wakeup}.")
-			fcec = open("/tmp/was_cectimer_wakeup", "w")  # tell Cec was timer wakeup, so don't issue Standby to TV
-			fcec.write("1")
-			fcec.close()
+			open("/tmp/was_cectimer_wakeup", "w").write("1")  # tell Cec was timer wakeup, so don't issue Standby to TV
 			self.standbytimer = eTimer()
 			self.standbytimer.callback.append(self.gotostandby)
 			self.standbytimer.start(15000, True)
@@ -110,34 +110,44 @@ class Navigation:
 	def restartService(self):
 		self.playService(self.currentlyPlayingServiceOrGroup, forceRestart=True)
 
-	def playService(self, ref, checkParentalControl=True, forceRestart=False, adjust=True):
+	def playService(self, ref, checkParentalControl=True, forceRestart=False, adjust=True, event=None):
+		# Some plugins send None as ref becasue want to shutdown enigma play system.
+		# So we have to stop current service if someone send None.
+		if ref is None:
+			self.stopService()
+			return 0
+
+		InfoBarInstance = InfoBar.instance
+
 		oldref = self.currentlyPlayingServiceOrGroup
+		current_service_source = None
+		is_handled = False
+		if InfoBarInstance:
+			current_service_source = InfoBarInstance.session.screen["CurrentService"]
+
+		if "%3a//" in ref.toString():
+			self.currentlyPlayingServiceReference = None
+			self.currentlyPlayingService = None
+			if current_service_source:
+				current_service_source.newService(False)
+
 		if ref and oldref and ref == oldref and not forceRestart:
 			print("[Navigation] ignore request to play already running service(1)")
 			return 1
 		print("[Navigation] playing ref", ref and ref.toString())
-		if path.exists("/proc/stb/lcd/symbol_signal") and config.lcd.mode.value == "1":
-			try:
-				if "0:0:0:0:0:0:0:0:0" not in ref.toString():
-					signal = 1
-				else:
-					signal = 0
-				f = open("/proc/stb/lcd/symbol_signal", "w")
-				f.write(str(signal))
-				f.close()
-			except:
-				f = open("/proc/stb/lcd/symbol_signal", "w")
-				f.write("0")
-				f.close()
-		elif path.exists("/proc/stb/lcd/symbol_signal") and config.lcd.mode.value == "0":
-			f = open("/proc/stb/lcd/symbol_signal", "w")
-			f.write("0")
-			f.close()
 
-		if ref is None:
-			self.stopService()
-			return 0
-		InfoBarInstance = InfoBar.instance
+		if exists("/proc/stb/lcd/symbol_signal") and hasattr(config.lcd, "mode"):
+			open("/proc/stb/lcd/symbol_signal", "w").write("1" if ref and "0:0:0:0:0:0:0:0:0" not in ref.toString() and config.lcd.mode.value else "0")
+
+		self.currentlyPlayingServiceReference = ref
+		self.currentlyPlayingServiceOrGroup = ref
+		self.originalPlayingServiceReference = ref
+
+		if InfoBarInstance and current_service_source:
+			current_service_source.newService(ref)
+			InfoBarInstance.session.screen["Event_Now"].updateSource(self.currentlyPlayingServiceReference)
+			InfoBarInstance.session.screen["Event_Next"].updateSource(self.currentlyPlayingServiceReference)
+			InfoBarInstance.serviceStarted()
 
 		if not checkParentalControl or parentalControl.isServicePlayable(ref, boundFunction(self.playService, checkParentalControl=False, forceRestart=forceRestart, adjust=adjust)):
 			if ref.flags & eServiceReference.isGroup:
@@ -176,9 +186,18 @@ class Navigation:
 					self.pnav.stopService()
 				else:
 					self.skipServiceReferenceReset = True
+
 				self.currentlyPlayingServiceReference = playref
-				playref = streamrelay.streamrelayChecker(playref)
+				playref, is_stream_relay = streamrelay.streamrelayChecker(playref)
+
+				if SystemInfo["FCCactive"] and "%3a//" in ref.toString() and not is_stream_relay:
+					self.pnav.stopService()
+
+				for f in Navigation.playServiceExtensions:
+					playref, is_handled = f(self, playref, event, InfoBarInstance)
+
 				self.currentlyPlayingServiceOrGroup = ref
+
 				if InfoBarInstance and InfoBarInstance.servicelist.servicelist.setCurrent(ref, adjust):
 					self.currentlyPlayingServiceOrGroup = InfoBarInstance.servicelist.servicelist.getCurrent()
 				setPriorityFrontend = False
@@ -217,28 +236,23 @@ class Navigation:
 					self.retryServicePlayTimer = eTimer()
 					self.retryServicePlayTimer.callback.append(boundFunction(self.playService, ref, checkParentalControl, forceRestart, adjust))
 					self.retryServicePlayTimer.start(config.misc.softcam_streamrelay_delay.value, True)
-				else:
-					if self.pnav.playService(playref):
-						# print("[Navigation] Failed to start", playref)
+				elif not is_handled and self.pnav.playService(playref):
 						self.currentlyPlayingServiceReference = None
+						self.originalPlayingServiceReference = None
 						self.currentlyPlayingServiceOrGroup = None
 						if oldref and "://" in oldref.getPath():
 							print("[Navigation] Streaming was active -> try again")  # use timer to give the streamserver the time to deallocate the tuner
 							self.retryServicePlayTimer = eTimer()
 							self.retryServicePlayTimer.callback.append(boundFunction(self.playService, ref, checkParentalControl, forceRestart, adjust))
 							self.retryServicePlayTimer.start(500, True)
-					else:  # self.pnav.playService was successful so force evStart here immediately because that doesn't happen for iptv services so the box appears frozen
-						self.currentlyPlayingServiceOrGroup = self.currentlyPlayingServiceReference
-						if InfoBarInstance:
-							InfoBarInstance.session.screen["CurrentService"].newService(self.currentlyPlayingServiceReference)
-							InfoBarInstance.session.screen["Event_Now"].updateSource(self.currentlyPlayingServiceReference)
-							InfoBarInstance.session.screen["Event_Next"].updateSource(self.currentlyPlayingServiceReference)
-							InfoBarInstance.serviceStarted()
 				self.skipServiceReferenceReset = False
 				if setPriorityFrontend:
 					setPreferredTuner(int(config.usage.frontend_priority.value))
 				if self.currentlyPlayingServiceReference and self.currentlyPlayingServiceReference.toString() in streamrelay.data:
 					self.currentServiceIsStreamRelay = True
+				if InfoBarInstance and "%3a//" in playref.toString() and not is_handled:
+					self.originalPlayingServiceReference = None
+					InfoBarInstance.serviceStarted()
 				return 0
 		elif oldref and InfoBarInstance and InfoBarInstance.servicelist.servicelist.setCurrent(oldref, adjust):
 			self.currentlyPlayingServiceOrGroup = InfoBarInstance.servicelist.servicelist.getCurrent()
@@ -250,10 +264,8 @@ class Navigation:
 	def getCurrentlyPlayingServiceOrGroup(self):
 		return self.currentlyPlayingServiceOrGroup
 
-	def getCurrentServiceRef(self):
-		curPlayService = self.getCurrentService()
-		info = curPlayService and curPlayService.info()
-		return info and info.getInfoString(iServiceInformation.sServiceref)
+	def getCurrentServiceReferenceOriginal(self):
+		return self.originalPlayingServiceReference or self.currentlyPlayingServiceOrGroup
 
 	def recordService(self, ref, simulate=False):
 		service = None
@@ -262,7 +274,9 @@ class Navigation:
 		if ref:
 			if ref.flags & eServiceReference.isGroup:
 				ref = getBestPlayableServiceReference(ref, eServiceReference(), simulate)
-			ref = streamrelay.streamrelayChecker(ref)
+			ref = streamrelay.streamrelayChecker(ref)[0]
+			for f in Navigation.recordServiceExtensions:
+				ref = f(self, ref)
 			service = ref and self.pnav and self.pnav.recordService(ref, simulate)
 			if service is None:
 				print("[Navigation] record returned non-zero")
@@ -292,10 +306,8 @@ class Navigation:
 			self.pnav.stopService()
 		self.currentlyPlayingServiceReference = None
 		self.currentlyPlayingServiceOrGroup = None
-		if path.exists("/proc/stb/lcd/symbol_signal"):
-			f = open("/proc/stb/lcd/symbol_signal", "w")
-			f.write("0")
-			f.close()
+		if exists("/proc/stb/lcd/symbol_signal"):
+			open("/proc/stb/lcd/symbol_signal", "w").write("0")
 
 	def pause(self, p):
 		return self.pnav and self.pnav.pause(p)
