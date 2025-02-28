@@ -11,7 +11,7 @@ from Components.Network import iNetwork
 from Components.NimManager import nimmanager
 from Components.Pixmap import MultiPixmap
 from Components.Sources.StaticText import StaticText
-from Components.SystemInfo import SystemInfo, CHIPSET, SOC_BRAND, RCNAME
+from Components.SystemInfo import SystemInfo, CHIPSET, SOC_BRAND
 from Screens.GitCommitInfo import CommitInfo
 from Screens.Screen import Screen, ScreenSummary
 from Screens.SoftwareUpdate import UpdatePlugin
@@ -67,7 +67,8 @@ class About(AboutBase):
 		AboutText += _("CPU:\t%s %s %s\n") % (about.getCPUArch(), about.getCPUSpeedString(), about.getCpuCoresString())
 
 		AboutText += _("SoC:\t%s\n") % SystemInfo["socfamily"].upper()
-		AboutText += _("Remote:\t%s\n") % RCNAME
+		AboutText += _("Remote:\t%s\n") % SystemInfo["RCName"]
+
 		tempinfo = ""
 		if path.exists("/proc/stb/sensors/temp0/value"):
 			with open("/proc/stb/sensors/temp0/value", "r") as f:
