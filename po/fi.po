@@ -4,8 +4,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-06 12:03+0200\n"
-"PO-Revision-Date: 2025-03-06 16:33+0200\n"
+"POT-Creation-Date: 2025-03-06 17:04+0200\n"
+"PO-Revision-Date: 2025-03-06 19:14+0200\n"
 "Last-Translator: Orlandox\n"
 "Language-Team: timoj/Kojo/Samzam/Orlandox\n"
 "Language: fi\n"
@@ -2881,6 +2881,10 @@ msgstr "Käynnistyslogon tunnistus"
 
 msgid "Boot normally"
 msgstr "Käynnistyä normaalisti"
+
+#, python-format
+msgid "Bootloader:\t%s\n"
+msgstr "Bootloader:\t%s\n"
 
 msgid "Bootup time"
 msgstr "Käynnistysaika"
@@ -6378,10 +6382,6 @@ msgstr "FEC"
 msgid "FEC:"
 msgstr "FEC:"
 
-#, python-format
-msgid "FFmpeg version:\t%s\n"
-msgstr "FFmpeg-versio:\t%s\n"
-
 msgid "FHD"
 msgstr "FHD"
 
@@ -6815,7 +6815,7 @@ msgstr "Kokoruudun resoluutio"
 msgid "FuÃball"
 msgstr "Jalkapallo"
 
-msgid "Fȕr Kinder"
+msgid "FÃ¼r Kinder"
 msgstr "Lapsille"
 
 msgid "G"
@@ -7727,8 +7727,8 @@ msgid "Image Manager allows downloading images from OpenViX image server and fro
 msgstr "Imagen hallinnointi mahdollistaa imagen lataamisen OpenViX-imagepalvelimelta ja useista muista jakeluista."
 
 #, python-format
-msgid "Image Slot:\t %s %s"
-msgstr "Imagen paikka:\t %s %s"
+msgid "Image Slot:\tStartup %s - %s %s"
+msgstr "Imagen paikka:\tStartup %s - %s %s"
 
 msgid "Image View On"
 msgstr "Kuvanäkymä päälle"
@@ -8293,7 +8293,7 @@ msgstr "Klassikko"
 msgid "Kneipensport"
 msgstr "Baari Urheilu"
 
-msgid "Komödie"
+msgid "KomÃ¶die"
 msgstr "Komedia"
 
 msgid "Korea (Democratic People's Republic of)"
@@ -9904,9 +9904,6 @@ msgstr "Ei määritetty"
 msgid "Not Flashing"
 msgstr "Kiinteä"
 
-msgid "Not Installed"
-msgstr "Ei asennettu"
-
 msgid "Not associated"
 msgstr "Ei assosioitu"
 
@@ -11031,7 +11028,7 @@ msgstr "Portti D"
 msgid "Port:"
 msgstr "Portti:"
 
-msgid "Porträt"
+msgid "PortrÃ¤t"
 msgstr "Muotokuva"
 
 msgid "Portugal"
@@ -11297,7 +11294,7 @@ msgstr ""
 "Jos tämä jatkuu tarkista/raportoi foorumille"
 
 #, python-format
-msgid "Processor temperature:\t%s"
+msgid "Processor temp:\t%s"
 msgstr "Prosessorin lämpötila:\t%s"
 
 msgid "Profile"
@@ -12145,9 +12142,7 @@ msgid "Restart test"
 msgstr "Käynnistä testi uudelleen"
 
 msgid "Restart your network connection and interfaces.\n"
-msgstr ""
-"Käynnistä verkkokortti ja yhteys uudelleen.\n"
-"\n"
+msgstr "Käynnistä verkkokortti ja yhteys uudelleen.\n"
 
 msgid "Restore"
 msgstr "Palauta"
@@ -14244,6 +14239,10 @@ msgstr "Snooker"
 msgid "Snooker/Pool"
 msgstr "Snooker/Pool"
 
+#, python-format
+msgid "SoC:\t%s\n"
+msgstr "SoC:\t%s\n"
+
 msgid "Soap"
 msgstr "Saippua"
 
@@ -14982,8 +14981,8 @@ msgid "System & Modulation"
 msgstr "Järjestelmä & modulaatio"
 
 #, python-format
-msgid "System temperature:\t%s"
-msgstr "Järjestelmän lämpötila:\t%s"
+msgid "System temp:\t%s"
+msgstr "Laitteen lämpötila:\t%s"
 
 #, python-format
 msgid "System temperature: %s"
@@ -15963,7 +15962,7 @@ msgstr "Raita"
 msgid "Traditional Music"
 msgstr "Perinteinen Musiikki"
 
-msgid "Tragödie"
+msgid "TragÃ¶die"
 msgstr "Tragedia"
 
 msgid "Transcoding: "
@@ -18987,8 +18986,8 @@ msgid "skip forward"
 msgstr "Siirry eteenpäin"
 
 #, python-format
-msgid "slot %s  (%s)"
-msgstr "paikka %s  (%s)"
+msgid "slot %s (%s)"
+msgstr "paikka %s (%s)"
 
 #, python-format
 msgid "slot%s %s - %s"
