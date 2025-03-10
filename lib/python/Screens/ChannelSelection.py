@@ -2431,7 +2431,7 @@ class ChannelSelection(ChannelSelectionEdit, ChannelSelectionBase, ChannelSelect
 						self.showPipzapMessage()
 					elif zap_res == 2:
 						self.retryServicePlayTimer = eTimer()
-						self.retryServicePlayTimer.callback.append(boundFunction(self.zap, enable_pipzap = True, checkParentalControl=False))
+						self.retryServicePlayTimer.callback.append(boundFunction(self.zap, enable_pipzap=True, checkParentalControl=False))
 						self.retryServicePlayTimer.start(config.misc.softcam_streamrelay_delay.value, True)
 				else:
 					self.setStartRoot(self.curRoot)
