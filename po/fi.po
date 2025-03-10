@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-03-06 17:04+0200\n"
-"PO-Revision-Date: 2025-03-06 21:53+0200\n"
+"PO-Revision-Date: 2025-03-07 17:57+0200\n"
 "Last-Translator: Orlandox\n"
 "Language-Team: timoj/Kojo/Samzam/Orlandox\n"
 "Language: fi\n"
@@ -2854,8 +2854,8 @@ msgid "Bollywood"
 msgstr "Bollywood"
 
 #, python-format
-msgid "Bolt:%s\n"
-msgstr "Bootloader:%s\n"
+msgid "Bolt:\t%s\n"
+msgstr "Bolt:\t%s\n"
 
 msgid "Bonaire, Sint Eustatius and Saba"
 msgstr "Bonaire, Sint Eustatius ja Saba"
@@ -6549,6 +6549,9 @@ msgstr "Syötteiden tila: Päivityksessä"
 msgid "Festival"
 msgstr "Festivaali"
 
+msgid "FFmpeg version:\t%s\n"
+msgstr "FFmpeg:n versio:\t%s\n"
+
 msgid "Fiction"
 msgstr "Fiktio"
 
@@ -7727,8 +7730,8 @@ msgid "Image Manager allows downloading images from OpenViX image server and fro
 msgstr "Imagen hallinnointi mahdollistaa imagen lataamisen OpenViX-imagepalvelimelta ja useista muista jakeluista."
 
 #, python-format
-msgid "Image Slot:\tStartup %s - %s %s"
-msgstr "Imagen paikka:\tKäynnistys %s - %s %s"
+msgid "Image Slot:\t %s %s"
+msgstr "Imagen paikka:\t %s %s"
 
 msgid "Image View On"
 msgstr "Kuvanäkymä päälle"
@@ -9928,6 +9931,9 @@ msgstr ""
 "Vapaa levytila: %sMt\n"
 "Hakemisto: %s"
 
+msgid "Not Installed"
+msgstr "Ei asennettu"
+
 msgid "Not running"
 msgstr "Ei käynnissä"
 
@@ -11294,7 +11300,7 @@ msgstr ""
 "Jos tämä jatkuu tarkista/raportoi foorumille"
 
 #, python-format
-msgid "Processor temp:\t%s"
+msgid "Processor temperature:\t%s"
 msgstr "Prosessorin lämpötila:\t%s"
 
 msgid "Profile"
@@ -11415,8 +11421,8 @@ msgid "Python frontend for /tmp/mmi.socket"
 msgstr "Python-liittymä /tmp/mmi.socket:ille"
 
 #, python-format
-msgid "Python:\t%s\n"
-msgstr "Python:\t%s\n"
+msgid "Python:\t%s.%s.%s\n"
+msgstr "Python:\t%s.%s.%s\n"
 
 msgid "Qatar"
 msgstr "Qatar"
@@ -14985,8 +14991,8 @@ msgid "System temp:\t%s"
 msgstr "Laitteen lämpötila:\t%s"
 
 #, python-format
-msgid "System temperature: %s"
-msgstr "Laitteen lämpötila: %s"
+msgid "System temperature:\t%s"
+msgstr "Laitteen lämpötila:\t%s"
 
 msgid "System: "
 msgstr "Järjestelmä: "
@@ -15030,7 +15036,7 @@ msgstr ""
 "Suomenkielinen käännös: timoj, Kojo, Samzam, Orlandox\n"
 "\n"
 "Ylläpito : Orlandox\n"
-"--- 06.03.2025 ---\n"
+"--- 07.03.2025 ---\n"
 "\n"
 "http://www.huoltovalikko.com"
 
@@ -18986,8 +18992,8 @@ msgid "skip forward"
 msgstr "Siirry eteenpäin"
 
 #, python-format
-msgid "slot %s (%s)"
-msgstr "paikka %s (%s)"
+msgid "slot %s  (%s)"
+msgstr "paikka %s  (%s)"
 
 #, python-format
 msgid "slot%s %s - %s"
