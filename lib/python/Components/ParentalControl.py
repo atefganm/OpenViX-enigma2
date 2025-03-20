@@ -124,7 +124,7 @@ class ParentalControl:
 				Tools.Notifications.AddNotificationParentalControl(boundFunction(self.servicePinEntered, ref), PinInput, triesEntry=config.ParentalControl.retries.servicepin, pinList=self.getPinList(), service=ServiceReference(ref).getServiceName(), title=title, windowTitle=_("Parental control"))
 			import NavigationInstance
 			if NavigationInstance.instance and NavigationInstance.instance.currentlyPlayingServiceReference:
-				NavigationInstance.instance.stopService() # kill current service since we are on protected service and canceled the pin
+				NavigationInstance.instance.stopService()  # kill current service since we are on protected service and canceled the pin
 			return False
 		else:
 			return True
