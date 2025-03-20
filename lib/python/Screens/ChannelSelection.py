@@ -2621,7 +2621,7 @@ class ChannelSelection(ChannelSelectionEdit, ChannelSelectionBase, ChannelSelect
 			refstr = ref.toString()
 		else:
 			refstr = ""
-		if refstr != self.lastservice.value and not Components.ParentalControl.parentalControl.isProtected(ref):
+		if refstr != self.lastservice.value:
 			self.lastservice.value = refstr
 			self.lastservice.save()
 
