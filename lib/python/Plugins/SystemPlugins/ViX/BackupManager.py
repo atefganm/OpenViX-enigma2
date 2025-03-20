@@ -568,9 +568,8 @@ class VIXBackupManager(Screen):
 							devmounts = []
 							self.plugfile = self.plugfiles[3]
 							# print("[BackupManager] self.plugfile, self.plugfiles", self.plugfile, self.plugfiles)
-							for dir in ["/media/%s/%s" % (media, self.plugfile) for media in listdir("/media/") if path.isdir(path.join("/media/", media)) and path.exists("/media/%s/%s" % (media, self.plugfile))]:
-								if media not in ("autofs", "net"):  # noqa: F821
-									devmounts.append(dir)
+							for dir in ["/media/%s/%s" % (media, self.plugfile) for media in listdir("/media/") if media not in ("autofs", "net") and path.isdir(path.join("/media/", media)) and path.exists("/media/%s/%s" % (media, self.plugfile))]:
+								devmounts.append(dir)
 							if len(devmounts):
 								for x in devmounts:
 									print("[BackupManager] search dir = %s" % devmounts)
