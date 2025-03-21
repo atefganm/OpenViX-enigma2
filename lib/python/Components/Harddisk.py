@@ -1359,12 +1359,12 @@ class UnmountTasks(LoggingTask):
 		self.debug = debug
 		LoggingTask.__init__(self, job, _("Unmount"))
 		self.storageDevice = storageDevice
-		self.nomoutFile = f"/dev/nomount.{self.storageDevice.disk}"
+		self.nomountFile = f"/dev/nomount.{self.storageDevice.disk}"
 		self.mountpoints = []
 
 	def prepare(self):
 		try:
-			open(self.nomoutFile, "wb").close()
+			open(self.nomountFile, "wb").close()
 		except Exception as e:
 			print(f"[{self.__class__.__name__}] ERROR: Failed to create /dev/nomount file:{e}")
 		self.setTool('umount')
@@ -1419,11 +1419,11 @@ class MountTasks(LoggingTask):
 		LoggingTask.__init__(self, job, _("Mount"))
 		self.storageDevice = storageDevice
 		self.mountDevice = mountDevice
-		self.nomoutFile = f"/dev/nomount.{self.storageDevice.disk}"
+		self.nomountFile = f"/dev/nomount.{self.storageDevice.disk}"
 
 	def prepare(self):
 		try:
-			unlink(self.nomoutFile)
+			unlink(self.nomountFile)
 		except Exception as e:
 			print(f"[{self.__class__.__name__}] ERROR: Failed to remove /dev/nomount file: {e}")
 
