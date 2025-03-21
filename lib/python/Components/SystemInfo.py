@@ -6,7 +6,7 @@ from re import split
 from boxbranding import getBoxType, getBrandOEM, getDisplayType, getHaveAVJACK, getHaveHDMIinFHD, getHaveHDMIinHD, getHaveRCA, getHaveSCART, getHaveSCARTYUV, getHaveYUV, getImageType, getMachineBrand, getMachineBuild, getMachineMtdRoot, getMachineName, getHaveDVI, getHaveHDMI
 from enigma import Misc_Options, eDVBCIInterfaces, eDVBResourceManager, eGetEnigmaDebugLvl
 
-from Components.About import getChipSetString
+from Components.About import getChipSetString, getKernelVersionString
 from Components.RcModel import rc_model
 from Tools.Directories import SCOPE_PLUGINS, fileCheck, fileExists, fileHas, pathExists, resolveFilename, SCOPE_LIBDIR, SCOPE_SKIN, fileReadLines
 from Tools.HardwareInfo import HardwareInfo
@@ -71,6 +71,13 @@ class BoxInformation:
 
 
 BoxInfo = BoxInformation()
+
+# "kernel" from enigma.info may not be faithful with what is expected. e.g. osmio4k should be "5.15.0"
+# but enigma.info shows "5.15" which reflects "PREFERRED_VERSION_linux-edision". But we want the version
+# to refect that found in "${STAGING_KERNEL_BUILDDIR}/kernel-abiversion" which is the version used in the
+# package names from the feeds. Therefore we will force the output of BoxInfo.getItem("kernel") to the 
+# value from "/proc/version" which is the same.
+BoxInfo.boxInfo["kernel"] = getKernelVersionString().strip()  # force kernel revision
 
 # This line makes the BoxInfo backwards compatible with SystemInfo without duplicating the dictionary.
 SystemInfo = BoxInfo.boxInfo
