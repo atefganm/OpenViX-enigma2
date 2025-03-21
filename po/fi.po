@@ -4,8 +4,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-06 17:04+0200\n"
-"PO-Revision-Date: 2025-03-08 08:53+0200\n"
+"POT-Creation-Date: 2025-03-15 10:09+0200\n"
+"PO-Revision-Date: 2025-03-15 13:41+0200\n"
 "Last-Translator: Orlandox\n"
 "Language-Team: timoj/Kojo/Samzam/Orlandox\n"
 "Language: fi\n"
@@ -6382,6 +6382,10 @@ msgstr "FEC"
 msgid "FEC:"
 msgstr "FEC:"
 
+#, python-format
+msgid "FFmpeg version:\t%s\n"
+msgstr "FFmpeg versio:\t%s\n"
+
 msgid "FHD"
 msgstr "FHD"
 
@@ -6548,9 +6552,6 @@ msgstr "Syötteiden tila: Päivityksessä"
 
 msgid "Festival"
 msgstr "Festivaali"
-
-msgid "FFmpeg version:\t%s\n"
-msgstr "FFmpeg versio:\t%s\n"
 
 msgid "Fiction"
 msgstr "Fiktio"
@@ -9907,6 +9908,9 @@ msgstr "Ei määritetty"
 msgid "Not Flashing"
 msgstr "Kiinteä"
 
+msgid "Not Installed"
+msgstr "Ei asennettu"
+
 msgid "Not associated"
 msgstr "Ei assosioitu"
 
@@ -9930,9 +9934,6 @@ msgstr ""
 "Tiedostokoko: %sMt\n"
 "Vapaa levytila: %sMt\n"
 "Hakemisto: %s"
-
-msgid "Not Installed"
-msgstr "Ei asennettu"
 
 msgid "Not running"
 msgstr "Ei käynnissä"
@@ -12969,9 +12970,6 @@ msgstr "Valitse kohde:"
 msgid "Select display of record icon based on 'Sref only' or 'Sref + Stream url' where applicable."
 msgstr "Valitse tallennuskuvakkeen näyttö 'vain Sref' tai 'Sref + striimin url' perusteella, jos mahdollista."
 
-msgid "Select extra packages folder"
-msgstr "Valitse lisäohjelmapakettien hakemisto"
-
 msgid "Select files/folders to backup"
 msgstr "Valitse varmistettavat tiedostot/kansiot"
 
@@ -14245,10 +14243,6 @@ msgstr "Snooker"
 msgid "Snooker/Pool"
 msgstr "Snooker/Pool"
 
-#, python-format
-msgid "SoC:\t%s\n"
-msgstr "SoC:\t%s\n"
-
 msgid "Soap"
 msgstr "Saippua"
 
@@ -14987,12 +14981,12 @@ msgid "System & Modulation"
 msgstr "Järjestelmä & modulaatio"
 
 #, python-format
-msgid "System temp:\t%s"
+msgid "System temperature:\t%s"
 msgstr "Laitteen lämpötila:\t%s"
 
 #, python-format
-msgid "System temperature:\t%s"
-msgstr "Laitteen lämpötila:\t%s"
+msgid "System temperature: %s"
+msgstr "Laitteen lämpötila: %s"
 
 msgid "System: "
 msgstr "Järjestelmä: "
@@ -15036,7 +15030,7 @@ msgstr ""
 "Suomenkielinen käännös: timoj, Kojo, Samzam, Orlandox\n"
 "\n"
 "Ylläpito : Orlandox\n"
-"--- 08.03.2025 ---\n"
+"--- 15.03.2025 ---\n"
 "\n"
 "http://www.huoltovalikko.com"
 
