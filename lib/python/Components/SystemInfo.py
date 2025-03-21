@@ -75,7 +75,7 @@ BoxInfo = BoxInformation()
 # "kernel" from enigma.info may not be faithful with what is expected. e.g. osmio4k should be "5.15.0"
 # but enigma.info shows "5.15" which reflects "PREFERRED_VERSION_linux-edision". But we want the version
 # to refect that found in "${STAGING_KERNEL_BUILDDIR}/kernel-abiversion" which is the version used in the
-# package names from the feeds. Therefore we will force the output of BoxInfo.getItem("kernel") to the 
+# package names from the feeds. Therefore we will force the output of BoxInfo.getItem("kernel") to the
 # value from "/proc/version" which is the same.
 BoxInfo.boxInfo["kernel"] = getKernelVersionString().strip()  # force kernel revision
 
