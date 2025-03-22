@@ -161,6 +161,7 @@ def canDelete(item):
 		return False
 	return True
 
+
 def diskinfo():
 	try:
 		stat = os.statvfs(config.movielist.last_videodir.value)
@@ -170,6 +171,7 @@ def diskinfo():
 	except:
 		text = ("-?-")
 	return text
+
 
 canCopy = canMove
 canRename = canMove
