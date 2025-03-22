@@ -2,11 +2,10 @@ from os import statvfs
 
 from enigma import eLabel
 from Components.GUIComponent import GUIComponent
+from Components.Harddisk import bytesToHumanReadable
 from Components.VariableText import VariableText
 
 
-# TODO: Harddisk.py has similiar functions, but only similiar.
-# fix this to use same code
 class DiskInfo(VariableText, GUIComponent):
 	FREE = 0
 	USED = 1
@@ -22,6 +21,7 @@ class DiskInfo(VariableText, GUIComponent):
 
 	def update(self):
 		try:
+			# print(f"[DiskInfo][totalFree]mediapath:{self.path}")
 			stat = statvfs(self.path)
 		except OSError:
 			return -1
@@ -29,13 +29,8 @@ class DiskInfo(VariableText, GUIComponent):
 		if self.type == self.FREE:
 			try:
 				percent = '(' + str((100 * stat.f_bavail) // stat.f_blocks) + '%)'
-				free = stat.f_bfree * stat.f_bsize
-				if free < 10000000:
-					free = _("%d kB") % (free >> 10)
-				elif free < 10000000000:
-					free = _("%d MB") % (free >> 20)
-				else:
-					free = _("%d GB") % (free >> 30)
+				# print(f"[DiskInfo][totalFree] stat.f_bfree:{stat.f_bfree} stat.f_bsize:{stat.f_bsize}")
+				free = bytesToHumanReadable(stat.f_bfree * stat.f_bsize)
 				self.setText(" ".join((free, percent, _("free diskspace"))))
 			except:
 				# occurs when f_blocks is 0 or a similar error
