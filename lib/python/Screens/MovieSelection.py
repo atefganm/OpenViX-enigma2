@@ -168,7 +168,7 @@ def diskFreeSpace():
 		free = Components.Harddisk.bytesToHumanReadable(stat.f_bfree * stat.f_bsize)
 		text = " ".join((free, percent, _("free diskspace")))
 	except:
-		text = ("-?-")
+		text = ""
 	return text
 
 
