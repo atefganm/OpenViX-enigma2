@@ -2498,7 +2498,7 @@ class MovieSelection(Screen, HelpableScreen, SelectionEventInfo, InfoBarBase, Pr
 			self["freeDiskSpace"].setText(text)
 			current = self.getCurrent()
 			if current is not None:
-				self.trashinfo.update(current.getPath())
+				self["TrashcanSize"].setText(trashcanSize(current.getPath()))
 
 	def can_gohome(self, item):
 		return True
