@@ -175,7 +175,8 @@ def diskFreeSpace():
 def trashcanSize(path):
 	if not path.startswith("/media/autofs"):
 		try:
-			return _("Trashcan:") + " " + Components.Harddisk.bytesToHumanReadable(Tools.Trashcan.get_size(Tools.Trashcan.getTrashFolder(path)))
+			if size := Tools.Trashcan.get_size(Tools.Trashcan.getTrashFolder(path)):
+				return _("Trashcan:") + " " + Components.Harddisk.bytesToHumanReadable(size)
 		except Exception:
 			pass
 	return ""
