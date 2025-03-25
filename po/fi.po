@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-03-19 18:26+0200\n"
-"PO-Revision-Date: 2025-03-22 17:10+0200\n"
+"PO-Revision-Date: 2025-03-24 07:11+0200\n"
 "Last-Translator: Orlandox\n"
 "Language-Team: timoj/Kojo/Samzam/Orlandox\n"
 "Language: fi\n"
@@ -4225,11 +4225,11 @@ msgstr "Tiedostoa %s ei voitu avata!"
 
 #, python-format
 msgid "Could not record due to a conflicting timer %s"
-msgstr "Ei voida tallentaa ristiriitaisen ajastuksen takia %s"
+msgstr "Ei voida tallentaa ristiriitaisen ajastuksen %s takia"
 
 #, python-format
 msgid "Could not record due to an invalid service %s"
-msgstr "Ei voida tallentaa virheellisen kanavan takia %s"
+msgstr "Ei voida tallentaa virheellisen kanavan %s takia"
 
 #, python-format
 msgid "Could not save configfile %s!"
@@ -15027,7 +15027,7 @@ msgstr ""
 "Suomenkielinen käännös: timoj, Kojo, Samzam, Orlandox\n"
 "\n"
 "Ylläpito : Orlandox\n"
-"--- 22.03.2025 ---\n"
+"--- 24.03.2025 ---\n"
 "\n"
 "http://www.huoltovalikko.com"
 
