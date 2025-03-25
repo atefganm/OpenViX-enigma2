@@ -134,7 +134,8 @@ class UpdatePlugin(Screen, ProtectedScreen):
 		self.error = 0
 		self.processed_packages = []
 		self.total_packages = None
-		self.onFirstExecBegin.append(self.checkNetworkState)
+		if not self.isProtected():
+			self.onFirstExecBegin.append(self.checkNetworkState)
 
 	def checkNetworkState(self):
 		self['tl_red'].hide()
@@ -201,9 +202,17 @@ class UpdatePlugin(Screen, ProtectedScreen):
 		onlineupdatecheckpoller.start()
 
 	def isProtected(self):
-		return config.ParentalControl.setuppinactive.value and\
+		return config.ParentalControl.setuppinactive.value and config.ParentalControl.servicepin[0].value and\
 			(not config.ParentalControl.config_sections.main_menu.value and not config.ParentalControl.config_sections.configuration.value or hasattr(self.session, 'infobar') and self.session.infobar is None) and\
 			config.ParentalControl.config_sections.software_update.value
+
+	def pinEntered(self, result):
+		if result is None:
+			self.closeProtectedScreen()
+		elif not result:
+			self.session.openWithCallback(self.closeProtectedScreen, MessageBox, _("The pin code you entered is wrong."), MessageBox.TYPE_ERROR, timeout=3)
+		else:
+			self.checkNetworkState()
 
 	def doActivityTimer(self):
 		self.activity += 1
