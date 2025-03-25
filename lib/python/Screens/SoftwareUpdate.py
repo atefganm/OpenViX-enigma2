@@ -121,6 +121,10 @@ class UpdatePlugin(Screen, ProtectedScreen):
 		self['tl_red'] = Pixmap()
 		self['tl_yellow'] = Pixmap()
 		self['tl_green'] = Pixmap()
+		self['tl_red'].hide()
+		self['tl_yellow'].hide()
+		self['tl_green'].hide()
+		self['tl_off'].hide()
 		self['feedStatusMSG'] = Label()
 
 		self.channellist_only = 0
@@ -138,10 +142,6 @@ class UpdatePlugin(Screen, ProtectedScreen):
 			self.onFirstExecBegin.append(self.checkNetworkState)
 
 	def checkNetworkState(self):
-		self['tl_red'].hide()
-		self['tl_yellow'].hide()
-		self['tl_green'].hide()
-		self['tl_off'].hide()
 		self.trafficLight = feedsstatuscheck.getFeedsBool()
 		if self.trafficLight in feedsstatuscheck.feed_status_msgs:
 			status_text = feedsstatuscheck.feed_status_msgs[self.trafficLight]
