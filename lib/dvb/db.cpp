@@ -491,7 +491,7 @@ void eDVBService::setCacheEntry(cacheID id, int pid)
 			eServiceReference ref = eServiceReference(m_reference_str);
 			std::string ref_s = ref.toReferenceString();
 			int pid_val = pid > 0 ? pid : -1;
-			if (endsWith(ref_s, ":")) 
+			if (endsWith(ref_s, ":"))
 			{
 				ref_s = ref_s.substr(0, ref_s.size()-1);
 			}
