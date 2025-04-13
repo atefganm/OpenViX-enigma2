@@ -258,6 +258,7 @@ SystemInfo["FastChannelChange"] = False
 SystemInfo["3DMode"] = fileCheck("/proc/stb/fb/3dmode") or fileCheck("/proc/stb/fb/primary/3d")
 SystemInfo["3DZNorm"] = fileCheck("/proc/stb/fb/znorm") or fileCheck("/proc/stb/fb/primary/zoffset")
 SystemInfo["Blindscan_t2_available"] = fileCheck("/proc/stb/info/vumodel") and SystemInfo["boxtype"].startswith("vu")
+SystemInfo["Passthrough_fix_needed"] = fileCheck("/proc/stb/info/vumodel") and SystemInfo["boxtype"].startswith("vu")
 SystemInfo["HasTranscoding"] = pathExists("/proc/stb/encoder/0") or fileCheck("/dev/bcm_enc0")
 SystemInfo["HasH265Encoder"] = fileHas("/proc/stb/encoder/0/vcodec_choices", "h265")
 SystemInfo["CanNotDoSimultaneousTranscodeAndPIP"] = SystemInfo["boxtype"] in ("vusolo4k", "gbquad4k", "gbue4k")

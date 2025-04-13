@@ -12,7 +12,7 @@ from Components.ServiceEventTracker import ServiceEventTracker
 from Screens.Setup import SetupSummary
 from Components.Sources.Boolean import Boolean
 from Components.Sources.StaticText import StaticText
-from Components.SystemInfo import BoxInfo
+from Components.SystemInfo import SystemInfo, BoxInfo
 from Screens.ChannelSelection import FLAG_IS_DEDICATED_3D
 from Screens.MessageBox import MessageBox
 from Screens.Screen import Screen
@@ -253,6 +253,9 @@ class VideoSetup(Screen, ConfigListScreen):
 		if level >= 1:
 			if BoxInfo.getItem("CanDownmixAC3"):
 				self.list.append(getConfigListEntry(_("AC3 downmix"), config.av.downmix_ac3, _("Choose whether multi channel ac3 sound tracks should be downmixed to stereo.")))
+			if SystemInfo["Passthrough_fix_needed"] and config.av.downmix_ac3.value == "passthrough":
+				self.list.append(getConfigListEntry(_("Passthrough audio handling delay short"), config.av.passthrought_fix_short, _("Used when there is AC3 passthrough and specify the delay when switching service.")))
+				self.list.append(getConfigListEntry(_("Passthrough audio handling delay lon"), config.av.passthrought_fix_long, _("Used when there is AC3 passthrough and specify the delay when switching service.")))
 			if BoxInfo.getItem("CanDownmixDTS"):
 				self.list.append(getConfigListEntry(_("DTS downmix"), config.av.downmix_dts, _("Choose whether multi channel dts sound tracks should be downmixed to stereo.")))
 			if BoxInfo.getItem("CanDownmixAACPlus"):
