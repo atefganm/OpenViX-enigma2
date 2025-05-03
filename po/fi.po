@@ -4,8 +4,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-19 18:26+0200\n"
-"PO-Revision-Date: 2025-03-30 10:55+0300\n"
+"POT-Creation-Date: 2025-04-04 22:51+0300\n"
+"PO-Revision-Date: 2025-04-05 08:13+0300\n"
 "Last-Translator: Orlandox\n"
 "Language-Team: timoj/Kojo/Samzam/Orlandox\n"
 "Language: fi\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.5\n"
+"X-Generator: Poedit 3.6\n"
 
 msgid ""
 "\n"
@@ -728,18 +728,6 @@ msgstr "%d %b"
 msgid "%d %b %Y"
 msgstr "%d %b %Y"
 
-#, python-format
-msgid "%d GB"
-msgstr "%d GB"
-
-#, python-format
-msgid "%d KB"
-msgstr "%d KB"
-
-#, python-format
-msgid "%d MB"
-msgstr "%d MB"
-
 #. TRANSLATORS: full date representation dayname daynum monthname year in strftime() format! See 'man strftime'
 #. _("%A %e %B %Y")
 #. TRANSLATORS: short time representation hour:minute in strftime() format! See 'man strftime'
@@ -809,16 +797,18 @@ msgid "%d jobs are running in the background!"
 msgstr "%d työtä on käynnissä taustalla!"
 
 #, python-format
-msgid "%d kB"
-msgstr "%d kt"
-
-#, python-format
 msgid "%d marked item"
 msgstr "%d merkattu kohde"
 
 #, python-format
 msgid "%d marked items"
 msgstr "%d merkattua kohdetta"
+
+#, python-format
+msgid "%d milisecond"
+msgid_plural "%d miliseconds"
+msgstr[0] "%d millisekunti"
+msgstr[1] "%d millisekuntia"
 
 #, python-format
 msgid "%d min"
@@ -10440,6 +10430,12 @@ msgstr "Partitio: %s Liitos: %s liitos poistettu onnistuneesti; jos kaikkien par
 msgid "Passthrough"
 msgstr "Läpivienti"
 
+msgid "Passthrough audio handling delay AC3"
+msgstr "AC3 -äänen läpiviennin käsittelyviive"
+
+msgid "Passthrough audio handling delay AC3+"
+msgstr "AC3+ -äänen läpiviennin käsittelyviive"
+
 msgid "Password"
 msgstr "Salasana"
 
@@ -15027,7 +15023,7 @@ msgstr ""
 "Suomenkielinen käännös: timoj, Kojo, Samzam, Orlandox\n"
 "\n"
 "Ylläpito : Orlandox\n"
-"--- 30.03.2025 ---\n"
+"--- 05.04.2025 ---\n"
 "\n"
 "http://www.huoltovalikko.com"
 
@@ -16552,6 +16548,12 @@ msgstr "Käytä roskakoria tallenneluettelossa"
 
 msgid "Used service scan type"
 msgstr "Käytetty kanavahakutyyppi"
+
+msgid "Used to specify delay when switching between services and AC3 passthrough is enabled."
+msgstr "Käytetään määrittämään viive, kun vaihdetaan kanavien välillä ja AC3 -läpivienti on käytössä."
+
+msgid "Used to specify delay when switching between services and AC3+/Atmos passthrough is enabled."
+msgstr "Käytetään määrittämään viive, kun vaihdetaan kanavien välillä ja AC3+/Atmos -läpivienti on käytössä."
 
 msgid "Used:"
 msgstr "Käytetty:"
@@ -18493,9 +18495,6 @@ msgstr "Aseta tähän merkki"
 
 msgid "instant record"
 msgstr "Pikatallennus"
-
-msgid "invalid type"
-msgstr "Epäkelpo tyyppi"
 
 msgid "jazz"
 msgstr "jazz"
