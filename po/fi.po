@@ -10597,7 +10597,7 @@ msgid "Play Music..."
 msgstr "Soita musiikkia..."
 
 msgid "Play archive"
-msgstr "Toisto-arkisto"
+msgstr "Toista arkisto"
 
 msgid "Play as picture in picture"
 msgstr "Toista kuva-kuvassa kuvana"
