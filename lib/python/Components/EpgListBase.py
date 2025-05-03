@@ -169,7 +169,7 @@ class EPGListBase(GUIComponent):
 			import traceback
 			traceback.print_exc()
 			return []
-		
+
 	def detectCatchupAvailable(self, stime, service):
 		sref = service.toString() if isinstance(service, eServiceReference) else service
 		now = time()
