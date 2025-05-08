@@ -128,7 +128,7 @@ class ScreenButtonsBar(GUIAddon):
 				buttonText = ""
 
 			if buttonText:
-				textWidth = self._calcTextWidth(buttonText, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))
+				textWidth = self._calcTextWidth(buttonText, font=self.font, size=eSize(self.getDesktopWidth() // 3, 0))
 			else:
 				textWidth = 0
 			if self.layoutStyle != "fluid":
@@ -240,5 +240,5 @@ class ScreenButtonsBar(GUIAddon):
 		self.textRenderer.text = text
 		return self.textRenderer.instance.calculateSize().width()
 
-	def getDesktopWith(self):
+	def getDesktopWidth(self):
 		return getDesktop(0).size().width()
