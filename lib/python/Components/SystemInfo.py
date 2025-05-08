@@ -95,6 +95,7 @@ MTDROOTFS = BoxInfo.getItem("mtdrootfs")
 DISPLAYMODEL = BoxInfo.getItem("displaymodel")
 DISPLAYBRAND = BoxInfo.getItem("displaybrand")
 MACHINEBUILD = BoxInfo.getItem("machinebuild")
+CHKROOTMB = BoxInfo.getItem("chkrootmb")
 OEA = split(r'(\d.*)', BoxInfo.getItem("oe"))[1]
 
 
@@ -163,7 +164,9 @@ SystemInfo["HasMultibootMTD"] = False # This needs to be here so it can be reset
 SystemInfo["resetMBoot"] = False  # Kexec kernel issue-this needs to be here so it can be reset by getMultibootslots if required!
 SystemInfo["HasKexecUSB"] = False	# This needs to be here so it can be reset by getMultibootslots!
 SystemInfo["HasKexecMultiboot"] = fileHas("/proc/cmdline", "kexec=1")	# This needs to be here so it can be tested by getMultibootslots!
-from Tools.Multiboot import getMultibootslots  # noqa: E402  # This import needs to be here to avoid a SystemInfo load loop!
+from Tools.Multiboot import getMultibootslots, isFat32  # noqa: E402  This import needs to be here to avoid a SystemInfo load loop!
+SystemInfo["HasChkrootMultiboot"] = isFat32("/dev/block/by-name/others")
+SystemInfo["canchkroot"] = (fileExists("/dev/block/by-name/others") and not SystemInfo["HasChkrootMultiboot"] and not fileExists("/etc/.disableChkroot"))
 SystemInfo["HasHiSi"] = pathExists("/proc/hisi") and SystemInfo["boxtype"] not in ("vipertwin", "viper4kv20", "viper4kv40", "sfx6008", "sfx6018")  # This needs to be for later checks
 SystemInfo["canMultiBoot"] = getMultibootslots()
 # SystemInfo["MBbootdevice"] = device set in Tools/Multiboot.py
@@ -203,7 +206,6 @@ def getModuleLayout():
 BoxInfo.setItem("DebugLevel", eGetEnigmaDebugLvl())
 BoxInfo.setItem("InDebugMode", eGetEnigmaDebugLvl() >= 4)
 BoxInfo.setItem("ModuleLayout", getModuleLayout(), immutable=True)
-
 
 SystemInfo["CanKexecVu"] = SystemInfo["boxtype"] in ("vusolo4k", "vuduo4k", "vuduo4kse", "vuultimo4k", "vuuno4k", "vuuno4kse", "vuzero4k") and not SystemInfo["HasKexecMultiboot"]
 SystemInfo["HasUsbhdd"] = {}
