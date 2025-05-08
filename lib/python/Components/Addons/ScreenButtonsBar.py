@@ -68,6 +68,8 @@ class ScreenButtonsBar(GUIAddon):
 		last_pixd_width = 0
 		if self.actionButtonsPosition != "right":
 			xPosAction = width if self.actionButtonsPosition == "farRight" else 0
+			if self.actionButtonsPosition == "farRight":
+				sequenceAction = dict(reversed(list(sequenceAction.items())))
 			for x in sequenceAction:
 				if x in self.pixmaps:
 					pic = LoadPixmap(resolveFilename(SCOPE_GUISKIN, self.pixmaps[x]))
