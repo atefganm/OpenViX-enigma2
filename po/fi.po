@@ -4,8 +4,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-15 17:17+0300\n"
-"PO-Revision-Date: 2025-04-15 19:43+0300\n"
+"POT-Creation-Date: 2025-05-04 05:06+0300\n"
+"PO-Revision-Date: 2025-05-04 13:22+0300\n"
 "Last-Translator: Orlandox\n"
 "Language-Team: timoj/Kojo/Samzam/Orlandox\n"
 "Language: fi\n"
@@ -3464,6 +3464,15 @@ msgstr "Piirisarja:\t%s %s\n"
 msgid "Chipset: %s"
 msgstr "Piirisarja: %s"
 
+msgid "Chkroot Manager Actions"
+msgstr "Chkroot hallinnan toiminnot"
+
+msgid "Chkroot MultiBoot Initialization in progress!"
+msgstr "Chkroot MultiBootin alustaminen käynnissä!"
+
+msgid "Chkroot MultiBoot Manager"
+msgstr "Chkroot MultiBoot hallinta"
+
 msgid "Choose Bouquet"
 msgstr "Valitse suosikkilista"
 
@@ -3662,6 +3671,9 @@ msgstr "Sulje PiP-kuva Exit-näppäimellä"
 
 msgid "Close screen"
 msgstr "Sulje näyttö"
+
+msgid "Close the Chkroot MultiBoot Manager"
+msgstr "Sulje Chkroot MultiBoot hallinta"
 
 msgid "Close title selection"
 msgstr "Sulje otsikon valinta"
@@ -3885,8 +3897,8 @@ msgstr "Määritä toiminto, kun tallenteen toisto pysäytetään."
 msgid "Configure the behavior when movie playback is started."
 msgstr "Määritä toiminto, kun tallenteen toisto aloitetaan."
 
-msgid "Configure the behavior when reaching the end of a movie, during movie playback."
-msgstr "Määritä toiminto, kun saavutetaan tallenteen loppu toiston aikana."
+msgid "Configure the behavior when reaching the end of a movie, during movie playback. This setting is overridden when 'use individual settings for each directory' is enabled (see MovieSelection settings)."
+msgstr "Määritä käyttäytyminen, kun elokuvan loppu saavutetaan elokuvan toiston aikana. Tämä asetus ohitetaan, kun 'käytä yksilöllisiä asetuksia jokaiselle hakemistolle' on käytössä (katso Tallenneluettelon asetukset)."
 
 msgid "Configure the border width of the subtitles. The dark border makes the subtitles easier to read on a light background."
 msgstr "Määrittää tekstityksen reunuksen leveyden. Tumma reunus helpottaa tekstityksen lukemista vaalealla taustalla."
@@ -5067,6 +5079,9 @@ msgstr "Himmennyksen viive"
 msgid "Dim the LCD after specified time."
 msgstr "Himmennä LCD asetetun ajan jälkeen."
 
+msgid "Direct item selection"
+msgstr "Suora valikkokohteen valinta"
+
 msgid "Direct menu item selection"
 msgstr "Suora valikkokohteen valinta"
 
@@ -5115,6 +5130,9 @@ msgstr "Estä animaatiot"
 msgid "Disable Autostart"
 msgstr "Aut.käynnistys pois käytöstä"
 
+msgid "Disable Chkroot"
+msgstr "Chkroot pois käytöstä"
+
 msgid "Disable FCC during recordings"
 msgstr "Estä nopea kanavanvaihto tallennusten aikana"
 
@@ -5138,6 +5156,9 @@ msgstr "Poista operaattoriprofiilit käytöstä"
 
 msgid "Disable startup"
 msgstr "Käynnistys pois päältä"
+
+msgid "Disable the MultiBoot option"
+msgstr "Poista MultiBoot-vaihtoehto käytöstä"
 
 msgid "Disabled"
 msgstr "Ei käytössä"
@@ -5704,6 +5725,9 @@ msgstr "Aut.käynnistys käyttöön"
 
 msgid "Enable Bluetooth Audio"
 msgstr "Ota Bluetooth ääni käyttöön"
+
+msgid "Enable Chkroot MultiBoot"
+msgstr "Ota Chkroot MultiBoot käyttöön"
 
 msgid "Enable EIT EPG"
 msgstr "Ota käyttöön EIT EPG"
@@ -8946,6 +8970,9 @@ msgstr "Yhdistetään ajansiirron tiedostot"
 msgid "Message"
 msgstr "Viesti"
 
+msgid "MessageBox Direct Item Selection Actions"
+msgstr "Viestilaatikko Suora Nimike Valinta Toiminnot"
+
 msgid "MessageBox Functions"
 msgstr "Viestilaatikon toiminnot"
 
@@ -10514,6 +10541,9 @@ msgstr "Pysyvät lajittelunäppäimen muutokset"
 msgid "Permanently delete all recordings in the trash can?"
 msgstr "Poista kaikki roskakorin tallenteet pysyvästi?"
 
+msgid "Permanently disable the MultiBoot option?"
+msgstr "Poista MultiBoot-vaihtoehto pysyvästi käytöstä?"
+
 msgid "Permanently ignore this device"
 msgstr "Unohda tämä laite pysyvästi"
 
@@ -11204,6 +11234,9 @@ msgstr "Valitse kanavalistasta painamalla 'OK'"
 
 msgid "Press GREEN (Reboot) to switch images, YELLOW (Delete) to erase an image or BLUE (Restore) to restore all deleted images."
 msgstr "Paina VIHREÄÄ (käynnistä uudelleen) vaihtaaksesi imagea, KELTAISTA (poista) poistaaksesi imagen tai SINISTÄ (palauta) palauttaaksesi kaikki poistetut imaget."
+
+msgid "Press GREEN to enable MultiBoot!"
+msgstr "Ota MultiBoot käyttöön painamalla VIHREÄÄ!"
 
 msgid "Press OK"
 msgstr "Paina OK"
@@ -14542,6 +14575,9 @@ msgstr "Teksti-TV"
 msgid "Start test"
 msgstr "Aloita testi"
 
+msgid "Start the Chkroot initialization"
+msgstr "Käynnistä Chkroot-alustus"
+
 msgid "Start time"
 msgstr "Aloitusaika"
 
@@ -14624,7 +14660,7 @@ msgid "Stop playing this movie?"
 msgstr "Lopetetaanko tallenteen toistaminen?"
 
 msgid "Stop previous broadcasted service on return to movie list."
-msgstr "Pysäytä edellinen palvelu palattaessa tallenneluetteloon."
+msgstr "Pysäytä edellinen lähetetty kanava palattaessa tallenneluetteloon."
 
 msgid "Stop recording"
 msgstr "Pysäytä tallennus"
@@ -14639,7 +14675,7 @@ msgid "Stop recordings:"
 msgstr "Pysäytä tallennukset:"
 
 msgid "Stop service on return to movie list"
-msgstr "Kyllä, palataan tallenneluetteloon"
+msgstr "Pysäytä kanava palattaessa tallenneluetteloon"
 
 msgid "Stop test"
 msgstr "Lopeta testi"
@@ -15201,6 +15237,10 @@ msgstr "%s %s lukee tallennetun EPG-tiedon joka (tuntia)."
 
 msgid "The %s %s saves the EPG data every (hours)."
 msgstr "%s %s tallentaa EPG-tiedon joka (tuntia)."
+
+#, python-format
+msgid "The %s %s will reboot within 1 seconds."
+msgstr "%s %s käynnistyy uudelleen 1 sekunnin kuluessa."
 
 msgid ""
 "The AutoTimer plugin is not installed!\n"
@@ -18974,9 +19014,6 @@ msgstr "show/visailu (yleinen)"
 
 msgid "shuffle"
 msgstr "satunnaisjärjestys"
-
-msgid "shut down"
-msgstr "Sammuta"
 
 msgid "simple"
 msgstr "Suppea"
