@@ -431,6 +431,12 @@ class ConfigSelection(ConfigElement):
 		if self.value != value:
 			self.changed()
 
+	def getChoices(self):
+		return self.choices.__list__()
+
+	def getDescriptions(self):
+		return self.description.__list__()
+
 	def setValue(self, value):
 		prev = str(self._value) if hasattr(self, "_value") else None
 		if str(value) in map(str, self.choices):
