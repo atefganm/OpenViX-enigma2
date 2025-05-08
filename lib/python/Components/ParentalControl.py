@@ -126,7 +126,7 @@ class ParentalControl:
 			if NavigationInstance.instance and NavigationInstance.instance.currentlyPlayingServiceReference and 'FROM BOUQUET "userbouquet.' not in service:
 				if pip_service:
 					NavigationInstance.instance.pnav.clearPiPService()
-					pip_service.stop() # kill current pip service since we are on protected service and may cancel the pin
+					pip_service.stop()  # kill current pip service since we are on protected service and may cancel the pin
 				else:
 					NavigationInstance.instance.stopService()  # kill current service since we are on protected service and may cancel the pin
 			return False
