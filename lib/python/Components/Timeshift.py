@@ -446,7 +446,7 @@ class InfoBarTimeshift:
 			else:
 				self.ts_rewind_timer.start(100, 1)
 		self.__seekableStatusChanged()
-		
+
 	def rewindService(self):
 		if SystemInfo["brand"] in ("gigablue", "xp"):
 			self.setSeekState(self.SEEK_STATE_PLAY)
