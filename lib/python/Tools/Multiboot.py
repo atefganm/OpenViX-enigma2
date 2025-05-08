@@ -13,6 +13,7 @@ if SystemInfo["HasKexecMultiboot"]:
 
 MbootList1 = ("/dev/mmcblk0p1", "/dev/mmcblk1p1", "/dev/mmcblk0p3", "/dev/mmcblk0p4", "/dev/mtdblock2", "/dev/block/by-name/bootoptions", "/dev/block/by-name/others")
 
+
 class tmp:
 	dir = None
 
@@ -304,6 +305,7 @@ def restoreSlots():
 		Console(binary=True).ePopen(f"umount {tmp.dir}")
 	if not path.ismount(tmp.dir):
 		rmdir(tmp.dir)
+
 
 def isFat32(device):
 	try:
