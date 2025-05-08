@@ -46,10 +46,10 @@ def getMultibootslots():
 						if Creator in ("openvix", "openbh"):
 							copyfile("/etc/init.d/kexec-multiboot-recovery", dest)
 				# print(f"[multiboot][getMultibootslots]1 bootargs?: {path.exists('/sys/firmware/devicetree/base/chosen/bootargs')}")
-				SystemInfo["MBbootdevice"] = "chkrootmb" if CHKROOTMB else device
+				SystemInfo["MBbootdevice"] = device
 				device2 = device.rsplit("/", 1)[1]
-				print(f"[Multiboot][[getMultibootslots]1 *** Bootdevice found: {device2}")
-				SystemInfo["BootDevice"] = device2
+				# print(f"[Multiboot][[getMultibootslots]2 *** Bootdevice found: {device2} CHKROOTMB:{CHKROOTMB}")
+				SystemInfo["BootDevice"] = "chkrootmb" if CHKROOTMB else device2
 				if path.exists("/sys/firmware/devicetree/base/chosen/bootargs") or CHKROOTMB:  # check validity for multiboot
 					for file in glob.glob(path.join(tmpname, "STARTUP_*")):
 						slotnumber = file.rsplit("_", 3 if "BOXMODE" in file else 1)[1]
