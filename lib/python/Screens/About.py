@@ -287,17 +287,22 @@ class Devices(Screen):
 			for count in range(len(self.hddlist)):
 				hdd = self.hddlist[count][1]
 				hddp = self.hddlist[count][0]
-				if "ATA" in hddp:
-					hddp = hddp.replace("ATA", "", 2)
-					hddp = hddp.replace("SATA", "SATA Internal Bus ").replace("(", "").replace(")", "")
-				free = hdd.Totalfree()
-				if free >= 1:
-					free *= 1000000  # convert MB to bytes
-					freeline = _("Free: ") + bytesToHumanReadable(free)
-				elif "Generic(STORAGE" in hddp:				# This is the SDA boot volume for SF8008 if "full" #
-					continue
-				else:
-					freeline = _("Free: ") + _("full")
+				print(f"[About] MODEL:{MODEL} hddp:{hddp}")
+				if MODEL in ("dm900", "dm920") and "/dev/mmcblk0" in hddp:
+					hddp = hddp.replace("/dev/mmcblk0", "/dev/mmcblk0p3")
+					freeline = " "
+				else:	
+					if "ATA" in hddp:
+						hddp = hddp.replace("ATA", "", 2)
+						hddp = hddp.replace("SATA", "SATA Internal Bus ").replace("(", "").replace(")", "")
+					free = hdd.Totalfree()
+					if free >= 1:
+						free *= 1000000  # convert MB to bytes
+						freeline = _("Free: ") + bytesToHumanReadable(free)
+					elif "Generic(STORAGE" in hddp:				# This is the SDA boot volume for SF8008 if "full" #
+						continue
+					else:
+						freeline = _("Free: ") + _("full")
 				line = "%s      %s" % (hddp, freeline)
 				self.list.append(line)
 		self.list = "\n".join(self.list)
