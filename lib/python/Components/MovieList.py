@@ -705,8 +705,8 @@ class MovieList(GUIComponent):
 		rootPath = path.normpath(root.getPath())
 		split = path.split(rootPath)
 		parent = None
-		# Don't navigate above the "root"
-		if len(rootPath) > 1 and (path.realpath(rootPath) != path.realpath(config.movielist.root.value)):
+		# Don't navigate above the "root". But if we are in a collection we do want to show the "..".
+		if len(rootPath) > 1 and (path.realpath(rootPath) != path.realpath(config.movielist.root.value) or collectionName):
 			parent = split[0]
 			currentFolder = path.normpath(rootPath) + '/'
 			if collectionName:
@@ -715,7 +715,7 @@ class MovieList(GUIComponent):
 				data.directorySize = None
 				self.list.append((eServiceReference.fromDirectory(currentFolder), None, 0, data))
 				numberOfDirs += 1
-			elif parent and (parent not in defaultInhibitDirs) and not currentFolder.endswith(config.usage.default_path.value):
+			elif parent and (parent not in defaultInhibitDirs):
 				# enigma wants an extra '/' appended
 				if not parent.endswith('/'):
 					parent += '/'
