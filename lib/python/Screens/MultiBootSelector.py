@@ -299,7 +299,7 @@ class ChkrootInit(Screen):
 		self["description"].setText("%s\n\n%s" % (_("Chkroot MultiBoot Initialization in progress!"), self.descriptionSuffix))
 		device = "/dev/block/by-name/others"
 		mountpoint = "/boot"
-		if MODEL in ("dm900", "dm920"):	# mmcblk0p1 = 63488 mmcblk0p2 = 2031616 mmcblk0p3 = 13172703
+		if MODEL in ("dm900", "dm920"):  # mmcblk0p1 = 63488 mmcblk0p2 = 2031616 mmcblk0p3 = 13172703
 			with open("/sys/block/mmcblk0/mmcblk0p1/size", "r") as fd:
 				sectors = int(fd.read().strip())
 			rootMap = [
