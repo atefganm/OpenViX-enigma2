@@ -333,7 +333,7 @@ class ChkrootInit(Screen):
 			cmdList.append(f"echo 'kernel=/dev/{KERNEL} root=/dev/{rootdev} rootsubdir={subdir}' > {mountpoint}/STARTUP{suffix}")
 
 		cmdList.append(f"umount {mountpoint}")
-		print(f"[MultiBootSelector][ChkrootInit] cmdlist:{cmdList}")		
+		print(f"[MultiBootSelector][ChkrootInit] cmdlist:{cmdList}")
 		Console().eBatch(cmdList, rootInitCallback, debug=True)
 
 	def disableChkroot(self):

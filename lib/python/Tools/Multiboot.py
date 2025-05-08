@@ -129,7 +129,7 @@ def getMultibootslots():
 						print(f"[Multiboot][MultiBootSlot]2 current slot used:{SystemInfo['MultiBootSlot']}")
 						break
 		else:
-			SystemInfo["MultiBootSlot"] = int(STARTUP.replace("\n", "").split("linuxrootfs")[1])				
+			SystemInfo["MultiBootSlot"] = int(STARTUP.replace("\n", "").split("linuxrootfs")[1])
 	print(f"[multiboot][getMultibootslots] bootslots: {bootslots} Activeslot:{SystemInfo['MultiBootSlot']}")
 	return bootslots
 

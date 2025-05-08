@@ -291,7 +291,7 @@ class Devices(Screen):
 				if MODEL in ("dm900", "dm920") and "/dev/mmcblk0" in hddp:
 					hddp = hddp.replace("/dev/mmcblk0", "/dev/mmcblk0p3")
 					freeline = " "
-				else:	
+				else:
 					if "ATA" in hddp:
 						hddp = hddp.replace("ATA", "", 2)
 						hddp = hddp.replace("SATA", "SATA Internal Bus ").replace("(", "").replace(")", "")

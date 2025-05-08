@@ -587,7 +587,7 @@ class VIXImageManager(Screen):
 		print("[ImageManager] MAINDEST=%s" % MAINDEST)
 		CMD = "/usr/bin/ofgwrite -r -k '%s'" % MAINDEST							# normal non multiboot receiver
 		if SystemInfo["canMultiBoot"]:
-			rootsubdir = SystemInfo["canMultiBoot"][self.multibootslot]["rootsubdir"]		
+			rootsubdir = SystemInfo["canMultiBoot"][self.multibootslot]["rootsubdir"]
 			if self.multibootslot == 0 and SystemInfo["HasKexecMultiboot"]:		# reset Vu Multiboot slot0
 				kz0 = SystemInfo["mtdkernel"]
 				rz0 = SystemInfo["mtdrootfs"]
@@ -604,7 +604,7 @@ class VIXImageManager(Screen):
 					CMD = "/usr/bin/ofgwrite -r%s -kzImage -m%s '%s'" % (self.MTDROOTFS, self.multibootslot, MAINDEST)
 				print("[ImageManager] running commnd:%s slot = %s" % (CMD, self.multibootslot))
 			elif CHKROOTMB:  # dm900/dm920 kernel:mmcblk0p1 root:mmcblk0p2 rootSubDir = None or mmcblk0p3
-				CMD = "/usr/bin/ofgwrite -r%s -c%s -m%s '%s'" % (self.MTDROOTFS, SystemInfo["MultiBootSlot"], self.multibootslot, MAINDEST)  
+				CMD = "/usr/bin/ofgwrite -r%s -c%s -m%s '%s'" % (self.MTDROOTFS, SystemInfo["MultiBootSlot"], self.multibootslot, MAINDEST)
 			else:
 				CMD = "/usr/bin/ofgwrite -r -k -m%s '%s'" % (self.multibootslot, MAINDEST)  # Normal multiboot
 		elif SystemInfo["HasH9SD"]:
