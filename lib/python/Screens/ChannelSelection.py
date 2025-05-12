@@ -68,7 +68,7 @@ class InsertService(Setup):
 	def __init__(self, session):
 		self.createConfig()
 		Setup.__init__(self, session)
-	
+
 	def createConfig(self):
 		choices = [("Select Service", _("Press 'OK' to select from service list")), ("IPTV stream", _("IPTV stream"))]
 		if SystemInfo.get("hdmifhdin") or SystemInfo.get("hdmihdin"):
@@ -96,7 +96,7 @@ class InsertService(Setup):
 		self["config"].list = SetupList
 
 	def changedEntry(self):
-		if isinstance(self.getCurrentItem(), ConfigText): 
+		if isinstance(self.getCurrentItem(), ConfigText):
 			self.createSetup()
 		Setup.changedEntry(self)
 

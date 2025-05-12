@@ -896,7 +896,7 @@ def InitUsageConfig():
 
 	def wdhm(number):
 		units = ((_("week"), _("day"), _("hour"), _("minute")), (_("weeks"), _("days"), _("hours"), _("minutes")), (7 * 24 * 60, 24 * 60, 60, 1))
-		for i, d in enumerate(units[2]): 
+		for i, d in enumerate(units[2]):
 			if unit := int(number / d):
 				return "%s %s" % (unit, units[0 if unit == 1 else 1][i])
 		return _("disabled")
