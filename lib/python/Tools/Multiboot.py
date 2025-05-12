@@ -101,7 +101,7 @@ def getMultibootslots():
 							else:
 								continue
 				else:  # kernel corruption set corruption flag
-					print(f"[multiboot][getMultibootslots]3 bootargs?: {path.exists("/sys/firmware/devicetree/base/chosen/bootargs")}")
+					print(f"[multiboot][getMultibootslots]3 bootargs?: {path.exists(" / sys / firmware / devicetree / base / chosen / bootargs")}")
 					SystemInfo["resetMBoot"] = True
 					bootslots = {}
 			Console(binary=True).ePopen(f"umount {tmpname}")

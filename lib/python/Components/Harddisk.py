@@ -858,7 +858,7 @@ class HarddiskManager:
 					continue
 				mountPoint = device.get("MOUNT")
 				if mountPoint:
-					commands.append(f"/bin/umount -lf {DEVNAME.replace("/dev/", "/media/")}")
+					commands.append(f"/bin/umount -lf {DEVNAME.replace(" / dev / ", " / media / ")}")
 					ID_FS_TYPE = "auto"  # eventData.get("ID_FS_TYPE")
 					knownDevices.append(f"{ID_FS_UUID}:{mountPoint}")
 					newFstab.append(f"UUID={ID_FS_UUID} {mountPoint} {ID_FS_TYPE} defaults 0 0")
