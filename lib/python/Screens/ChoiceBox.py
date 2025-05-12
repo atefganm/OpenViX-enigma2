@@ -133,7 +133,7 @@ class ChoiceBox(Screen, HelpableScreen):
 			"menu": (self.setDefaultChoiceList, _("Reset the list order to the default")),
 			"shiftDown": (self.additionalMoveDown, _("Move the current item down the list")),
 			"shiftUp": (self.additionalMoveUp, _("Move the current item up the list")),
-		}, prio=0 - 1, description=_("List Sort Actions"))
+		}, prio=-1, description=_("List Sort Actions"))
 		self["sortActions"].setEnabled(reorderConfig and len(list) > 1)
 
 	def autoResize(self):
