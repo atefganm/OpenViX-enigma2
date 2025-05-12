@@ -20,7 +20,7 @@ commit_files() {
 }
 
 upload_files() {
-  git remote add upstream https://${GITHUB_TOKEN}@github.com/OpenViX/enigma2.git > /dev/null 2>&1
+  git remote add upstream https://${GITHUB_TOKEN}@github.com/atefganm/OpenViX-enigma2.git > /dev/null 2>&1
   git push --quiet upstream Developer || echo "failed to push with error $?"
 }
 
