@@ -122,6 +122,7 @@ class InsertService(Setup):
 	def selectService(self):
 		self.session.openWithCallback(self.channelSelectionCallback, SimpleChannelSelection, _("Select channel"))
 
+
 def getStreamRelayRef(sref):
 	try:
 		if "http" in sref:
@@ -333,7 +334,6 @@ class ChannelContextMenu(Screen):
 						if not self.inBouquet:
 							_append_when_current_valid(current, menu, actions, (_("Add service to favourites"), self.addServiceToBouquetSelected), level=0, key="4")
 							self.addFunction = self.addServiceToBouquetSelected
-
 
 					if self.parentalControlEnabled:
 						if self.parentalControl.getProtectionLevel(csel.getCurrentSelection().toCompareString()) == -1:

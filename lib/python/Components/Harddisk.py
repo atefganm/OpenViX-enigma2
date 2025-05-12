@@ -790,6 +790,7 @@ DEVICEDB = \
 
 DEVICEDB["dm525"] = DEVICEDB["dm520"]
 
+
 class HarddiskManager:
 	def __init__(self):
 		self.hdd = []

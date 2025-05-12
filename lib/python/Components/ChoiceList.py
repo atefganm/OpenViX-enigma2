@@ -57,6 +57,7 @@ def ChoiceEntryComponent(key=None, text=None):
 
 class ChoiceList(MenuList):
 	SPACER = "--"
+
 	def __init__(self, list, selection=0, enableWrapAround=False):
 		MenuList.__init__(self, list, enableWrapAround, eListboxPythonMultiContent)
 		font = fonts.get("ChoiceList", applySkinFactor("Regular", 20, 25))
