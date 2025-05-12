@@ -14,11 +14,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
-        gcc: [13]
-        python: ['3.12']
+        gcc: [14]
+        python: ['3.13']
     steps:
     - name: install dev packages
       run: |
