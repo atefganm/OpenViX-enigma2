@@ -80,9 +80,9 @@ class PluginBrowser(Screen, ProtectedScreen, HelpableScreen):
 		if config.usage.sort_pluginlist.value:
 			self["list"].list.sort()
 
-		self["okActions"] = HelpableActionMap(self, ["OkCancelActions"], {"ok": (self.keySelect, _("Select the current item")),}, description=_("Selection Actions"))
-		self["cancelActions"] = HelpableActionMap(self, ["OkCancelActions"], {"cancel": (self.close, _("Exit PluginBrowser")),}, prio=0, description=_("Cancel Actions"))
-		self["menuActions"] = HelpableActionMap(self, ["MenuActions"], {"menu": (self.close, _("Open PluginBrowser setup screen")),}, prio=0, description=_("Setup Actions"))
+		self["okActions"] = HelpableActionMap(self, ["OkCancelActions"], {"ok": (self.keySelect, _("Select the current item")), }, description=_("Selection Actions"))
+		self["cancelActions"] = HelpableActionMap(self, ["OkCancelActions"], {"cancel": (self.close, _("Exit PluginBrowser")), }, prio=0, description=_("Cancel Actions"))
+		self["menuActions"] = HelpableActionMap(self, ["MenuActions"], {"menu": (self.close, _("Open PluginBrowser setup screen")), }, prio=0, description=_("Setup Actions"))
 		self["PluginDownloadActions"] = HelpableActionMap(self, ["ColorActions"],
 		{
 			"red": (self.delete, _("Open 'Remove Plugins' screen")),
