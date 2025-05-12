@@ -319,11 +319,13 @@ class PopupChoiceBox(ChoiceBox):
 		self.closeCB = closeCB
 
 	def show(self):
-		self["actions"].execBegin()
+		for action in ("okActions", "cancelActions", "colorActions", "selectionActions", "navigationActions"):
+			self[action].execBegin()
 		ChoiceBox.show(self)
 
 	def hide(self):
-		self["actions"].execEnd()
+		for action in ("okActions", "cancelActions", "colorActions", "selectionActions", "navigationActions"):
+			self[action].execEnd()
 		ChoiceBox.hide(self)
 
 	def goEntry(self, entry):
