@@ -157,13 +157,13 @@ def setRCFile(source):
 		SystemInfo["rc_default"] = True
 
 
-SystemInfo["HasRootSubdir"] = False	# This needs to be here so it can be reset by getMultibootslots!
-SystemInfo["RecoveryMode"] = False	# This needs to be here so it can be reset by getMultibootslots!
-SystemInfo["AndroidMode"] = False	# This needs to be here so it can be reset by getMultibootslots!
-SystemInfo["HasMultibootMTD"] = False # This needs to be here so it can be reset by getMultibootslots!
+SystemInfo["HasRootSubdir"] = False  # This needs to be here so it can be reset by getMultibootslots!
+SystemInfo["RecoveryMode"] = False  # This needs to be here so it can be reset by getMultibootslots!
+SystemInfo["AndroidMode"] = False  # This needs to be here so it can be reset by getMultibootslots!
+SystemInfo["HasMultibootMTD"] = False  # This needs to be here so it can be reset by getMultibootslots!
 SystemInfo["resetMBoot"] = False  # Kexec kernel issue-this needs to be here so it can be reset by getMultibootslots if required!
-SystemInfo["HasKexecUSB"] = False	# This needs to be here so it can be reset by getMultibootslots!
-SystemInfo["HasKexecMultiboot"] = fileHas("/proc/cmdline", "kexec=1")	# This needs to be here so it can be tested by getMultibootslots!
+SystemInfo["HasKexecUSB"] = False  # This needs to be here so it can be reset by getMultibootslots!
+SystemInfo["HasKexecMultiboot"] = fileHas("/proc/cmdline", "kexec=1")  # This needs to be here so it can be tested by getMultibootslots!
 from Tools.Multiboot import getMultibootslots, isFat32  # noqa: E402  This import needs to be here to avoid a SystemInfo load loop!
 SystemInfo["HasChkrootMultiboot"] = isFat32("/dev/block/by-name/others")
 SystemInfo["canchkroot"] = (fileExists("/dev/block/by-name/others") and not SystemInfo["HasChkrootMultiboot"] and not fileExists("/etc/.disableChkroot"))

@@ -34,7 +34,7 @@ class Console(Screen):
 		self.run = 0
 		self.container.appClosed.append(self.runFinished)
 		self.container.dataAvail.append(self.dataAvail)
-		self.onLayoutFinish.append(self.startRun) # dont start before gui is finished
+		self.onLayoutFinish.append(self.startRun)  # dont start before gui is finished
 
 	def updateTitle(self):
 		self.setTitle(self.newtitle)
@@ -42,16 +42,16 @@ class Console(Screen):
 	def startRun(self):
 		self["text"].setText(_("Execution progress:") + "\n\n")
 		print("[Console] executing in run", self.run, " the command:", self.cmdlist[self.run])
-		if self.container.execute(self.cmdlist[self.run]): #start of container application failed...
-			self.runFinished(-1) # so we must call runFinished manual
+		if self.container.execute(self.cmdlist[self.run]):  # start of container application failed...
+			self.runFinished(-1)  # so we must call runFinished manual
 
 	def runFinished(self, retval):
 		if retval:
 			self.errorOcurred = True
 		self.run += 1
 		if self.run != len(self.cmdlist):
-			if self.container.execute(self.cmdlist[self.run]): #start of container application failed...
-				self.runFinished(-1) # so we must call runFinished manual
+			if self.container.execute(self.cmdlist[self.run]):  # start of container application failed...
+				self.runFinished(-1)  # so we must call runFinished manual
 		else:
 			self["text"].appendText(_("Execution finished!!"))
 			if self.finishedCallback is not None:

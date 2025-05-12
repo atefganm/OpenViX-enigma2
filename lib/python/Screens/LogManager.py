@@ -124,7 +124,7 @@ class LogManagerPoller:
 						eBackgroundFileEraser.getInstance().erase(fn)
 						bytesToRemove -= st_size
 						size -= st_size
-		self.TrashTimer.startLongTimer(43200) #twice a day
+		self.TrashTimer.startLongTimer(43200)  # twice a day
 
 
 class LogManager(Screen):
@@ -396,9 +396,9 @@ class LogManagerFb(Screen):
 		self.close()
 
 	def ok(self):
-		if self.SOURCELIST.canDescent(): # isDir
+		if self.SOURCELIST.canDescent():  # isDir
 			self.SOURCELIST.descent()
-			if self.SOURCELIST.getCurrentDirectory(): #??? when is it none
+			if self.SOURCELIST.getCurrentDirectory():  # ??? when is it none
 				self.setTitle(self.SOURCELIST.getCurrentDirectory())
 		else:
 			self.onFileAction()

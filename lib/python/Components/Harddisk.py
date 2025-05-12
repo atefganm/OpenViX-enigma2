@@ -702,8 +702,8 @@ DEVICEDB = \
 		"/devices/platform/ohci-brcm.3/": _("Internal USB"),
 		"/devices/platform/sdhci-brcmstb.0/": _("eMMC"),
 		"/devices/platform/sdhci-brcmstb.1/": _("SD"),
-		"/devices/platform/strict-ahci.0/ata1/": _("SATA"),	# front
-		"/devices/platform/strict-ahci.0/ata2/": _("SATA"),	# back
+		"/devices/platform/strict-ahci.0/ata1/": _("SATA"),  # front
+		"/devices/platform/strict-ahci.0/ata2/": _("SATA"),  # back
 	},
 	"dm800":
 	{
@@ -783,7 +783,7 @@ DEVICEDB = \
 	},
 	"dm7025":
 	{
-		"/devices/pci0000:00/0000:00:14.1/ide1/1.0": "Compact Flash", #hdc
+		"/devices/pci0000:00/0000:00:14.1/ide1/1.0": "Compact Flash",  # hdc
 		"/devices/pci0000:00/0000:00:14.1/ide0/0.0": "Internal Harddisk"
 	}
 	}

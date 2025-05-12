@@ -20,7 +20,7 @@ class HarddiskSetup(Screen):
 		self["capacity"] = Label(_("Capacity: ") + hdd.capacity())
 		self["bus"] = Label(_("Bus: ") + hdd.bus())
 		self["key_red"] = Label(_("Cancel"))
-		self["key_green"] = Label(text) # text can be either "Initialize" or "Check"
+		self["key_green"] = Label(text)  # text can be either "Initialize" or "Check"
 		self["actions"] = ActionMap(["OkCancelActions"],
 		{
 			"ok": self.hddQuestion,
@@ -78,7 +78,7 @@ class HarddiskSelection(Screen):
 		Screen.__init__(self, session)
 		self.setTitle(_("Initialize Devices"))
 
-		self.skinName = "HarddiskSelection" # For derived classes
+		self.skinName = "HarddiskSelection"  # For derived classes
 		if harddiskmanager.HDDCount() == 0:
 			tlist = [(_("no storage devices found"), 0)]
 			self["hddlist"] = MenuList(tlist)
