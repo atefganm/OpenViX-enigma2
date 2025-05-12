@@ -114,8 +114,8 @@ class ChoiceBox(Screen, HelpableScreen):
 			self["list"].onSelectionChanged.append(self.updateSummary)
 		self.updateSummary()
 
-		self["okActions"] = HelpableActionMap(self, ["OkCancelActions"], {"ok": (self.keySelect, _("Select the current item")),}, prio=0, description=_("Selection Actions"))
-		self["cancelActions"] = HelpableActionMap(self, ["OkCancelActions"], {"cancel": (self.cancel, _("Cancel the current action and exit")),}, prio=0, description=_("Cancel Actions"))
+		self["okActions"] = HelpableActionMap(self, ["OkCancelActions"], {"ok": (self.keySelect, _("Select the current item")), }, prio=0, description=_("Selection Actions"))
+		self["cancelActions"] = HelpableActionMap(self, ["OkCancelActions"], {"cancel": (self.cancel, _("Cancel the current action and exit")), }, prio=0, description=_("Cancel Actions"))
 		self["colorActions"] = HelpableActionMap(self, ["ColorActions"], colorActions, prio=-1, description=_("Selection Actions"))
 		self["selectionActions"] = HelpableNumberActionMap(self, ["NumberActions"], selectionActions, prio=-1, description=_("Selection Actions"))
 
