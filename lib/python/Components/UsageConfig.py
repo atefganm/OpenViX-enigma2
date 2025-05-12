@@ -18,7 +18,10 @@ from Tools.HardwareInfo import HardwareInfo
 from Components.AVSwitch import iAVSwitch
 from os import makedirs
 from os.path import exists, isfile, join as pathjoin, normpath
-import os, time, locale, skin
+import os
+import time
+import locale
+import skin
 from boxbranding import getDisplayType
 
 displaytype = getDisplayType()
