@@ -467,7 +467,7 @@ eServiceMP3::eServiceMP3(eServiceReference ref):
 	eDebug("[eServiceMP3] Init start %s", ref.toString().c_str());
 	if (!sref.empty())
 	{
-		eDebug("[eServiceMP3] Init start !sref.empty()");	
+		eDebug("[eServiceMP3] Init start !sref.empty()");
 		std::vector<eIPTVDBItem> &iptv_services = eDVBDB::getInstance()->iptv_services;
 		for(std::vector<eIPTVDBItem>::iterator it = iptv_services.begin(); it != iptv_services.end(); ++it)
 		{
@@ -868,6 +868,7 @@ DEFINE_REF(GstMessageContainer);
 void eServiceMP3::setCacheEntry(bool isAudio, int pid)
 {
 	bool hasFoundItem = false;
+
 	std::vector<eIPTVDBItem> &iptv_services = eDVBDB::getInstance()->iptv_services;
 	for(std::vector<eIPTVDBItem>::iterator it = iptv_services.begin(); it != iptv_services.end(); ++it) {
 		if (m_ref.toString().find(it->s_ref) != std::string::npos) {
@@ -2741,7 +2742,7 @@ void eServiceMP3::pullSubtitle(GstBuffer *buffer)
 			{
 				uint8_t * data = map.data;
 				m_dvb_subtitle_parser->processBuffer(data, len, buf_pos / 1000000ULL);
-			} 
+			}
 			else if ( subType < stVOB )
 			{
 				int delay = eConfigManager::getConfigIntValue("config.subtitles.pango_subtitles_delay");

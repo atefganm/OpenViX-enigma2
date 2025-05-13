@@ -1120,8 +1120,8 @@ eDVBServicePlay::~eDVBServicePlay()
 #ifdef PASSTHROUGH_FIX
 void eDVBServicePlay::forcePassthrough()
 {
-			m_passthrough_fix_timer->stop();
-			m_passthrough_fix_timer->start(100, true);
+	eDebug("[eDVBServicePlay] Setting 'passthrough' to force correct operation");
+	CFile::writeStr("/proc/stb/audio/ac3", "passthrough");
 }
 #endif
 
@@ -1547,8 +1547,8 @@ RESULT eDVBServicePlay::connectEvent(const sigc::slot<void(iPlayableService*,int
 RESULT eDVBServicePlay::pause(ePtr<iPauseableService> &ptr)
 {
 		/* note: we check for timeshift to be enabled,
-		   not neccessary active. if you pause when timeshift
-		   is not active, you should activate it when unpausing */
+			not neccessary active. if you pause when timeshift
+			is not active, you should activate it when unpausing */
 	if ((!m_is_pvr) && (!m_timeshift_enabled) && (m_reference.path.empty() || m_reference.isStreamRelay))
 	{
 		ptr = nullptr;
@@ -2348,8 +2348,9 @@ int eDVBServicePlay::selectAudioStream(int i)
 		std::string pass = CFile::read("/proc/stb/audio/ac3");
 		if (replace_all(replace_all(pass, "\r", ""), "\n", "") == "passthrough")
 		{
-			eDebug("[eDVBServicePlay] Setting 'passthrough' to force correct operation");
-			CFile::writeStr("/proc/stb/audio/ac3", "passthrough");
+			int shortAudioDelay = eConfigManager::getConfigIntValue("config.av.passthrough_fix_short", 100);
+			m_passthrough_fix_timer->stop();
+			m_passthrough_fix_timer->start(shortAudioDelay, true);
 		}
 	}
 #endif
@@ -2772,7 +2773,7 @@ int eDVBServicePlay::isTimeshiftEnabled()
 RESULT eDVBServicePlay::saveTimeshiftFile()
 {
 	if (!m_timeshift_enabled)
-				return -1;
+		return -1;
 
 	m_save_timeshift = 1;
 
