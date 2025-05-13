@@ -89,7 +89,7 @@ class PluginBrowser(Screen, ProtectedScreen, HelpableScreen):
 			"green": (self.download, _("Open 'Download Plugins' screen")),
 			"yellow": (self.userInstalledPlugins, _("View list of user installed plugins")),
 		}, description=_("Colour Actions"))
-		self["SortActions"] = HelpableActionMap(self, ["DirectionActions", "NumberActions"],
+		self["SortActions"] = HelpableNumberActionMap(self, ["DirectionActions", "NumberActions"],
 		{
 			"shiftUp": (self.moveUp, _("Move the current item up the list")),
 			"shiftDown": (self.moveDown, _("Move the current item down the list")),
