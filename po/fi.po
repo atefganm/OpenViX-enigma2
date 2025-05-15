@@ -8641,7 +8641,7 @@ msgstr ""
 "- tarkista, ettei kaapeli ole vaurioitunut."
 
 msgid "Locale"
-msgstr "Paikallinen laite"
+msgstr "Maa-asetus"
 
 msgid "Location"
 msgstr "Hakemisto"
