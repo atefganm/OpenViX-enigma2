@@ -479,23 +479,20 @@ class AVSwitchBase:
 
 
 def InitAVSwitch():
-	if MACHINEBUILD == "vuduo":
-		delay_choices = [(i, ngettext("%d milisecond", "%d miliseconds", i) % i) for i in list(range(0, 3000, 100))]  # noqa: F821
-		config.av.passthrough_fix_long = ConfigSelection(choices=delay_choices, default=1200)
-		config.av.passthrough_fix_short = ConfigSelection(choices=delay_choices, default=100)
-		config.av.yuvenabled = ConfigBoolean(default=False)
-	else:
-		config.av.yuvenabled = ConfigBoolean(default=True)
-	config.av.osd_alpha = ConfigSlider(default=255, increment=5, limits=(20, 255))  # Make openATV compatible with some plugins who still use config.av.osd_alpha.
+	delay_choices = [(i, ngettext("%d milisecond", "%d miliseconds", i) % i) for i in list(range(0, 3000, 100))]  # noqa: F821
+	config.av.passthrough_fix_long = ConfigSelection(choices=delay_choices, default=1200)
+	config.av.passthrough_fix_short = ConfigSelection(choices=delay_choices, default=100)
+	config.av.yuvenabled = ConfigBoolean(default=True)
+	colorformat_choices = {
+		"cvbs": _("CVBS"),
+		"rgb": _("RGB"),
+		"svideo": _("S-Video")
+	}
+	# when YUV is not enabled, don't let the user select it
+	if config.av.yuvenabled.value:
+		colorformat_choices["yuv"] = _("YPbPr")
 
-	config.av.autores = ConfigSelection(default="disabled", choices=[
-		("disabled", _("Disabled")),
-		("simple", _("Simple")),
-		("native", _("Native")),
-		("all", _("All resolutions")),
-		("hd", _("Only HD"))
-	])
-
+	config.av.autores = ConfigSelection(choices={"disabled": _("Disabled"), "simple": _("Simple"), "native": _("Native"), "all": _("All resolutions"), "hd": _("only HD")}, default="disabled")
 	config.av.autores_preview = NoSave(ConfigYesNo(default=False))
 	config.av.autores_1080i_deinterlace = ConfigYesNo(default=False)
 	choiceList = [
