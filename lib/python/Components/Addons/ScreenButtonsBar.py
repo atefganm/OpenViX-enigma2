@@ -173,10 +173,10 @@ class ScreenButtonsBar(GUIAddon):
 						pos=(xPos, yPos), size=(width_text, height - 2),
 						font=0, flags=textFlags,
 						text=buttonText, color=textColor, color_sel=textColor, backcolor=backColor, corner_radius=self.cornerRadius))
-				
+
 				if shouldBreak:
 					break
-				
+
 				xPos += width_text + (self.spacingButtonsTight if self.layoutStyle == "fluidfull" else self.spacingButtons)
 			if xPos - ((xPosAction + self.spacingBetweenActionAndColorGroups) if self.actionButtonsPosition != "farRight" else 0) > width_color_reserved:
 				if self.layoutStyle == "fixed" or self.layoutStyle == "fluid":
