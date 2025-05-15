@@ -1,7 +1,8 @@
 from os import listdir, path as ospath, popen
 from re import search
+from sys import version_info
 from enigma import eTimer, getDesktop, getEnigmaLastCommitDate, getEnigmaLastCommitHash
-from Components.About import about
+from Components.About import getBoxUptime, getCPUArch, getEnigmaUptime, getIfConfig, getIfTransferredData
 from Components.ActionMap import ActionMap
 from Components.Button import Button
 from Components.config import config
@@ -11,12 +12,12 @@ from Components.Network import iNetwork
 from Components.NimManager import nimmanager
 from Components.Pixmap import MultiPixmap
 from Components.Sources.StaticText import StaticText
-from Components.SystemInfo import SystemInfo, CHIPSET, KERNEL, MODEL, RCNAME, SOC_BRAND
+from Components.SystemInfo import SystemInfo, CHIPSET, KERNEL, MODEL, SOC_BRAND
 from Screens.GitCommitInfo import CommitInfo
 from Screens.Screen import Screen, ScreenSummary
 from Screens.SoftwareUpdate import UpdatePlugin
 from Screens.TextBox import TextBox
-from Tools.Directories import fileHas, isPluginInstalled, fileReadLines
+from Tools.Directories import fileHas, fileReadLines, isPluginInstalled
 from Tools.Multiboot import GetCurrentImageMode
 from Tools.StbHardware import getFPVersion
 
@@ -45,7 +46,6 @@ def _formatDate(Date):
 	# expected input = "YYYYMMDD"
 	if len(Date) != 8 or not Date.isnumeric():
 		return _("unknown")
-	from Components.config import config
 	return config.usage.date.dateFormatAbout.value % {"year": Date[0:4], "month": Date[4:6], "day": Date[6:8]}
 
 
@@ -133,23 +133,20 @@ class About(AboutBase):
 		})
 
 	def populate(self):
+		Brands = {"meson": "MESON", "bcm": "Broadcom", "hisi": "Hisilicon"}
 		AboutText = ""
 		AboutText += _("Model:\t%s %s\n") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"])
-		AboutText += _("Chipset:\t%s %s\n") % (Brands.get(SOC_BRAND, SOC_BRAND), CHIPSET)
-		CPUArch = about.getCPUArch(MODEL)
+		AboutText += _("Chipset:\t%s %s\n") % (Brands.get(SOC_BRAND, SOC_BRAND), CHIPSET.replace("hi", "HI").replace("cv", "CV").replace("mv", "MV"))
+		CPUArch = getCPUArch(MODEL)
 		AboutText += _("CPU:\t%s %s %s\n") % (CPUArch[0], CPUArch[1], CPUArch[2])
-
-		if about.getChipSetString() != _("unavailable"):
-			if SystemInfo["HasHiSi"]:
-				AboutText += _("Chipset:\tHiSilicon %s\n") % about.getChipSetString().upper()
-			elif about.getIsBroadcom():
-				AboutText += _("Chipset:\tBroadcom %s\n") % about.getChipSetString().upper()
-			else:
-				AboutText += _("Chipset:\t%s\n") % about.getChipSetString().upper()
-
 		# AboutText += _("SoC:\t%s\n") % SystemInfo["socfamily"].upper()
-
 		if ospath.exists('/sys/firmware/devicetree/base/bolt/tag'):
+			with open("/sys/firmware/devicetree/base/bolt/tag") as f:
+				bootLoader = f.read().replace('\x00', '').replace('\n', '')
+				if SystemInfo["boxtype"] in ("gbquad4k", "gbue4k", "gbquad4kpro"):
+					AboutText += _("Bolt:\t%s\n") % bootLoader
+				else:
+					AboutText += _("Bootloader:\t%s\n") % bootLoader
 		AboutText += _("Remote:\t%s\n") % SystemInfo["RCName"]
 
 		SystemTemperature = getsystemTemperature()
@@ -208,13 +205,13 @@ class About(AboutBase):
 			AboutText += _("4097 iptv player:\t%s\n") % config.plugins.serviceapp.servicemp3.player.value
 		else:
 			AboutText += _("4097 iptv player:\tDefault player\n")
-		AboutText += _("Python:\t%s\n") % about.getPythonVersionString()
+		AboutText += _("Python:\t%s.%s.%s\n") % (version_info.major, version_info.minor, version_info.micro)
 		AboutText += _("Last E2 update:\t%s (%s)\n") % (getLastCommitHash(), getLastCommitDate())
 		AboutText += _("E2 (re)starts:\t%s\n") % config.misc.startCounter.value
-		uptime = about.getBoxUptime()
+		uptime = getBoxUptime()
 		if uptime:
 			AboutText += _("Uptime:\t%s\n") % uptime
-		e2uptime = about.getEnigmaUptime()
+		e2uptime = getEnigmaUptime()
 		if e2uptime:
 			AboutText += _("Enigma2 uptime:\t%s\n") % e2uptime
 		AboutText += _("Skin:\t%s") % config.skin.primary_skin.value[0:-9] + _("  (%s x %s)") % (skinWidth, skinHeight) + "\n"
@@ -496,7 +493,7 @@ class SystemNetworkInfo(AboutBase):
 	def createscreen(self):
 		self.AboutText = ""
 		self.iface = "eth0"
-		eth0 = about.getIfConfig("eth0")
+		eth0 = getIfConfig("eth0")
 		if "addr" in eth0:
 			self.AboutText += _("IP:") + "\t" + eth0["addr"] + "\n"
 			if "netmask" in eth0:
@@ -505,7 +502,7 @@ class SystemNetworkInfo(AboutBase):
 				self.AboutText += _("MAC:") + "\t" + eth0["hwaddr"] + "\n"
 			self.iface = "eth0"
 
-		eth1 = about.getIfConfig("eth1")
+		eth1 = getIfConfig("eth1")
 		if "addr" in eth1:
 			self.AboutText += _("IP:") + "\t" + eth1["addr"] + "\n"
 			if "netmask" in eth1:
@@ -514,7 +511,7 @@ class SystemNetworkInfo(AboutBase):
 				self.AboutText += _("MAC:") + "\t" + eth1["hwaddr"] + "\n"
 			self.iface = "eth1"
 
-		ra0 = about.getIfConfig("ra0")
+		ra0 = getIfConfig("ra0")
 		if "addr" in ra0:
 			self.AboutText += _("IP:") + "\t" + ra0["addr"] + "\n"
 			if "netmask" in ra0:
@@ -523,7 +520,7 @@ class SystemNetworkInfo(AboutBase):
 				self.AboutText += _("MAC:") + "\t" + ra0["hwaddr"] + "\n"
 			self.iface = "ra0"
 
-		wlan0 = about.getIfConfig("wlan0")
+		wlan0 = getIfConfig("wlan0")
 		if "addr" in wlan0:
 			self.AboutText += _("IP:") + "\t" + wlan0["addr"] + "\n"
 			if "netmask" in wlan0:
@@ -532,7 +529,7 @@ class SystemNetworkInfo(AboutBase):
 				self.AboutText += _("MAC:") + "\t" + wlan0["hwaddr"] + "\n"
 			self.iface = "wlan0"
 
-		wlan3 = about.getIfConfig("wlan3")
+		wlan3 = getIfConfig("wlan3")
 		if "addr" in wlan3:
 			self.AboutText += _("IP:") + "\t" + wlan3["addr"] + "\n"
 			if "netmask" in wlan3:
@@ -541,7 +538,7 @@ class SystemNetworkInfo(AboutBase):
 				self.AboutText += _("MAC:") + "\t" + wlan3["hwaddr"] + "\n"
 			self.iface = "wlan3"
 
-		rx_bytes, tx_bytes = about.getIfTransferredData(self.iface)
+		rx_bytes, tx_bytes = getIfTransferredData(self.iface)
 		self.AboutText += "\n" + _("Bytes received:") + "\t" + bytesToHumanReadable(int(rx_bytes)) + "\n"
 		self.AboutText += _("Bytes sent:") + "\t" + bytesToHumanReadable(int(tx_bytes)) + "\n"
 		for line in popen("ethtool %s |grep Speed" % self.iface, "r"):
@@ -700,7 +697,7 @@ class AboutSummary(ScreenSummary):
 		SystemTemperature = getsystemTemperature()
 		if SystemTemperature and int(SystemTemperature.replace("\n", "")) > 0:
 			self.aboutText.append(_("System temperature: %s") % SystemTemperature.replace("\n", "") + "\xb0" + "C\n")
-		self.aboutText.append(_("Chipset: %s") % CHIPSET.replace("\n", "") + "\n")
+		self.aboutText.append(_("Chipset: %s") % CHIPSET.replace("\n", "").upper() + "\n")
 		self.aboutText.append(_("Kernel: %s") % KERNEL + "\n")
 		self.aboutText.append(_("Drivers: %s") % driversDate() + "\n")
 		self["AboutText"].text = "".join(self.aboutText)
