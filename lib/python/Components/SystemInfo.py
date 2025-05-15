@@ -6,9 +6,9 @@ from re import split
 from boxbranding import getBoxType, getBrandOEM, getDisplayType, getHaveAVJACK, getHaveHDMIinFHD, getHaveHDMIinHD, getHaveRCA, getHaveSCART, getHaveSCARTYUV, getHaveYUV, getImageType, getMachineBrand, getMachineBuild, getMachineMtdRoot, getMachineName, getHaveDVI, getHaveHDMI
 from enigma import Misc_Options, eDVBCIInterfaces, eDVBResourceManager, eGetEnigmaDebugLvl
 
-from Components.About import getChipSetString, getKernelVersionString
+from Components.About import getChipSetString
 from Components.RcModel import rc_model
-from Tools.Directories import SCOPE_PLUGINS, fileCheck, fileExists, fileHas, pathExists, resolveFilename, SCOPE_LIBDIR, SCOPE_SKIN, fileReadLines
+from Tools.Directories import SCOPE_PLUGINS, fileCheck, fileExists, fileHas, pathExists, resolveFilename, SCOPE_LIBDIR, SCOPE_SKIN, fileReadLine, fileReadLines
 from Tools.HardwareInfo import HardwareInfo
 
 
@@ -77,11 +77,24 @@ BoxInfo = BoxInformation()
 # to refect that found in "${STAGING_KERNEL_BUILDDIR}/kernel-abiversion" which is the version used in the
 # package names from the feeds. Therefore we will force the output of BoxInfo.getItem("kernel") to the
 # value from "/proc/version" which is the same.
-BoxInfo.boxInfo["kernel"] = getKernelVersionString().strip()  # force kernel revision
+Versions = fileReadLine("/proc/version")
+BoxInfo.boxInfo["kernel"] = Versions.split(" ", 3)[2].split("-", 1)[0].strip() if Versions else _("unknown")  # force kernel revision
 
 # This line makes the BoxInfo backwards compatible with SystemInfo without duplicating the dictionary.
 SystemInfo = BoxInfo.boxInfo
 
+
+if BoxInfo.getItem("model") in ("dm7080", "dm820"):
+	CHIPSET = "7435"
+elif BoxInfo.getItem("model") in ("dm520", "dm525"):
+	CHIPSET = "73625"
+elif BoxInfo.getItem("model") in ("dm900", "dm920", "et13000"):
+	CHIPSET = "7252s"
+elif BoxInfo.getItem("model") in ("hd51", "vs1500", "h7", "h17"):
+	CHIPSET = "7251s"
+else:
+	chipset = fileReadLine("/proc/stb/info/chipset")
+	CHIPSET = chipset.lower().replace("\n", "").replace("bcm", "").replace("brcm", "")
 
 ARCHITECTURE = BoxInfo.getItem("architecture")
 BRAND = BoxInfo.getItem("brand")
@@ -89,7 +102,7 @@ MODEL = BoxInfo.getItem("model")
 RCNAME = BoxInfo.getItem('rcname')
 SOC_FAMILY = BoxInfo.getItem("socfamily")
 SOC_BRAND = split(r'(\d.*)', SOC_FAMILY)[0]
-CHIPSET = split(r'(\d.*)', SOC_FAMILY)[1]
+KERNEL = BoxInfo.getItem("kernel")
 DISPLAYTYPE = BoxInfo.getItem("displaytype")
 MTDROOTFS = BoxInfo.getItem("mtdrootfs")
 DISPLAYMODEL = BoxInfo.getItem("displaymodel")
@@ -267,7 +280,9 @@ SystemInfo["HasH265Encoder"] = fileHas("/proc/stb/encoder/0/vcodec_choices", "h2
 SystemInfo["CanNotDoSimultaneousTranscodeAndPIP"] = SystemInfo["boxtype"] in ("vusolo4k", "gbquad4k", "gbue4k")
 SystemInfo["hasXcoreVFD"] = SystemInfo["boxtype"] in ("osmega", "spycat4k", "spycat4kmini", "spycat4kcomb") and fileCheck("/sys/module/brcmstb_%s/parameters/pt6302_cgram" % SystemInfo["boxtype"])
 SystemInfo["HasHDMIin"] = SystemInfo["hdmifhdin"] or SystemInfo["hdmihdin"]
-SystemInfo["Has24hz"] = fileCheck("/proc/stb/video/videomode_24hz")
+SystemInfo["HDMIinPiP"] = SystemInfo["HasHDMIin"] and BRAND != "dreambox"
+SystemInfo["CanHDMIinRecord"] = fileExists("/proc/stb/encoder/0/decoder")
+SystemInfo["Has24hz"] = fileCheck("/proc/stb/video/videomode_24hz") or MODEL in ("h7")
 SystemInfo["canBackupEMC"] = MODEL in ("hd51", "h7") and ("disk.img", "%s" % SystemInfo["MBbootdevice"]) or MODEL in ("osmio4k", "osmio4kplus", "osmini4k") and ("emmc.img", "%s" % SystemInfo["MBbootdevice"]) or SystemInfo["HasHiSi"] and ("usb_update.bin", "none")
 SystemInfo["canMode12"] = MODEL in ("hd51", "h7") and ("brcm_cma=440M@328M brcm_cma=192M@768M", "brcm_cma=520M@248M brcm_cma=200M@768M")
 SystemInfo["HasMMC"] = fileHas("/proc/cmdline", "root=/dev/mmcblk") or "mmcblk" in SystemInfo["mtdrootfs"]
@@ -364,13 +379,14 @@ SystemInfo["HAVESCART"] = getHaveSCART() in ('True',)
 SystemInfo["HAVESCARTYUV"] = getHaveSCARTYUV() in ('True',)
 SystemInfo["HaveAVJACK"] = getHaveAVJACK() in ('True',)
 SystemInfo["RecoveryMode"] = fileCheck("/proc/stb/fp/boot_mode")
-SystemInfo["VideoModes"] = getChipSetString() in (  # 2160p and 1080p capable hardware...
-	"5272s", "7251", "7251s", "7252", "7252s", "7278", "7366", "7376", "7444s", "72604", "3798mv200", "3798cv200", "3798mv200h", "3798mv300", "hi3798mv200", "hi3798mv200h", "hi3798mv200advca", "hi3798cv200", "hi3798mv300"
+
+SystemInfo["VideoModes"] = CHIPSET.replace("hi", "") in (  # 2160p and 1080p capable hardware...
+	"5272s", "7251", "7251s", "7252", "7252s", "7278", "7366", "7376", "7444s", "72604", "3798cv200", "3798mv200", "3798mv200advca", "3798mv200h", "3798mv300"
 ) and (
 	["720p", "1080p", "2160p", "2160p30", "1080i", "576p", "576i", "480p", "480i"],  # Normal modes.
 	{"720p", "1080p", "2160p", "2160p30", "1080i"}  # Widescreen modes.
-) or getChipSetString() in (  # 1080p capable hardware...
-	"7241", "7356", "73565", "7358", "7362", "73625", "7424", "7425", "7435", "7552", "3716mv410", "3716mv430", "hi3716mv430"
+) or CHIPSET.replace("hi", "") in (  # 1080p capable hardware...
+	"7241", "7356", "73565", "7358", "7362", "73625", "7424", "7425", "7552", "3716mv410", "3716mv430"
 ) and (
 	["720p", "1080p", "1080i", "576p", "576i", "480p", "480i"],  # Normal modes.
 	{"720p", "1080p", "1080i"}  # Widescreen modes.
@@ -379,7 +395,7 @@ SystemInfo["VideoModes"] = getChipSetString() in (  # 2160p and 1080p capable ha
 	{"720p", "1080i"}  # Widescreen modes.
 )
 
-SystemInfo["FbcTunerPowerAlwaysOn"] = SystemInfo["boxtype"] in ("vusolo4k", "vuduo4k", "vuduo4kse", "vuultimo4k", "vuuno4k", "vuuno4kse")
+SystemInfo["FbcTunerPowerAlwaysOn"] = SystemInfo["boxtype"] in ("vusolo4k", "vuduo4k", "vuduo4kse", "vuultimo4k", "vuuno4k", "vuuno4kse", "dm900", "dm920")
 SystemInfo["HasPhysicalLoopthrough"] = ["Vuplus DVB-S NIM(AVL2108)", "GIGA DVB-S2 NIM (Internal)"]
 SystemInfo["HasFBCtuner"] = ["Vuplus DVB-C NIM(BCM3158)", "Vuplus DVB-C NIM(BCM3148)", "Vuplus DVB-S NIM(7376 FBC)", "Vuplus DVB-S NIM(45308X FBC)", "Vuplus DVB-S NIM(45208 FBC)", "DVB-S2 NIM(45208 FBC)", "DVB-S2X NIM(45308X FBC)", "DVB-S2 NIM(45308 FBC)", "DVB-C NIM(3128 FBC)", "BCM45208", "BCM45308X", "BCM3158"]
 SystemInfo["FCCactive"] = False
