@@ -4,9 +4,9 @@ from time import sleep
 from enigma import eAVControl, eDVBVolumecontrol, getDesktop, iServiceInformation
 from Components.config import ConfigBoolean, ConfigEnableDisable, ConfigInteger, ConfigNothing, ConfigOnOff, ConfigSelection, ConfigSelectionNumber, ConfigSlider, ConfigSubDict, ConfigSubsection, ConfigYesNo, NoSave, config
 from Components.About import about
-from Components.SystemInfo import BoxInfo
+from Components.SystemInfo import SystemInfo, BoxInfo
 from Tools.CList import CList
-from Tools.Directories import fileReadLine, fileWriteLine
+from Tools.Directories import fileReadLine, fileWriteLine, isPluginInstalled
 
 MODULE_NAME = __name__.split(".")[-1]
 BRAND = BoxInfo.getItem("brand")
@@ -203,6 +203,8 @@ class AVSwitchBase:
 
 	def readAvailableModes(self):
 		modes = eAVControl.getInstance().getAvailableModes()
+		if isPluginInstalled("AutoResolution"):
+			return SystemInfo["AvailableVideomodes"]
 		print("[AVSwitch] getAvailableModes:'%s'" % modes)
 		return modes.split()
 
