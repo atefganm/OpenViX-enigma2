@@ -421,7 +421,7 @@ class Devices(Screen):
 				mountfree = line[3]
 				if self.mountinfo:
 					self.mountinfo += "\n"
-				self.mountinfo += "%s (%sB, %sB %s)  " % (ipaddress, mounttotal, mountfree, _("free"))
+				self.mountinfo += "%s (%s, %s %s)  " % (ipaddress, mounttotal, mountfree, _("free"))
 		if ospath.exists("/media/autofs"):
 			for entry in sorted(listdir("/media/autofs")):
 				mountEntry = ospath.join("/media/autofs", entry)
