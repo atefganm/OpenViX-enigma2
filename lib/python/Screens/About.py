@@ -125,7 +125,7 @@ def df_h(find=None, binary=False):
 	# f_namemax;  /* Maximum filename length */
 
 	out = []
-	for mount in open("/proc/mounts").readlines(): 
+	for mount in open("/proc/mounts").readlines():
 		fs_spec, fs_file, fs_vfstype, fs_mntops, fs_freq, fs_passno = mount.split()
 		if True:  # fs_spec.startswith('/'):  # possible filtering here if necessary
 			r = statvfs(fs_file)
@@ -367,7 +367,7 @@ class Devices(Screen):
 				self["Tuner" + str(count)].setText(text)
 
 		self.hddlist = harddiskmanager.HDDList()
-		
+
 		self.list = []
 		self.tparts = {}
 		result = df_h()
