@@ -447,22 +447,22 @@ class SystemMemoryInfo(AboutBase):
 			tstLine = out_lines[lidx].split()
 			if "MemTotal:" in tstLine:
 				MemTotal = out_lines[lidx].split()
-				self.AboutText += _("Total memory:") + "\t" + bytesToHumanReadable(int(MemTotal[1])*1024, binary=True) + "\n"
+				self.AboutText += _("Total memory:") + "\t" + bytesToHumanReadable(int(MemTotal[1]) * 1024, binary=True) + "\n"
 			if "MemFree:" in tstLine:
 				MemFree = out_lines[lidx].split()
-				self.AboutText += _("Free memory:") + "\t" + bytesToHumanReadable(int(MemFree[1])*1024, binary=True) + "\n"
+				self.AboutText += _("Free memory:") + "\t" + bytesToHumanReadable(int(MemFree[1]) * 1024, binary=True) + "\n"
 			if "Buffers:" in tstLine:
 				Buffers = out_lines[lidx].split()
-				self.AboutText += _("Buffers:") + "\t" + bytesToHumanReadable(int(Buffers[1])*1024, binary=True) + "\n"
+				self.AboutText += _("Buffers:") + "\t" + bytesToHumanReadable(int(Buffers[1]) * 1024, binary=True) + "\n"
 			if "Cached:" in tstLine:
 				Cached = out_lines[lidx].split()
-				self.AboutText += _("Cached:") + "\t" + bytesToHumanReadable(int(Cached[1])*1024, binary=True) + "\n"
+				self.AboutText += _("Cached:") + "\t" + bytesToHumanReadable(int(Cached[1]) * 1024, binary=True) + "\n"
 			if "SwapTotal:" in tstLine:
 				SwapTotal = out_lines[lidx].split()
-				self.AboutText += _("Total swap:") + "\t" + bytesToHumanReadable(int(SwapTotal[1])*1024, binary=True) + "\n"
+				self.AboutText += _("Total swap:") + "\t" + bytesToHumanReadable(int(SwapTotal[1]) * 1024, binary=True) + "\n"
 			if "SwapFree:" in tstLine:
 				SwapFree = out_lines[lidx].split()
-				self.AboutText += _("Free swap:") + "\t" + bytesToHumanReadable(int(SwapFree[1])*1024, binary=True) + "\n\n"
+				self.AboutText += _("Free swap:") + "\t" + bytesToHumanReadable(int(SwapFree[1]) * 1024, binary=True) + "\n\n"
 
 		flash = df_h(find="/")[0]
 
