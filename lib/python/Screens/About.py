@@ -1,4 +1,4 @@
-from os import listdir, path as ospath, popen
+from os import listdir, path as ospath, popen, statvfs
 from re import search
 from sys import version_info
 from enigma import eTimer, getDesktop, getEnigmaLastCommitDate, getEnigmaLastCommitHash
@@ -6,7 +6,6 @@ from Components.About import getBoxUptime, getCPUArch, getEnigmaUptime, getIfCon
 from Components.ActionMap import ActionMap
 from Components.Button import Button
 from Components.config import config
-from Components.Console import Console
 from Components.Harddisk import harddiskmanager, bytesToHumanReadable
 from Components.Network import iNetwork
 from Components.NimManager import nimmanager
@@ -99,6 +98,44 @@ def getprocessorTemperature():
 		except:
 			tempinfo = ""
 	return tempinfo
+
+
+def df_h(find=None, binary=False):
+
+	# Ubuntu base10/base2 units policy (since 2010): https://wiki.ubuntu.com/UnitsPolicy
+
+	# Format of /proc/mounts
+	# The 1st column specifies the device that is mounted.
+	# The 2nd column reveals the mount point.
+	# The 3rd column tells the file-system type.
+	# The 4th column tells you if it is mounted read-only (ro) or read-write (rw).
+	# The 5th and 6th columns are dummy values designed to match the format used in /etc/mtab.
+
+	# Format of os.statvfs
+	# f_bsize;    /* Filesystem block size */
+	# f_frsize;   /* Fragment size */
+	# f_blocks;   /* Size of fs in f_frsize units */
+	# f_bfree;    /* Number of free blocks */
+	# f_bavail;   /* Number of free blocks for unprivileged users */
+	# f_files;    /* Number of inodes */
+	# f_ffree;    /* Number of free inodes */
+	# f_favail;   /* Number of free inodes for unprivileged users */
+	# f_fsid;     /* Filesystem ID */
+	# f_flag;     /* Mount flags */
+	# f_namemax;  /* Maximum filename length */
+
+	out = []
+	for mount in open("/proc/mounts").readlines(): 
+		fs_spec, fs_file, fs_vfstype, fs_mntops, fs_freq, fs_passno = mount.split()
+		if True:  # fs_spec.startswith('/'):  # possible filtering here if necessary
+			r = statvfs(fs_file)
+			if find is None or find == fs_file:
+				total = r.f_bsize * r.f_blocks
+				free = r.f_bsize * r.f_bfree
+				used = total - free
+				usedpercent = "%d%%" % (100 * used // total if total else 100)  # sanity against ZeroDivisionError if total is 0
+				out.append((fs_spec, bytesToHumanReadable(int(total), binary=binary), bytesToHumanReadable(int(used), binary=binary), bytesToHumanReadable(int(free), binary=binary), usedpercent, fs_file))
+	return out
 
 
 class AboutBase(TextBox):
@@ -290,7 +327,6 @@ class Devices(Screen):
 
 	def populate2(self):
 		self.activityTimer.stop()
-		self.Console = Console()
 		niminfo = ""
 		nims = nimmanager.nimListCompressed()
 		for count in range(len(nims)):
@@ -331,16 +367,14 @@ class Devices(Screen):
 				self["Tuner" + str(count)].setText(text)
 
 		self.hddlist = harddiskmanager.HDDList()
-		self.Console.ePopen("df -mH | grep -v '^Filesystem' | grep  -v '^tmpfs' | grep -v '^none'", self.Stage0Complete)
-
-	def Stage0Complete(self, result, retval, extra_args=None):
-		print(f"[About][Stage0Complete] retval:{retval} result:{result}")
+		
 		self.list = []
-		result = result.replace("\n                        ", " ").split("\n")
 		self.tparts = {}
+		result = df_h()
+		print(f"[About] df_h()\n{result}\n")
 		for line in result:
 			if line:
-				self.parts = line.split()  # device, size, used, free, use %, mount
+				self.parts = line  # device, size, used, free, use %, mount
 				self.tparts[self.parts[0]] = self.parts  # save entry with device key
 		if self.hddlist:
 			print("[About] hddlist = %s" % (self.hddlist))
@@ -380,9 +414,8 @@ class Devices(Screen):
 
 		self.mountinfo = ""
 		for line in result:
-			self.parts = line.split()
+			self.parts = line
 			if line and self.parts[0] and self.parts[0].startswith(("192", "//192")):
-				line = line.split()
 				ipaddress = line[0]
 				mounttotal = line[1]
 				mountfree = line[3]
@@ -408,45 +441,36 @@ class SystemMemoryInfo(AboutBase):
 		AboutBase.__init__(self, session, labels=True)
 		self.setTitle(_("Memory"))
 		self.skinName = ["SystemMemoryInfo", "About"]
-		out_lines = open("/proc/meminfo").readlines()
+		out_lines = open("/proc/meminfo").readlines()  # output is in kiB so multiply by 1024
 		self.AboutText = _("RAM") + "\n\n"
 		for lidx in range(len(out_lines) - 1):
 			tstLine = out_lines[lidx].split()
 			if "MemTotal:" in tstLine:
 				MemTotal = out_lines[lidx].split()
-				self.AboutText += _("Total memory:") + "\t" + MemTotal[1] + "\n"
+				self.AboutText += _("Total memory:") + "\t" + bytesToHumanReadable(int(MemTotal[1])*1024, binary=True) + "\n"
 			if "MemFree:" in tstLine:
 				MemFree = out_lines[lidx].split()
-				self.AboutText += _("Free memory:") + "\t" + MemFree[1] + "\n"
+				self.AboutText += _("Free memory:") + "\t" + bytesToHumanReadable(int(MemFree[1])*1024, binary=True) + "\n"
 			if "Buffers:" in tstLine:
 				Buffers = out_lines[lidx].split()
-				self.AboutText += _("Buffers:") + "\t" + Buffers[1] + "\n"
+				self.AboutText += _("Buffers:") + "\t" + bytesToHumanReadable(int(Buffers[1])*1024, binary=True) + "\n"
 			if "Cached:" in tstLine:
 				Cached = out_lines[lidx].split()
-				self.AboutText += _("Cached:") + "\t" + Cached[1] + "\n"
+				self.AboutText += _("Cached:") + "\t" + bytesToHumanReadable(int(Cached[1])*1024, binary=True) + "\n"
 			if "SwapTotal:" in tstLine:
 				SwapTotal = out_lines[lidx].split()
-				self.AboutText += _("Total swap:") + "\t" + SwapTotal[1] + "\n"
+				self.AboutText += _("Total swap:") + "\t" + bytesToHumanReadable(int(SwapTotal[1])*1024, binary=True) + "\n"
 			if "SwapFree:" in tstLine:
 				SwapFree = out_lines[lidx].split()
-				self.AboutText += _("Free swap:") + "\t" + SwapFree[1] + "\n\n"
+				self.AboutText += _("Free swap:") + "\t" + bytesToHumanReadable(int(SwapFree[1])*1024, binary=True) + "\n\n"
 
-		self["textBoxActions"].setEnabled(False)
-		self.Console = Console()
-		self.Console.ePopen("df -mh / | grep -v '^Filesystem'", self.Stage1Complete)
-
-	def Stage1Complete(self, result, retval, extra_args=None):
-		flash = str(result).replace("\n", "")
-		flash = flash.split()
-		RamTotal = flash[1]
-		RamFree = flash[3]
+		flash = df_h(find="/")[0]
 
 		self.AboutText += _("FLASH") + "\n\n"
-		self.AboutText += _("Total:") + "\t" + RamTotal + "\n"
-		self.AboutText += _("Free:") + "\t" + RamFree + "\n\n"
+		self.AboutText += _("Total:") + "\t" + flash[1] + "\n"
+		self.AboutText += _("Free:") + "\t" + flash[3] + "\n\n"
 
 		self["AboutScrollLabel"].setText(self.AboutText)
-		self["textBoxActions"].setEnabled(True)
 
 
 class SystemNetworkInfo(AboutBase):
