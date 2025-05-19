@@ -4,8 +4,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-11 00:28+0300\n"
-"PO-Revision-Date: 2025-05-14 11:29+0300\n"
+"POT-Creation-Date: 2025-05-17 14:08+0300\n"
+"PO-Revision-Date: 2025-05-18 08:50+0300\n"
 "Last-Translator: Orlandox\n"
 "Language-Team: timoj/Kojo/Samzam/Orlandox\n"
 "Language: fi\n"
@@ -937,6 +937,14 @@ msgstr "%m/%d/%Y"
 #, python-format
 msgid "%s"
 msgstr "%s"
+
+#, python-format
+msgid "%s "
+msgstr "%s "
+
+#, python-format
+msgid "%s   "
+msgstr "%s   "
 
 #, python-format
 msgid "%s %s advanced remote control (native)"
@@ -6759,8 +6767,9 @@ msgstr "Vapaa swap:"
 msgid "Free:"
 msgstr "Vapaana:"
 
-msgid "Free: "
-msgstr "Vapaana: "
+#, python-format
+msgid "Free:%s   "
+msgstr "Vapaana:%s   "
 
 msgid "French"
 msgstr "Ranska"
@@ -9165,6 +9174,10 @@ msgstr "Liitä."
 
 msgid "Mount: "
 msgstr "Liitos: "
+
+#, python-format
+msgid "Mount:%s "
+msgstr "Liitos:%s "
 
 msgid "Mounts"
 msgstr "Liitokset"
@@ -16680,6 +16693,10 @@ msgstr "Käytetään määrittämään viive, kun vaihdetaan kanavien välillä 
 msgid "Used:"
 msgstr "Käytetty:"
 
+#, python-format
+msgid "Used:%s   "
+msgstr "Käytetty:%s   "
+
 msgid "User - bouquets"
 msgstr "Käyttäjä - suosikit"
 
@@ -18503,9 +18520,6 @@ msgstr "vapaana"
 
 msgid "free diskspace"
 msgstr "vapaata levytilaa"
-
-msgid "full"
-msgstr "täysi"
 
 msgid "further education"
 msgstr "jatkokoulutus"
