@@ -4,8 +4,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-17 14:08+0300\n"
-"PO-Revision-Date: 2025-05-18 08:50+0300\n"
+"POT-Creation-Date: 2025-05-18 11:48+0300\n"
+"PO-Revision-Date: 2025-05-18 15:09+0300\n"
 "Last-Translator: Orlandox\n"
 "Language-Team: timoj/Kojo/Samzam/Orlandox\n"
 "Language: fi\n"
@@ -1003,8 +1003,8 @@ msgid "%s files cannot be bulk renamed"
 msgstr "%s tiedostoa ei voi nimetä massana"
 
 #, python-format
-msgid "%s is also enabled for autofs network mount \n"
-msgstr "%s on myös käytössä autofs verkkoliitokselle \n"
+msgid "%s is also enabled for autofs network"
+msgstr "%s on myös käytössä autofs-verkkossa"
 
 #. TRANSLATORS: The satellite with name '%s' is no longer used after a configuration change. The user is asked whether or not the satellite should be deleted.
 #, python-format
@@ -6768,8 +6768,8 @@ msgid "Free:"
 msgstr "Vapaana:"
 
 #, python-format
-msgid "Free:%s   "
-msgstr "Vapaana:%s   "
+msgid "Free: %s "
+msgstr "Vapaana: %s "
 
 msgid "French"
 msgstr "Ranska"
@@ -9176,8 +9176,8 @@ msgid "Mount: "
 msgstr "Liitos: "
 
 #, python-format
-msgid "Mount:%s "
-msgstr "Liitos:%s "
+msgid "Mount: %s  "
+msgstr "Liitos: %s  "
 
 msgid "Mounts"
 msgstr "Liitokset"
@@ -16694,8 +16694,8 @@ msgid "Used:"
 msgstr "Käytetty:"
 
 #, python-format
-msgid "Used:%s   "
-msgstr "Käytetty:%s   "
+msgid "Used: %s  "
+msgstr "Käytetty: %s  "
 
 msgid "User - bouquets"
 msgstr "Käyttäjä - suosikit"
