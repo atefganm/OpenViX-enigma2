@@ -303,7 +303,6 @@ class Devices(Screen):
 			self["Tuner" + str(count)] = StaticText("")
 		self["hdd"] = StaticText()
 		self["mounts"] = StaticText()
-		self.list = []
 		self.activityTimer = eTimer()
 		self.activityTimer.timeout.get().append(self.populate2)
 		self["key_red"] = Button(_("Close"))
@@ -315,7 +314,6 @@ class Devices(Screen):
 		self.onLayoutFinish.append(self.populate)
 
 	def populate(self):
-		self.mountinfo = ""
 		self["actions"].setEnabled(False)
 		scanning = _("Please wait while scanning for devices...")
 		self["nims"].setText(scanning)
@@ -363,23 +361,16 @@ class Devices(Screen):
 						text = "%s %s-%s: %s" % (_("Tuner"), desc_list[count]["start"], desc_list[count]["end"], desc_list[count]["desc"])
 				else:
 					text = ""
-
 				self["Tuner" + str(count)].setText(text)
 
-		self.hddlist = harddiskmanager.HDDList()
-
-		self.list = []
-		self.tparts = {}
-		result = df_h()
-		print(f"[About] df_h()\n{result}\n")
-		for line in result:
-			if line:
-				self.parts = line  # device, size, used, free, use %, mount
-				self.tparts[self.parts[0]] = self.parts  # save entry with device key
-		if self.hddlist:
-			print("[About] hddlist = %s" % (self.hddlist))
-			for count in range(len(self.hddlist)):
-				hdd = self.hddlist[count][0].replace("/dev/mmcblk0", "/dev/mmcblk0p3")  # dm9x0:mmcblk0p3 multiboot root & storage
+		hddlist = harddiskmanager.HDDList()
+		devicelist = []
+		mountdict = {m[0]: m for m in df_h()}  # tuples of (device, size, used, free, use %, mount)
+		print(f"[About] mountdict\n{mountdict}\n")
+		if hddlist:
+			print("[About] hddlist = %s" % (hddlist))
+			for i in range(len(hddlist)):
+				hdd = hddlist[i][0].replace("/dev/mmcblk0", "/dev/mmcblk0p3")  # dm9x0:mmcblk0p3 multiboot root & storage
 				hddsplit = hdd.split("/", 1)  # hddsplit[0]:description hddsplit[1]:device and space
 				hddDescription = hddsplit[0]  # device description
 				if "ATA" in hddDescription:
@@ -392,49 +383,41 @@ class Devices(Screen):
 				hddDescLen = len(hddDescription)
 				hddKey1 = ("/" + hddsplit[1].split(" ", 1)[0])  # device key e.g. /dev/sda /dev/sdb /dev/mmcblk0p1
 
-				if self.tparts:
-					for index, keyValue in enumerate(self.tparts.keys()):
-						if hddKey1 not in str(keyValue):
-							continue
-						else:
-							break
+				if mountdict:
+					for keyValue in mountdict.keys():
+						if hddKey1 in str(keyValue):
+							break  # use break here to excape the loop and NOT run its else clause
 					else:  # device not mounted
-						line = "%s" % hdd
-						self.list.append(line)
-						continue
+						devicelist.append("%s" % hdd)
+						continue  # continues the outer loop so code below is skipped
 					# device is mounted so add device partition(s) attributes
 					keyRange = 5 if "dev/sd" in hddKey1 else 2  # assumes no more than 4 partitions on device
 					for count in range(1, keyRange):
 						hddKey = "%s" % hddKey1 + "%s" % str(count) if "dev/sd" in hddKey1 else hddKey1
-						if hddKey in self.tparts.keys():
-							freeline = _("%s ") % hddKey + _("%s   ") % self.tparts[hddKey][1] + "\n" + _("Mount: %s  ") % self.tparts[hddKey][5] + _("Used: %s  ") % self.tparts[hddKey][2] + _("Free: %s ") % self.tparts[hddKey][3]
+						if hddKey in mountdict.keys():
+							freeline = _("%s ") % hddKey + _("%s   ") % mountdict[hddKey][1] + "\n" + _("Mount: %s  ") % mountdict[hddKey][5] + _("Used: %s  ") % mountdict[hddKey][2] + _("Free: %s ") % mountdict[hddKey][3]
 							line = ""
 							for count in range(0, hddDescLen):
 								line += "%s " % hddDescription[count]
 							line += "%s " % freeline
-							self.list.append(line)
+							devicelist.append(line)
 				else:  # device not mounted
-					line = "%s" % hdd
-					self.list.append(line)
-		self.list = "\n".join(self.list)
-		self["hdd"].setText(self.list)
+					devicelist.append("%s" % hdd)
+		self["hdd"].setText("\n".join(devicelist))
 
-		self.mountinfo = ""
-		for line in result:
-			self.parts = line
-			if line and self.parts[0] and self.parts[0].startswith(("192", "//192")):
-				ipaddress = line[0]
-				mounttotal = line[1]
-				mountfree = line[3]
-				if self.mountinfo:
-					self.mountinfo += "\n"
-				self.mountinfo += "%s (%s, %s %s)  " % ("Mount: " + ipaddress, mounttotal, _("Free:"), mountfree)
+		networkmountinfo = []
+		for key in mountdict:
+			if key.startswith(("192", "//192")):  # LAN IP starting 192.xxx.xxx.xxx (Is this a good check? Will all LAN IPs start 192? No!)
+				ipaddress = mountdict[key][0]
+				mounttotal = mountdict[key][1]
+				mountfree = mountdict[key][3]
+				networkmountinfo.append("%s (%s, %s %s)  " % ("Mount: " + ipaddress, mounttotal, _("Free:"), mountfree))
 		if ospath.exists("/media/autofs"):
 			for entry in sorted(listdir("/media/autofs")):
 				mountEntry = ospath.join("/media/autofs", entry)
-				self.mountinfo += _("%s is also enabled for autofs network \n") % (mountEntry)
-		if self.mountinfo:
-			self["mounts"].setText(self.mountinfo)
+				networkmountinfo.append(_("%s is also enabled for autofs network") % (mountEntry))
+		if networkmountinfo:
+			self["mounts"].setText("\n".join(networkmountinfo))
 		else:
 			self["mounts"].setText(_("none"))
 		self["actions"].setEnabled(True)
