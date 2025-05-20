@@ -325,13 +325,7 @@ class Devices(Screen):
 
 	def populate2(self):
 		self.activityTimer.stop()
-		niminfo = ""
-		nims = nimmanager.nimListCompressed()
-		for count in range(len(nims)):
-			if niminfo:
-				niminfo += "\n"
-			niminfo += nims[count]
-		self["nims"].setText(niminfo)
+		self["nims"].setText("\n".join([nim for nim in nimmanager.nimListCompressed()]))
 
 		nims = nimmanager.nimList()
 		if len(nims) <= 4:
