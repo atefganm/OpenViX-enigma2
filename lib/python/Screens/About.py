@@ -384,8 +384,8 @@ class Devices(Screen):
 				hddKey1 = ("/" + hddsplit[1].split(" ", 1)[0])  # device key e.g. /dev/sda /dev/sdb /dev/mmcblk0p1
 
 				if mountdict:
-					for keyValue in mountdict.keys():
-						if hddKey1 in str(keyValue):
+					for device in mountdict:
+						if hddKey1 in device:
 							break  # use break here to excape the loop and NOT run its else clause
 					else:  # device not mounted
 						devicelist.append("%s" % hdd)
@@ -406,11 +406,11 @@ class Devices(Screen):
 		self["hdd"].setText("\n".join(devicelist))
 
 		networkmountinfo = []
-		for key in mountdict:
-			if key.startswith(("192", "//192")):  # LAN IP starting 192.xxx.xxx.xxx (Is this a good check? Will all LAN IPs start 192? No!)
-				ipaddress = mountdict[key][0]
-				mounttotal = mountdict[key][1]
-				mountfree = mountdict[key][3]
+		for device in mountdict:
+			if device.startswith(("192", "//192")):  # LAN IP starting 192.xxx.xxx.xxx (Is this a good check? Will all LAN IPs start 192? No!)
+				ipaddress = mountdict[device][0]
+				mounttotal = mountdict[device][1]
+				mountfree = mountdict[device][3]
 				networkmountinfo.append("%s (%s, %s %s)  " % ("Mount: " + ipaddress, mounttotal, _("Free:"), mountfree))
 		if ospath.exists("/media/autofs"):
 			for entry in sorted(listdir("/media/autofs")):
