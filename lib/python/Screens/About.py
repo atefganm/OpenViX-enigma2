@@ -383,9 +383,13 @@ class Devices(Screen):
 				hddsplit = hdd.split("/", 1)  # hddsplit[0]:description hddsplit[1]:device and space
 				hddDescription = hddsplit[0]  # device description
 				if "ATA" in hddDescription:
-					hddDescription = hddDescription.replace("ATA", "", 2).replace("SATA", "SATA Internal Bus ").replace("(", "").replace(")", "")
+					hddDescription = hddDescription.replace("ATA", "", 2).replace("SATA ", "SATA Internal Bus ").replace("(", "").replace(")", "").replace("   ", " ").replace("  ", " ").replace("/dev", " /dev")
+				if "USB" in hddDescription:
+					hddDescription = hddDescription.replace("(", "").replace(")", "").replace("   ", " ").replace("  ", " ").replace("/dev", " /dev")
+				if "SD" in hddDescription:
+					hddDescription = hddDescription.replace("(", "").replace(")", "").replace("   ", " ").replace("  ", " ").replace("/dev", " /dev")
 				hddDescription = hddDescription.split()  # split out fields without spaces
-
+				hddDescLen = len(hddDescription)
 				hddKey1 = ("/" + hddsplit[1].split(" ", 1)[0])  # device key e.g. /dev/sda /dev/sdb /dev/mmcblk0p1
 
 				if self.tparts:
@@ -403,8 +407,11 @@ class Devices(Screen):
 					for count in range(1, keyRange):
 						hddKey = "%s" % hddKey1 + "%s" % str(count) if "dev/sd" in hddKey1 else hddKey1
 						if hddKey in self.tparts.keys():
-							freeline = _("%s ") % hddKey + _("%s   ") % self.tparts[hddKey][1] + _("Used:%s   ") % self.tparts[hddKey][2] + _("Free:%s   ") % self.tparts[hddKey][3] + _("Mount:%s ") % self.tparts[hddKey][5]
-							line = "%s %s %s" % (hddDescription[0], hddDescription[1], freeline)
+							freeline = _("%s ") % hddKey + _("%s   ") % self.tparts[hddKey][1] +  "\n" + _("Mount: %s  ") % self.tparts[hddKey][5] + _("Used: %s  ") % self.tparts[hddKey][2] + _("Free: %s ") % self.tparts[hddKey][3]
+							line = ""
+							for count in range(0, hddDescLen):
+								line += "%s " % hddDescription[count]
+							line += "%s " % freeline
 							self.list.append(line)
 				else:  # device not mounted
 					line = "%s" % hdd
@@ -421,11 +428,11 @@ class Devices(Screen):
 				mountfree = line[3]
 				if self.mountinfo:
 					self.mountinfo += "\n"
-				self.mountinfo += "%s (%s, %s %s)  " % (ipaddress, mounttotal, mountfree, _("free"))
+				self.mountinfo += "%s (%s, %s %s)  " % ("Mount: " + ipaddress, mounttotal, _("Free:"), mountfree)
 		if ospath.exists("/media/autofs"):
 			for entry in sorted(listdir("/media/autofs")):
 				mountEntry = ospath.join("/media/autofs", entry)
-				self.mountinfo += _("%s is also enabled for autofs network mount \n") % (mountEntry)
+				self.mountinfo += _("%s is also enabled for autofs network \n") % (mountEntry)
 		if self.mountinfo:
 			self["mounts"].setText(self.mountinfo)
 		else:
