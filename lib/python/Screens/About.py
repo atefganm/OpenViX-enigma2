@@ -403,7 +403,7 @@ class Devices(Screen):
 					for count in range(1, keyRange):
 						hddKey = "%s" % hddKey1 + "%s" % str(count) if "dev/sd" in hddKey1 else hddKey1
 						if hddKey in self.tparts.keys():
-							freeline = _("%s " % hddKey) + _("%s   " % self.tparts[hddKey][1]) + _("Used:%s   " % self.tparts[hddKey][2]) + _("Free:%s   " % self.tparts[hddKey][3]) + _("Mount:%s " % self.tparts[hddKey][5])
+							freeline = _("%s ") % hddKey + _("%s   ") % self.tparts[hddKey][1] + _("Used:%s   ") % self.tparts[hddKey][2] + _("Free:%s   ") % self.tparts[hddKey][3] + _("Mount:%s ") % self.tparts[hddKey][5]
 							line = "%s %s %s" % (hddDescription[0], hddDescription[1], freeline)
 							self.list.append(line)
 				else:  # device not mounted
