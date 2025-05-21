@@ -2,6 +2,7 @@ from os import listdir, path as ospath, popen, statvfs
 from re import search
 from sys import version_info
 from enigma import eTimer, getDesktop, getEnigmaLastCommitDate, getEnigmaLastCommitHash
+from skin import parameters
 from Components.About import getBoxUptime, getCPUArch, getEnigmaUptime, getIfConfig, getIfTransferredData
 from Components.ActionMap import ActionMap
 from Components.Button import Button
@@ -17,6 +18,7 @@ from Screens.Screen import Screen, ScreenSummary
 from Screens.SoftwareUpdate import UpdatePlugin
 from Screens.TextBox import TextBox
 from Tools.Directories import fileHas, fileReadLines, isPluginInstalled
+from Tools.Hex2strColor import Hex2strColor
 from Tools.Multiboot import GetCurrentImageMode
 from Tools.StbHardware import getFPVersion
 
@@ -141,10 +143,16 @@ def df_h(find=None, binary=False):
 class AboutBase(TextBox):
 	def __init__(self, session, labels=None):
 		TextBox.__init__(self, session, label="AboutScrollLabel")
+		self.colors = parameters.get("AboutColors", [])  # First item must be default text colour. If parameter is missing adding colours will be skipped.
 		if labels:
 			self["lab1"] = StaticText(_("Virtuosso Image Xtreme"))
 			self["lab2"] = StaticText(_("By Team ViX"))
 			self["lab3"] = StaticText(_("Support at") + " www.world-of-satellite.com")
+
+	def addColor(self, text, i=1):
+		if i < len(self.colors):
+			text = Hex2strColor(self.colors[i]) + text + Hex2strColor(self.colors[0])
+		return text
 
 	def createSummary(self):
 		return AboutSummary
@@ -291,72 +299,14 @@ class About(AboutBase):
 		self.session.openWithCallback(self.populate, Setup, "about")
 
 
-class Devices(Screen):
+class Devices(AboutBase):
 	def __init__(self, session):
-		Screen.__init__(self, session)
+		AboutBase.__init__(self, session, labels=True)
+		self.skinName = "AboutOE"
 		self.setTitle(_("Devices"))
-		self["TunerHeader"] = StaticText(_("Detected tuners:"))
-		self["HDDHeader"] = StaticText(_("Detected devices:"))
-		self["MountsHeader"] = StaticText(_("Network servers:"))
-		self["nims"] = StaticText()
-		for count in range(4):
-			self["Tuner" + str(count)] = StaticText("")
-		self["hdd"] = StaticText()
-		self["mounts"] = StaticText()
-		self.activityTimer = eTimer()
-		self.activityTimer.timeout.get().append(self.populate2)
-		self["key_red"] = Button(_("Close"))
-		self["actions"] = ActionMap(["SetupActions"],
-		{
-			"cancel": self.close,
-			"ok": self.close,
-		})
 		self.onLayoutFinish.append(self.populate)
 
 	def populate(self):
-		self["actions"].setEnabled(False)
-		scanning = _("Please wait while scanning for devices...")
-		self["nims"].setText(scanning)
-		for count in range(4):
-			self["Tuner" + str(count)].setText(scanning)
-		self["hdd"].setText(scanning)
-		self["mounts"].setText(scanning)
-		self.activityTimer.start(1)
-
-	def populate2(self):
-		self.activityTimer.stop()
-		self["nims"].setText("\n".join([nim for nim in nimmanager.nimListCompressed()]))
-
-		nims = nimmanager.nimList()
-		if len(nims) <= 4:
-			for count in range(4):
-				if count < len(nims):
-					self["Tuner" + str(count)].setText(nims[count])
-				else:
-					self["Tuner" + str(count)].setText("")
-		else:
-			desc_list = []
-			cur_idx = -1
-			for count in range(len(nims)):
-				data = nims[count].split(":")
-				idx = data[0].strip(_("Tuner")).strip()
-				desc = data[1].strip()
-				if desc_list and desc_list[cur_idx]["desc"] == desc:
-					desc_list[cur_idx]["end"] = idx
-				else:
-					desc_list.append({"desc": desc, "start": idx, "end": idx})
-					cur_idx += 1
-
-			for count in range(4):
-				if count < len(desc_list):
-					if desc_list[count]["start"] == desc_list[count]["end"]:
-						text = "%s %s: %s" % (_("Tuner"), desc_list[count]["start"], desc_list[count]["desc"])
-					else:
-						text = "%s %s-%s: %s" % (_("Tuner"), desc_list[count]["start"], desc_list[count]["end"], desc_list[count]["desc"])
-				else:
-					text = ""
-				self["Tuner" + str(count)].setText(text)
-
 		hddlist = harddiskmanager.HDDList()
 		devicelist = []
 		mountdict = {m[0]: m for m in df_h()}  # tuples of (device, size, used, free, use %, mount)
@@ -369,9 +319,7 @@ class Devices(Screen):
 				hddDescription = hddsplit[0]  # device description
 				if "ATA" in hddDescription:
 					hddDescription = hddDescription.replace("ATA", "", 2).replace("SATA ", "SATA Internal Bus ").replace("(", "").replace(")", "").replace("   ", " ").replace("  ", " ").replace("/dev", " /dev")
-				if "USB" in hddDescription:
-					hddDescription = hddDescription.replace("(", "").replace(")", "").replace("   ", " ").replace("  ", " ").replace("/dev", " /dev")
-				if "SD" in hddDescription:
+				if "USB" in hddDescription or "SD" in hddDescription:
 					hddDescription = hddDescription.replace("(", "").replace(")", "").replace("   ", " ").replace("  ", " ").replace("/dev", " /dev")
 				hddDescription = hddDescription.split()  # split out fields without spaces
 				hddDescLen = len(hddDescription)
@@ -389,7 +337,7 @@ class Devices(Screen):
 					for count in range(1, keyRange):
 						hddKey = "%s" % hddKey1 + "%s" % str(count) if "dev/sd" in hddKey1 else hddKey1
 						if hddKey in mountdict.keys():
-							freeline = _("%s ") % hddKey + _("%s   ") % mountdict[hddKey][1] + "\n" + _("Mount: %s  ") % mountdict[hddKey][5] + _("Used: %s  ") % mountdict[hddKey][2] + _("Free: %s ") % mountdict[hddKey][3]
+							freeline = _("%s ") % hddKey + _("%s   ") % mountdict[hddKey][1] + "\n  " + _("Mount: %s  ") % mountdict[hddKey][5] + _("Used: %s  ") % mountdict[hddKey][2] + _("Free: %s ") % mountdict[hddKey][3]
 							line = ""
 							for count in range(0, hddDescLen):
 								line += "%s " % hddDescription[count]
@@ -397,7 +345,6 @@ class Devices(Screen):
 							devicelist.append(line)
 				else:  # device not mounted
 					devicelist.append("%s" % hdd)
-		self["hdd"].setText("\n".join(devicelist))
 
 		networkmountinfo = []
 		for device in mountdict:
@@ -410,11 +357,12 @@ class Devices(Screen):
 			for entry in sorted(listdir("/media/autofs")):
 				mountEntry = ospath.join("/media/autofs", entry)
 				networkmountinfo.append(_("%s is also enabled for autofs network") % (mountEntry))
-		if networkmountinfo:
-			self["mounts"].setText("\n".join(networkmountinfo))
-		else:
-			self["mounts"].setText(_("none"))
-		self["actions"].setEnabled(True)
+
+		self["AboutScrollLabel"].split = False  # don't split
+		self["AboutScrollLabel"].setText("\n".join(
+			[self.addColor(_("Detected tuners").upper())] + ([nim for nim in nimmanager.nimListCompressed()] or [_("none")]) + [""] +
+			[self.addColor(_("Detected devices").upper())] + (devicelist or [_("none")]) + [""] +
+			[self.addColor(_("Network servers").upper())] + (networkmountinfo or [_("none")]) + [""]))
 
 	def createSummary(self):
 		return AboutSummary
@@ -426,7 +374,7 @@ class SystemMemoryInfo(AboutBase):
 		self.setTitle(_("Memory"))
 		self.skinName = ["SystemMemoryInfo", "About"]
 		out_lines = open("/proc/meminfo").readlines()  # output is in kiB so multiply by 1024
-		self.AboutText = _("RAM") + "\n\n"
+		self.AboutText = self.addColor(_("RAM")) + "\n"
 		for lidx in range(len(out_lines) - 1):
 			tstLine = out_lines[lidx].split()
 			if "MemTotal:" in tstLine:
@@ -450,7 +398,7 @@ class SystemMemoryInfo(AboutBase):
 
 		flash = df_h(find="/")[0]
 
-		self.AboutText += _("FLASH") + "\n\n"
+		self.AboutText += self.addColor(_("FLASH")) + "\n"
 		self.AboutText += _("Total:") + "\t" + flash[1] + "\n"
 		self.AboutText += _("Free:") + "\t" + flash[3] + "\n\n"
 
