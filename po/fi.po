@@ -1004,7 +1004,7 @@ msgstr "%s tiedostoa ei voi nimetä massana"
 
 #, python-format
 msgid "%s is also enabled for autofs network"
-msgstr "%s on myös käytössä autofs-verkkossa"
+msgstr "%s on myös käytössä autofs-verkossa"
 
 #. TRANSLATORS: The satellite with name '%s' is no longer used after a configuration change. The user is asked whether or not the satellite should be deleted.
 #, python-format
