@@ -15151,7 +15151,7 @@ msgstr ""
 "Suomenkielinen käännös: timoj, Kojo, Samzam, Orlandox\n"
 "\n"
 "Ylläpito : Orlandox\n"
-"--- 14.05.2025 ---\n"
+"--- 20.05.2025 ---\n"
 "\n"
 "http://www.huoltovalikko.com"
 
