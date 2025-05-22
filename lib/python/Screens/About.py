@@ -307,6 +307,22 @@ class Devices(AboutBase):
 		self.onLayoutFinish.append(self.populate)
 
 	def populate(self):
+		nims = nimmanager.nimList()
+		if len(nims) > 4:
+			desc_list = []
+			for nim in nims:
+				data = nim.split(":")
+				idx = data[0].strip(_("Tuner")).strip()
+				desc = data[1].strip()
+				if desc_list and desc_list[-1]["desc"] == desc:
+					desc_list[-1]["end"] = idx
+				else:
+					desc_list.append({"desc": desc, "start": idx, "end": idx})
+
+			nims = []
+			for nim in desc_list:
+				nims.append(f'%s {nim["start"]}{"-%s" % nim["end"] if nim["start"] != nim["end"] else ""}: {nim["desc"]}' % _("Tuner"))
+
 		hddlist = harddiskmanager.HDDList()
 		devicelist = []
 		mountdict = {m[0]: m for m in df_h()}  # tuples of (device, size, used, free, use %, mount)
@@ -360,7 +376,7 @@ class Devices(AboutBase):
 
 		self["AboutScrollLabel"].split = False  # don't split
 		self["AboutScrollLabel"].setText("\n".join(
-			[self.addColor(_("Detected tuners").upper())] + ([nim for nim in nimmanager.nimListCompressed()] or [_("none")]) + [""] +
+			[self.addColor(_("Detected tuners").upper())] + (nims or [_("none")]) + [""] +
 			[self.addColor(_("Detected devices").upper())] + (devicelist or [_("none")]) + [""] +
 			[self.addColor(_("Network servers").upper())] + (networkmountinfo or [_("none")]) + [""]))
 
