@@ -331,7 +331,13 @@ class Devices(AboutBase):
 		if hddlist:
 			print("[About] hddlist = %s" % (hddlist))
 			for i in range(len(hddlist)):
-				hdd = hddlist[i][0].replace("/dev/mmcblk0", "/dev/mmcblk0p3")  # dm9x0:mmcblk0p3 multiboot root & storage
+				hdd = hddlist[i][0]
+				if MODEL in ("dm900", "dm920"):  # dm9x0:mmcblk0p3 multiboot root & storage
+					hdd = hdd.replace("/dev/mmcblk0", "/dev/mmcblk0p3")
+				elif SystemInfo["HasH9SD"]:
+					hdd = hdd.replace("/dev/mmcblk0", "/dev/mmcblk0p1")
+				elif SystemInfo["HasSDnomount"]:
+					hdd = hdd.replace("/dev/mmcblk1", "/dev/mmcblk1p1")
 				hddsplit = hdd.split("/", 1)  # hddsplit[0]:description hddsplit[1]:device and space
 				hddDescription = hddsplit[0]  # device description
 				if "ATA" in hddDescription:
@@ -345,7 +351,7 @@ class Devices(AboutBase):
 				if mountdict:
 					for device in mountdict:
 						if hddKey1 in device:
-							break  # use break here to excape the loop and NOT run its else clause
+							break  # use break here to escape the loop and NOT run its else clause
 					else:  # device not mounted
 						devicelist.append("%s" % hdd)
 						continue  # continues the outer loop so code below is skipped
