@@ -202,6 +202,10 @@
 		<key id="\x1b" mapto="cancel" flags="m" />
 	</map>
 
+	<map context="InfoActions"><!-- for compatibility with some shared plugins -->
+		<key id="KEY_INFO" mapto="info" flags="m" />
+	</map>
+
 	<map context="TextEditActions">
 		<key id="KEY_BACK" mapto="backspace" flags="mr" />
 		<key id="KEY_LAST" mapto="backspace" flags="mr" />
@@ -1291,5 +1295,7 @@
 		<key id="KEY_FILE" mapto="file_long" flags="l" />
 		<key id="KEY_WWW" mapto="www" flags="b" />
 		<key id="KEY_WWW" mapto="www_long" flags="l" />
+		<key id="KEY_ARCHIVE" mapto="archive" flags="b" />
+		<key id="KEY_ARCHIVE" mapto="archive_long" flags="l" />
 	</map>
 </keymap>
