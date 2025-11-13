@@ -61,7 +61,10 @@ public:
 			m_have_border_color = true;
 			invalidate(); 
 		}
-
+	virtual void setWidgetAlphaBlend(bool blend) { 
+			m_alphaBlend = blend;
+			invalidate(); 
+		}
 	virtual void setPadding(const eRect &padding) { m_padding = padding; }
 	virtual eRect getPadding() { return m_padding; }
 
@@ -132,6 +135,9 @@ protected:
 	int m_border_width;
 	gRGB m_border_color;
 	eRect m_padding;
+	bool m_alphaBlend = false;
+	uint8_t m_align = eStackAlignNone;
+	virtual void invalidateChilds() {} // This will be overwritten in subclass
 
 public:
 
@@ -194,6 +200,20 @@ public:
 		RADIUS_RIGHT = 10,
 		RADIUS_ALL = 15,
 	};
+
+	enum {
+		eStackAlignNone = 0,
+		eStackAlignLeft = 1,
+		eStackAlignRight = 2,
+		eStackAlignTop = 4,
+		eStackAlignBottom = 8,
+		eStackAlignCenter = 16
+	};
+
+	void setAlign(uint8_t a) { m_align = a; }
+	uint8_t align() const { return m_align; }
+	eWidget* m_stack;
+	void setStack(eWidget* stack) { m_stack = stack; }
 
 };
 

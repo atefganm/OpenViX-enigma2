@@ -100,7 +100,7 @@ class ResumePoints():
 
 	def saveResumePoints(self):
 		with open(self.resumePointFile, "wb") as f:
-			pickle_dump(self.resumePointCache, f, pickle_HIGHEST_PROTOCOL)
+			pickle_dump(self.resumePointCache, f, protocol=5)
 
 	def delResumePoint(self, ref):
 		if (sref := ref.toString()) in self.resumePointCache:
@@ -725,14 +725,14 @@ class InfoBarShowHide(InfoBarScreenSaver):
 
 	def unDimming(self):
 		self.unDimmingTimer.stop()
-		self.doWriteAlpha(config.misc.osd_alpha.value)
+		self.doWriteAlpha(config.av.osd_alpha.value)
 
 	def doWriteAlpha(self, value):
 		if fileExists("/proc/stb/video/alpha"):
 			f = open("/proc/stb/video/alpha", "w")
 			f.write("%i" % (value))
 			f.close()
-			if value == config.misc.osd_alpha.value:
+			if value == config.av.osd_alpha.value:
 				self.lastResetAlpha = True
 			else:
 				self.lastResetAlpha = False
@@ -832,14 +832,14 @@ class InfoBarShowHide(InfoBarScreenSaver):
 	def doHide(self):
 		if self.__state != self.STATE_HIDDEN:
 			if self.dimmed > 0:
-				self.doWriteAlpha((config.misc.osd_alpha.value * self.dimmed / config.usage.show_infobar_dimming_speed.value))
+				self.doWriteAlpha((config.av.osd_alpha.value * self.dimmed / config.usage.show_infobar_dimming_speed.value))
 				self.DimmingTimer.start(5, True)
 			else:
 				self.DimmingTimer.stop()
 				self.hide()
 		elif self.__state == self.STATE_HIDDEN and self.secondInfoBarScreen and self.secondInfoBarScreen.shown:
 			if self.dimmed > 0:
-				self.doWriteAlpha((config.misc.osd_alpha.value * self.dimmed / config.usage.show_infobar_dimming_speed.value))
+				self.doWriteAlpha((config.av.osd_alpha.value * self.dimmed / config.usage.show_infobar_dimming_speed.value))
 				self.DimmingTimer.start(5, True)
 			else:
 				self.DimmingTimer.stop()
@@ -854,7 +854,7 @@ class InfoBarShowHide(InfoBarScreenSaver):
 			self.EventViewIsShown = False
 		# elif hasattr(self, "pvrStateDialog"):
 		# 	if self.dimmed > 0:
-		# 		self.doWriteAlpha((config.misc.osd_alpha.value*self.dimmed/config.usage.show_infobar_dimming_speed.value))
+		# 		self.doWriteAlpha((config.av.osd_alpha.value*self.dimmed/config.usage.show_infobar_dimming_speed.value))
 		# 		self.DimmingTimer.start(5, True)
 		# 	else:
 		# 		self.DimmingTimer.stop()
@@ -915,7 +915,7 @@ class InfoBarShowHide(InfoBarScreenSaver):
 
 	def unlockShow(self):
 		if config.usage.show_infobar_do_dimming.value and self.lastResetAlpha is False:
-			self.doWriteAlpha(config.misc.osd_alpha.value)
+			self.doWriteAlpha(config.av.osd_alpha.value)
 		try:
 			self.__locked -= 1
 		except:
@@ -4567,17 +4567,18 @@ class InfoBarSubtitleSupport:
 			self.subtitle_window.hide()
 
 	def toggleDefaultSubtitles(self):
+		from Screens.SubtitleDisplay import HIDE_SCREEN_TYPE_YES, HIDE_SCREEN_TYPE_NO
 		subtitle = self.getCurrentServiceSubtitle()
 		subtitlelist = subtitle and subtitle.getSubtitleList()
 		if subtitlelist is None or len(subtitlelist) == 0:
-			self.subtitle_window.showMessage(_("No subtitles available"), True)
+			self.subtitle_window.showSubtitles(_("No subtitles available"), HIDE_SCREEN_TYPE_YES)
 		elif self.selected_subtitle:
 			self.toggleenableSubtitle(None)
-			self.subtitle_window.showMessage(_("Subtitles off"), True)
+			self.subtitle_window.showSubtitles(_("Subtitles off"), HIDE_SCREEN_TYPE_YES)
 			self.selected_subtitle = None
 		else:
 			self.toggleenableSubtitle(subtitlelist[0])
-			self.subtitle_window.showMessage(_("Subtitles on"), False)
+			self.subtitle_window.showSubtitles(_("Subtitles on"), HIDE_SCREEN_TYPE_NO)
 
 	def toggleenableSubtitle(self, newSubtitle):
 		if self.selected_subtitle != newSubtitle:

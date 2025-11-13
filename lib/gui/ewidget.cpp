@@ -29,6 +29,7 @@ eWidget::eWidget(eWidget *parent) : m_animation(this), m_parent(parent ? parent-
 	m_have_border_color = false;
 	m_border_width = 0;
 	m_padding = eRect(0, 0, 0, 0);
+	m_stack = nullptr;
 }
 
 void eWidget::move(ePoint pos)
@@ -49,6 +50,8 @@ void eWidget::move(ePoint pos)
 	/* try native move if supported. */
 	if ((m_vis & wVisShow) && ((!m_desktop) || m_desktop->movedWidget(this)))
 		invalidate();
+	if (m_stack)
+		m_stack->invalidateChilds();
 }
 
 void eWidget::resize(eSize size)
@@ -87,6 +90,8 @@ void eWidget::resize(eSize size)
 
 	recalcClipRegionsWhenVisible();
 	invalidate();
+	if (m_stack)
+		m_stack->invalidateChilds();
 }
 
 void eWidget::invalidate(const gRegion &region)
@@ -168,7 +173,9 @@ void eWidget::show()
 		gRegion abs = m_visible_with_childs;
 		abs.moveBy(abspos);
 		root->m_desktop->invalidate(abs, this, target_layer);
-	};
+	}
+	if (m_stack)
+		m_stack->invalidateChilds();
 }
 
 void eWidget::hide()
@@ -206,6 +213,8 @@ void eWidget::hide()
 		root->m_desktop->recalcClipRegions(root);
 		root->m_desktop->invalidate(abs);
 	}
+	if (m_stack)
+		m_stack->invalidateChilds();
 }
 
 void eWidget::raise()
@@ -246,12 +255,14 @@ void eWidget::setZPosition(int z)
 
 void eWidget::setTransparent(int transp)
 {
-	if (isTransparent() != transp)
+	if (isTransparent() && !transp)
 	{
-		if (transp)
-			m_vis |= wVisTransparent;
-		else
-			m_vis &= ~wVisTransparent;
+		m_vis &= ~wVisTransparent;
+		recalcClipRegionsWhenVisible();
+	}
+	else if (!isTransparent() && transp)
+	{
+		m_vis |= wVisTransparent;
 		recalcClipRegionsWhenVisible();
 	}
 }
@@ -394,16 +405,27 @@ int eWidget::event(int event, void *data, void *data2)
 					painter.setRadius(r, m_cornerRadiusEdges);
 				if (r && drawborder)
 				{
-					painter.setBackgroundColor(m_border_color);
-					painter.drawRectangle(eRect(ePoint(0, 0), size()));
-					if (r)
-						painter.setRadius(r, m_cornerRadiusEdges);
-					painter.setBackgroundColor(m_have_background_color ? m_background_color : gRGB(0, 0, 0));
-					painter.drawRectangle(eRect(m_border_width, m_border_width, size().width() - m_border_width * 2, size().height() - m_border_width * 2));
+
+					if(!m_gradient_set && m_alphaBlend)
+					{
+						painter.setBackgroundColor(m_have_background_color ? m_background_color : gRGB(0, 0, 0));
+						painter.setBorder(m_border_color, m_border_width);
+						painter.drawRectangle(eRect(ePoint(0, 0), size()), m_alphaBlend);
+					}
+					else
+					{
+						painter.setBackgroundColor(m_border_color);
+						painter.drawRectangle(eRect(ePoint(0, 0), size()));
+						if (r)
+							painter.setRadius(r, m_cornerRadiusEdges);
+						painter.setBackgroundColor(m_have_background_color ? m_background_color : gRGB(0, 0, 0));
+						painter.drawRectangle(eRect(m_border_width, m_border_width, size().width() - m_border_width * 2, size().height() - m_border_width * 2));
+					}
+
 					drawborder = false;
 				}
 				else
-					painter.drawRectangle(eRect(ePoint(0, 0), size()));
+					painter.drawRectangle(eRect(ePoint(0, 0), size()), !m_gradient_set && m_alphaBlend);
 			}
 			else
 			{
@@ -415,7 +437,15 @@ int eWidget::event(int event, void *data, void *data2)
 				}
 				else
 				{
-					painter.clear();
+					if(m_alphaBlend)
+					{
+						if(drawborder)
+							painter.setBorder(m_border_color, m_border_width);
+						painter.drawRectangle(eRect(ePoint(0, 0), size()), true);
+						drawborder = false;
+					}
+					else
+						painter.clear();
 				}
 			}
 			if (drawborder)

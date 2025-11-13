@@ -1,7 +1,8 @@
 from os import listdir, path as ospath, popen, statvfs
+from platform import libc_ver
 from re import search
 from requests import get
-from sys import version_info
+from sys import version_info, version as pyversion
 from enigma import eTimer, getDesktop, getEnigmaLastCommitDate, getEnigmaLastCommitHash
 from skin import parameters
 from Components.About import getBoxUptime, getCPUArch, getEnigmaUptime, getIfConfig, getIfTransferredData
@@ -13,7 +14,8 @@ from Components.Network import iNetwork
 from Components.NimManager import nimmanager
 from Components.Pixmap import MultiPixmap
 from Components.Sources.StaticText import StaticText
-from Components.SystemInfo import SystemInfo, CHIPSET, KERNEL, MODEL, SOC_BRAND
+from Components.SystemInfo import BoxInfo, SystemInfo, CHIPSET, DISPLAYBRAND, KERNEL, MACHINENAME, MODEL, SOC_BRAND, UBIMB
+from Components.UserInstalledPackages import UserInstalledPackages
 from Screens.GitCommitInfo import CommitInfo
 from Screens.Screen import Screen, ScreenSummary
 from Screens.SoftwareUpdate import UpdatePlugin
@@ -22,6 +24,8 @@ from Tools.Directories import fileHas, fileReadLines, isPluginInstalled
 from Tools.Hex2strColor import Hex2strColor
 from Tools.Multiboot import GetCurrentImageMode
 from Tools.StbHardware import getFPVersion
+
+from twisted.internet import threads
 
 
 def getFlashDateString():
@@ -51,13 +55,8 @@ def _formatDate(Date):
 	return config.usage.date.dateFormatAbout.value % {"year": Date[0:4], "month": Date[4:6], "day": Date[6:8]}
 
 
-def getFFmpegVersionString():
-	lines = fileReadLines("/var/lib/opkg/info/ffmpeg.control")
-	if lines:
-		for line in lines:
-			if line[0:8] == "Version:":
-				return line[9:].split("+")[0]
-	return _("Not Installed")
+def getVersionFromOpkg(fileName):
+	return next((line[9:].split("+")[0] for line in (fileReadLines(f"/var/lib/opkg/info/{fileName}.control") or []) if line.startswith("Version:")), _("Not Installed"))
 
 
 def getGStreamerVersionString():
@@ -67,6 +66,22 @@ def getGStreamerVersionString():
 		return gst[1].split("+")[0].split("-")[0].replace("\n", "")
 	except:
 		return _("unknown")
+
+
+def getGlibcVersion():
+	try:
+		return libc_ver()[1]
+	except:
+		print("[About] Get glibc version failed.")
+	return _("Unknown")
+
+
+def getGccVersion():
+	try:
+		return pyversion.split("[GCC ")[1].replace("]", "")
+	except:
+		print("[About] Get gcc version failed.")
+	return _("Unknown")
 
 
 def getsystemTemperature():
@@ -144,6 +159,7 @@ def df_h(find=None, binary=False):
 class AboutBase(TextBox):
 	def __init__(self, session, labels=None):
 		TextBox.__init__(self, session, label="AboutScrollLabel")
+		self.skinName = "AboutOE"
 		self.colors = parameters.get("AboutColors", [])  # First item must be default text colour. If parameter is missing adding colours will be skipped.
 		if labels:
 			self["lab1"] = StaticText(_("Virtuosso Image Xtreme"))
@@ -163,7 +179,6 @@ class About(AboutBase):
 	def __init__(self, session):
 		AboutBase.__init__(self, session, labels=True)
 		self.setTitle(_("About"))
-		self.skinName = "AboutOE"
 		self.populate()
 
 		self["key_green"] = Button(_("Translations"))
@@ -181,7 +196,7 @@ class About(AboutBase):
 	def populate(self):
 		Brands = {"meson": "MESON", "bcm": "Broadcom", "hisi": "Hisilicon"}
 		AboutText = ""
-		AboutText += _("Model:\t%s %s\n") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"])
+		AboutText += _("Model:\t%s %s\n") % (DISPLAYBRAND, MACHINENAME)
 		AboutText += _("Chipset:\t%s %s\n") % (Brands.get(SOC_BRAND, SOC_BRAND), CHIPSET.replace("hi", "HI").replace("cv", "CV").replace("mv", "MV"))
 		CPUArch = getCPUArch(MODEL)
 		AboutText += _("CPU:\t%s %s %s\n") % (CPUArch[0], CPUArch[1], CPUArch[2])
@@ -189,7 +204,7 @@ class About(AboutBase):
 		if ospath.exists('/sys/firmware/devicetree/base/bolt/tag'):
 			with open("/sys/firmware/devicetree/base/bolt/tag") as f:
 				bootLoader = f.read().replace('\x00', '').replace('\n', '')
-				if SystemInfo["boxtype"] in ("gbquad4k", "gbue4k", "gbquad4kpro"):
+				if MODEL in ("gb7252, "):
 					AboutText += _("Bolt:\t%s\n") % bootLoader
 				else:
 					AboutText += _("Bootloader:\t%s\n") % bootLoader
@@ -216,13 +231,6 @@ class About(AboutBase):
 		elif "BootDevice" in SystemInfo and SystemInfo["BootDevice"]:
 			AboutText += _("Boot Device:\t%s%s\n") % (VuPlustxt, SystemInfo["BootDevice"])
 
-		if SystemInfo["HasH9SD"]:
-			if "rootfstype=ext4" in open("/sys/firmware/devicetree/base/chosen/bootargs", "r").read():
-				part = "        - SD card in use for Image root \n"
-			else:
-				part = "        - eMMC slot in use for Image root \n"
-			AboutText += _("%s") % part
-
 		if SystemInfo["canMultiBoot"]:
 			slot = image = SystemInfo["MultiBootSlot"]
 			if SystemInfo["HasHiSi"] and "sda" in SystemInfo["canMultiBoot"][slot]["root"]:
@@ -232,10 +240,10 @@ class About(AboutBase):
 					image -= 1
 			slotType = {"eMMC": _("eMMC"), "SDCARD": _("SDCARD"), "USB": _("USB")}.get(SystemInfo["canMultiBoot"][slot]["slotType"].replace(" ", ""), SystemInfo["canMultiBoot"][slot]["slotType"].replace(" ", ""))
 			part = _("slot %s  (%s)") % (slot, slotType)
-			bootmode = _("bootmode = %s") % GetCurrentImageMode() if SystemInfo["canMode12"] else ""
+			bootmode = SystemInfo["canMode12"] and (mode := GetCurrentImageMode()) and _("bootmode = %s") % str(mode) or ""
 			AboutText += (_("Image Slot:\t %s %s") % (part, bootmode)) + "\n"
 
-		if SystemInfo["MachineName"] in ("ET8500") and ospath.exists("/proc/mtd"):
+		if MACHINENAME in ("ET8500") and ospath.exists("/proc/mtd"):
 			self.dualboot = self.dualBoot()
 			if self.dualboot:
 				AboutText += _("ET8500 Multiboot: Installed\n")
@@ -245,8 +253,16 @@ class About(AboutBase):
 
 		AboutText += _("Drivers:\t%s\n") % driversDate()
 		AboutText += _("Kernel:\t%s\n") % KERNEL
+		AboutText += _("Samba:\t%s\n") % getVersionFromOpkg("samba")
 		AboutText += _("GStreamer:\t%s\n") % getGStreamerVersionString().replace("GStreamer ", "")
-		AboutText += _("FFmpeg version:\t%s\n") % getFFmpegVersionString()
+		AboutText += _("GCC version:\t%s\n") % getGccVersion()
+		AboutText += _("Glibc version:\t%s\n") % getGlibcVersion()
+		AboutText += _("FFmpeg version:\t%s\n") % getVersionFromOpkg("ffmpeg")
+		AboutText += _("OpenSSL version:\t%s\n") % getVersionFromOpkg("openssl")
+		if BoxInfo.getItem("rust"):
+			AboutText += _("Rust version:\t%s\n") % str(BoxInfo.getItem("rust"))
+		if BoxInfo.getItem("upx"):
+			AboutText += _("UPX version:\t%s\n") % str(BoxInfo.getItem("upx"))
 		if isPluginInstalled("ServiceApp") and config.plugins.serviceapp.servicemp3.replace.value:
 			AboutText += _("4097 iptv player:\t%s\n") % config.plugins.serviceapp.servicemp3.player.value
 		else:
@@ -300,10 +316,42 @@ class About(AboutBase):
 		self.session.openWithCallback(self.populate, Setup, "about")
 
 
+class AboutBoxInfo(AboutBase):
+	def __init__(self, session):
+		AboutBase.__init__(self, session, labels=True)
+		self.setTitle(_("BoxInfo"))
+
+		BIlist = []
+		for item in BoxInfo.getEnigmaInfoList():
+			value = str(BoxInfo.getItem(item))
+			for x in ("http://", "https://"):  # Trim URLs to domain only
+				if value.startswith(x):
+					value = value.split(x)[1].split('/')[0] + " [...]"
+					break
+			BIlist.append("%s:\t %s\n" % (item, value))
+		self["AboutScrollLabel"].setText(''.join(BIlist))
+
+
+class AboutUserInstalledPlugins(AboutBase):
+	def __init__(self, session):
+		AboutBase.__init__(self, session, labels=True)
+		self.setTitle(_("User installed plugins"))
+		self.reader = UserInstalledPackages()
+		self.onLayoutFinish.append(self.startfetch)
+
+	def startfetch(self):
+		self.reader.run(self.callback)
+
+	def callback(self, plugins):
+		if plugins:
+			self["AboutScrollLabel"].setText("\n".join(sorted(plugins)))
+		else:
+			self["AboutScrollLabel"].setText(_("No user installed plugins found"))
+
+
 class Devices(AboutBase):
 	def __init__(self, session):
 		AboutBase.__init__(self, session, labels=True)
-		self.skinName = "AboutOE"
 		self.setTitle(_("Devices"))
 		self.onLayoutFinish.append(self.populate)
 
@@ -360,7 +408,7 @@ class Devices(AboutBase):
 					for count in range(1, keyRange):
 						hddKey = "%s" % hddKey1 + "%s" % str(count) if hddKey1[0:-1] in ("/dev/sd", "/dev/mmcblk1") else hddKey1
 						if hddKey in mountdict.keys():
-							freeline = _("%s ") % hddKey + _("%s   ") % mountdict[hddKey][1] + "\n  " + _("Mount: %s  ") % mountdict[hddKey][5] + _("Used: %s  ") % mountdict[hddKey][2] + _("Free: %s ") % mountdict[hddKey][3]
+							freeline = "%s " % hddKey + "%s   " % mountdict[hddKey][1] + "\n  " + _("Mount: %s  ") % mountdict[hddKey][5] + _("Used: %s  ") % mountdict[hddKey][2] + _("Free: %s ") % mountdict[hddKey][3]
 							line = ""
 							for count in range(0, hddDescLen):
 								line += "%s " % hddDescription[count]
@@ -395,7 +443,6 @@ class SystemMemoryInfo(AboutBase):
 	def __init__(self, session):
 		AboutBase.__init__(self, session, labels=True)
 		self.setTitle(_("Memory"))
-		self.skinName = ["SystemMemoryInfo", "About"]
 		out_lines = open("/proc/meminfo").readlines()  # output is in kiB so multiply by 1024
 		self.AboutText = self.addColor(_("RAM")) + "\n"
 		for lidx in range(len(out_lines) - 1):
@@ -468,8 +515,6 @@ class SystemNetworkInfo(AboutBase):
 			self.resetList()
 			self.onClose.append(self.cleanup)
 		self.onLayoutFinish.append(self.updateStatusbar)
-		self.timer = eTimer()
-		self.timer.callback.append(self.getWanIP)
 
 	def createscreen(self):
 		self.AboutText = ""
@@ -633,7 +678,7 @@ class SystemNetworkInfo(AboutBase):
 			iNetwork.getLinkState(self.iface, self.dataAvail)
 			self["devicepic"].setPixmapNum(0)
 		self["devicepic"].show()
-		self.timer.start(10, 1)
+		threads.deferToThread(self.getWanIP)
 
 	def getWanIP(self):
 		try:
@@ -683,7 +728,7 @@ class AboutSummary(ScreenSummary):
 		self.aboutText = []
 		self["AboutText"] = StaticText()
 		self.aboutText.append(_("OpenViX: %s") % SystemInfo["imageversion"] + "." + SystemInfo["imagebuild"] + "\n")
-		self.aboutText.append(_("Model: %s %s\n") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"]))
+		self.aboutText.append(_("Model: %s %s\n") % (DISPLAYBRAND, MACHINENAME))
 		self.aboutText.append(_("Updated: %s") % getLastCommitDate() + "\n")
 		SystemTemperature = getsystemTemperature()
 		if SystemTemperature and int(SystemTemperature.replace("\n", "")) > 0:

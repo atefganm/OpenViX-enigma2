@@ -103,8 +103,7 @@ class ScreenHeader(GUIAddon):
 			if isinstance(val, StaticText):
 				if hasattr(val, "text") and val.text and val not in sequence:
 					sequence.append(val)
-			elif isinstance(val, Pixmap):
-				if val and val not in sequence:
+			elif val and isinstance(val, Pixmap) and val not in sequence:
 					sequence.append(val)
 
 		self.updateAddon(sequence)
@@ -114,7 +113,7 @@ class ScreenHeader(GUIAddon):
 		for (attrib, value) in self.skinAttributes[:]:
 			if attrib == "titleFont":
 				self.titleFont = parseFont(value, parent.scale)
-			if attrib == "titleSingleFont":
+			elif attrib == "titleSingleFont":
 				self.titleSingleFont = parseFont(value, parent.scale)
 			elif attrib == "pathFont":
 				self.pathFont = parseFont(value, parent.scale)

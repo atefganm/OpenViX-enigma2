@@ -7,7 +7,7 @@ from Screens.Screen import Screen
 
 from Components.Pixmap import Pixmap
 from Components.config import config, ConfigBoolean, configfile
-from Components.SystemInfo import BoxInfo
+from Components.SystemInfo import SystemInfo, BoxInfo
 
 from Tools.Directories import resolveFilename, SCOPE_SKIN, SCOPE_CURRENT_SKIN
 from Tools.HardwareInfo import HardwareInfo

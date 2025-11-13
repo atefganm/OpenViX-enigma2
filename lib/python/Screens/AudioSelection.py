@@ -37,6 +37,7 @@ class AudioSelection(Screen, ConfigListScreen):
 	hooks = []
 	audioHooks = []
 	subtitleHooks = []
+	fillSubtitleExt = None
 
 	def __init__(self, session, infobar=None, page=PAGE_AUDIO):
 		Screen.__init__(self, session)
@@ -342,8 +343,7 @@ class AudioSelection(Screen, ConfigListScreen):
 						number = "%x%02x" % (x[3] and x[3] or 8, x[2])
 
 					elif x[0] == 2:
-						types = ("unknown", "embedded", "SSA file", "ASS file",
-								"SRT file", "VOB file", "PGS file")
+						types = (_("unknown"), _("embedded"), "SSA", "ASS", "SRT", "VOB", "PGS")
 						try:
 							description = types[x[2]]
 						except:
@@ -377,6 +377,8 @@ class AudioSelection(Screen, ConfigListScreen):
 		subtitle = service and service.subtitle()
 		subtitlelist = subtitle and subtitle.getSubtitleList()
 		self.selectedSubtitle = None
+		if callable(AudioSelection.fillSubtitleExt):
+			AudioSelection.fillSubtitleExt(subtitlelist)
 		if self.subtitlesEnabled():
 			self.selectedSubtitle = self.infobar.selected_subtitle
 			if self.selectedSubtitle and self.selectedSubtitle[:4] == (0, 0, 0, 0):
@@ -602,13 +604,21 @@ class AudioSelection(Screen, ConfigListScreen):
 				self.runHooks(self.TYPE_AUDIO)
 			if self.settings.menupage.value == PAGE_SUBTITLES and cur[0] is not None:
 				if self.infobar.selected_subtitle and self.infobar.selected_subtitle[:4] == cur[0][:4]:
-					self.enableSubtitle(None)
+					if len(cur[0]) > 5 and callable(cur[0][5]):
+						cur[0][5](None)
+					else:
+						self.enableSubtitle(None)
 					selectedidx = self["streams"].getIndex()
 					self.__updatedInfo()
 					self["streams"].setIndex(selectedidx)
 					self.runHooks(self.TYPE_SUBTITLE)
 				else:
-					self.enableSubtitle(cur[0][:5])
+					if len(cur[0]) > 5 and callable(cur[0][5]):
+						cur[0][5](cur[0])
+					else:
+						if self.infobar.selected_subtitle and len(self.infobar.selected_subtitle) > 5:
+							self.infobar.selected_subtitle[5](None)
+						self.enableSubtitle(cur[0][:5])
 					self.__updatedInfo()
 				if isIPTV(ref):
 					self.saveAVDict()

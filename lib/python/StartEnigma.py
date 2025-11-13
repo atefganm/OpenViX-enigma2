@@ -434,7 +434,7 @@ def runScreenTest():
 			else:
 				config.misc.pluginWakeupName.value = ""  # next wakeup not a plugin
 			config.misc.pluginWakeupName.save()
-			if not config.misc.SyncTimeUsing.value == "dvb":
+			if config.misc.SyncTimeUsing.value != "dvb":
 				print("[StartEnigma] dvb time sync disabled... so set RTC now to current linux time!", strftime("%Y/%m/%d %H:%M", localtime(nowTime)))
 				setRTCtime(nowTime)
 			print("[StartEnigma] set wakeup time to", strftime("%Y/%m/%d %H:%M", localtime(wptime)))
@@ -475,6 +475,7 @@ profile("PYTHON_START")
 from Components.SystemInfo import SystemInfo  # noqa: E402  don't move this import
 
 print("[StartEnigma]  Starting Python Level Initialisation.")
+print(f"[StartEnigma]  Receiver -> {SystemInfo['displaybrand']} {SystemInfo['displaymodel']}")
 print(f"[StartEnigma]  Image Type -> {SystemInfo['imagetype']}")
 print(f"[StartEnigma]  Image Version -> {SystemInfo['imageversion']}")
 print(f"[StartEnigma]  Image Build -> {SystemInfo['imagebuild']}")
@@ -693,16 +694,16 @@ from Components.InputDevice import InitInputDevices  # noqa: E402
 InitInputDevices()
 import Components.InputHotplug  # noqa: E402
 
-profile("UserInterface")
-print("[StartEnigma]  Initialising UserInterface.")
-from Screens.UserInterfacePositioner import InitOsd  # noqa: E402
-InitOsd()
-
 profile("AVSwitch")
 print("[StartEnigma]  Initialising AVSwitch.")
 from Components.AVSwitch import InitAVSwitch, InitiVideomodeHotplug  # noqa: E402
 InitAVSwitch()
 InitiVideomodeHotplug()
+
+profile("UserInterface")
+print("[StartEnigma]  Initialising UserInterface.")
+from Screens.UserInterfacePositioner import InitOsd  # noqa: E402
+InitOsd()
 
 profile("EpgConfig")
 from Components.EpgConfig import InitEPGConfig  # noqa: E402

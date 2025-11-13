@@ -10,7 +10,7 @@ from Components.ConfigList import ConfigListScreen
 from Components.config import getConfigListEntry, ConfigSelection, NoSave
 from Components.Console import Console
 from Components.Sources.List import List
-from Components.SystemInfo import SystemInfo, BoxInfo
+from Components.SystemInfo import SystemInfo, DISPLAYBRAND, MACHINENAME, MODEL, UBIMB
 from Screens.MessageBox import MessageBox
 from Screens.Screen import Screen
 from Screens.Standby import QUIT_REBOOT, TryQuitMainloop
@@ -41,7 +41,6 @@ def readFile(filename):
 
 def getProcPartitions(partitionList):
 	partitions = []
-	boxModel = BoxInfo.getItem("model")
 	with open("/proc/partitions", "r") as fd:
 		for line in fd.readlines():
 			line = line.strip()
@@ -54,7 +53,7 @@ def getProcPartitions(partitionList):
 			devMajor = int(devmajor)
 			if devMajor in blacklistedDisks:  # Ignore all blacklisted devices.
 				continue
-			if devMajor == 179 and boxModel in ("dm900", "dm920"):
+			if devMajor == 179 and MODEL in ("dm900", "dm920"):
 				print("[MountManager]2 device='%s', devmajor='%s', devminor='%s'." % (device, devmajor, devminor))
 				if device != "mmcblk0p3":
 					continue
@@ -75,6 +74,10 @@ def getProcPartitions(partitionList):
 					if SystemInfo["HasHiSi"] and path.exists("/dev/sda4") and re.search("sd[a][1-4]", device):  # Sf8008 using SDcard for slots ---> exclude
 						continue
 			if device in partitions:  # If device is already in partition list ignore it.
+				continue
+			if UBIMB and SystemInfo["canMultiBoot"] and SystemInfo["BootDevice"][0:3] == device[0:3]:  # don,t show boot device
+				partitions.append(device)
+				# print(f"[MountManager]3 device={device} device[0:3]:{device[0:3]}")
 				continue
 			buildPartitionInfo(device, partitionList)
 			partitions.append(device)
@@ -99,7 +102,7 @@ def buildPartitionInfo(partition, partitionList):
 	for physdevprefix, pdescription in list(getDeviceDB().items()):
 		print(f"[MountManager][port] physdevprefix:{physdevprefix} pdescription:{pdescription}")
 		if physicalDevice.replace("/sys", "").startswith(physdevprefix):
-			portDescription = pdescription
+			portDescription = _(pdescription)
 	print(f"[MountManager] portDescription:{portDescription}")
 
 	description = readFile(path.join(physicalDevice, "model"))
@@ -150,7 +153,7 @@ def buildPartitionInfo(partition, partitionList):
 						_format = res.stdout.decode().strip()
 				rw = parts[3]			# read/write
 				break
-	print("[MountManager1][buildPartitionInfo] mediamount", mediamount)
+	print(f"[MountManager1][buildPartitionInfo] mediamount:{mediamount}")
 	if mediamount == "/" and SystemInfo["HasKexecMultiboot"]:
 		return
 	if mediamount == _("None") or mediamount is None:
@@ -393,7 +396,7 @@ class DeviceMountSetup(ConfigListScreen, Screen):
 		self.setconfTimer()
 
 	def setconfTimer(self, result=None, retval=None, extra_args=None):
-		scanning = _("Please wait while scanning your %s %s devices...") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"])
+		scanning = _("Please wait while scanning your %s %s devices...") % (DISPLAYBRAND, MACHINENAME)
 		self["lab1"].setText(scanning)
 		self.activityTimer.start(10)
 
@@ -419,9 +422,9 @@ class DeviceMountSetup(ConfigListScreen, Screen):
 		ybox.setTitle(_("Please wait."))
 
 	def delay(self, val):
-		message = _("The changes need a system restart to take effect.\nRestart your %s %s now?") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"])
+		message = _("The changes need a system restart to take effect.\nRestart your %s %s now?") % (DISPLAYBRAND, MACHINENAME)
 		ybox = self.session.openWithCallback(self.restartBox, MessageBox, message, MessageBox.TYPE_YESNO)
-		ybox.setTitle(_("Restart %s %s.") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"]))
+		ybox.setTitle(_("Restart %s %s.") % (DISPLAYBRAND, MACHINENAME))
 
 	def addconfFstab(self, result=None, retval=None, extra_args=None):
 		# print("[MountManager] RESULT:", result)

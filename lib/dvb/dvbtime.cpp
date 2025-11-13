@@ -406,6 +406,8 @@ void eDVBLocalTimeHandler::updateTime( time_t tp_time, eDVBChannel *chan, int up
 						gettimeofday(&tnow, 0);
 						tnow.tv_sec = tp_time;
 						settimeofday(&tnow, 0);
+				if ( (time_difference <= -60) || (time_difference >= 60) )  // bigger difference than one minute
+					m_timeUpdatedMinutes();
 					}
 					else {
 						eDebug("[eDVBLocalTimerHandler] Slewing Linux time by %d seconds FAILED! (%d) %m", time_difference, errno);
@@ -615,6 +617,9 @@ void eDVBLocalTimeHandler::updateTime( time_t tp_time, eDVBChannel *chan, int up
 				now.tm_min,
 				now.tm_sec);
 			}
+
+			if ( (time_difference <= -60) || (time_difference >= 60) )  // bigger difference than one minute
+				m_timeUpdatedMinutes();
 		}
 
 		/*emit*/ m_timeUpdated();

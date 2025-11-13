@@ -15,7 +15,7 @@ from Components.Playlist import PlaylistIOInternal, PlaylistIOM3U, PlaylistIOPLS
 from Components.ServiceEventTracker import ServiceEventTracker, InfoBarBase
 from Components.ServicePosition import ServicePositionGauge
 from Components.Sources.StaticText import StaticText
-from Components.SystemInfo import SystemInfo
+from Components.SystemInfo import SystemInfo, DISPLAYBRAND, MACHINENAME
 from Plugins.Plugin import PluginDescriptor
 from Screens.ChoiceBox import ChoiceBox
 from Screens.InfoBar import InfoBar
@@ -351,14 +351,14 @@ class MediaPlayer(Screen, InfoBarBase, InfoBarScreenSaver, InfoBarSeek, InfoBarA
 	def __evAudioDecodeError(self):
 		currPlay = self.session.nav.getCurrentService()
 		sTagAudioCodec = currPlay.info().getInfoString(iServiceInformation.sTagAudioCodec)
-		print("[__evAudioDecodeError] audio-codec %s can't be decoded by hardware" % sTagAudioCodec)
-		self.session.open(MessageBox, _("This %s %s cannot decode %s streams!") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"], sTagAudioCodec), type=MessageBox.TYPE_INFO, timeout=20)
+		print(f"[__evAudioDecodeError] audio-codec {sTagAudioCodec} can't be decoded by hardware")
+		self.session.open(MessageBox, _("This %s %s cannot decode %s streams!") % (DISPLAYBRAND, MACHINENAME, sTagAudioCodec), type=MessageBox.TYPE_INFO, timeout=20)
 
 	def __evVideoDecodeError(self):
 		currPlay = self.session.nav.getCurrentService()
 		sTagVideoCodec = currPlay.info().getInfoString(iServiceInformation.sTagVideoCodec)
-		print("[__evVideoDecodeError] video-codec %s can't be decoded by hardware" % sTagVideoCodec)
-		self.session.open(MessageBox, _("This %s %s cannot decode %s streams!") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"], sTagVideoCodec), type=MessageBox.TYPE_INFO, timeout=20)
+		print(f"[__evVideoDecodeError] video-codec {sTagVideoCodec} can't be decoded by hardware")
+		self.session.open(MessageBox, _("This %s %s cannot decode %s streams!") % (DISPLAYBRAND, MACHINENAME, sTagVideoCodec), type=MessageBox.TYPE_INFO, timeout=20)
 
 	def __evPluginError(self):
 		currPlay = self.session.nav.getCurrentService()
@@ -485,7 +485,7 @@ class MediaPlayer(Screen, InfoBarBase, InfoBarScreenSaver, InfoBarSeek, InfoBarA
 	def updateCurrentInfo(self):
 		text = ""
 		if self.currList == "filelist":
-			idx = self.filelist.getSelectionIndex()
+			idx = self.filelist.getSelectedIndex()
 			r = self.filelist.list[idx]
 			text = r[1][7]
 			if r[0][1]:
@@ -531,7 +531,7 @@ class MediaPlayer(Screen, InfoBarBase, InfoBarScreenSaver, InfoBarSeek, InfoBarA
 			text = self.getIdentifier(t)
 			self.summaries.setText(text, 1)
 			self["currenttext"].setText(text)
-			idx = self.playlist.getSelectionIndex()
+			idx = self.playlist.getSelectedIndex()
 			idx += 1
 			if idx < len(self.playlist):
 				currref = self.playlist.getServiceRefList()[idx]
@@ -557,7 +557,7 @@ class MediaPlayer(Screen, InfoBarBase, InfoBarScreenSaver, InfoBarSeek, InfoBarA
 				self.copyFile()
 
 		if self.currList == "playlist":
-			if self.playlist.getCurrentIndex() == self.playlist.getSelectionIndex() and not self.playlist.isStopped():
+			if self.playlist.getCurrentIndex() == self.playlist.getSelectedIndex() and not self.playlist.isStopped():
 				if self.shown:
 					self.hideAndInfoBar()
 				elif self.mediaPlayerInfoBar.shown:
@@ -568,7 +568,7 @@ class MediaPlayer(Screen, InfoBarBase, InfoBarScreenSaver, InfoBarSeek, InfoBarA
 				else:
 					self.mediaPlayerInfoBar.show()
 			else:
-				self.changeEntry(self.playlist.getSelectionIndex())
+				self.changeEntry(self.playlist.getSelectedIndex())
 
 	def showMenu(self):
 		menulist = []
@@ -615,7 +615,7 @@ class MediaPlayer(Screen, InfoBarBase, InfoBarScreenSaver, InfoBarSeek, InfoBarA
 		elif choice[1] == "filelist":
 			self.switchToFileList()
 		elif choice[1] == "deleteentry":
-			if self.playlist.getSelectionIndex() == self.playlist.getCurrentIndex():
+			if self.playlist.getSelectedIndex() == self.playlist.getCurrentIndex():
 				self.stopEntry()
 			self.deleteEntry()
 		elif choice[1] == "clear":
@@ -679,7 +679,7 @@ class MediaPlayer(Screen, InfoBarBase, InfoBarScreenSaver, InfoBarSeek, InfoBarA
 
 	def deletePlaylistEntry(self):
 		if self.currList == "playlist":
-			if self.playlist.getSelectionIndex() == self.playlist.getCurrentIndex():
+			if self.playlist.getSelectedIndex() == self.playlist.getCurrentIndex():
 				self.stopEntry()
 			self.deleteEntry()
 
@@ -896,7 +896,7 @@ class MediaPlayer(Screen, InfoBarBase, InfoBarScreenSaver, InfoBarSeek, InfoBarA
 				self.changeEntry(next)
 
 	def deleteEntry(self):
-		self.playlist.deleteFile(self.playlist.getSelectionIndex())
+		self.playlist.deleteFile(self.playlist.getSelectedIndex())
 		self.playlist.updateList()
 		if len(self.playlist) == 0:
 			self.switchToFileList()

@@ -859,7 +859,7 @@ class HarddiskManager:
 					continue
 				mountPoint = device.get("MOUNT")
 				if mountPoint:
-					commands.append(f"/bin/umount -lf {DEVNAME.replace(" / dev / ", " / media / ")}")
+					commands.append(f"/bin/umount -lf {DEVNAME.replace("/dev/", "/media/")}")
 					ID_FS_TYPE = "auto"  # eventData.get("ID_FS_TYPE")
 					knownDevices.append(f"{ID_FS_UUID}:{mountPoint}")
 					newFstab.append(f"UUID={ID_FS_UUID} {mountPoint} {ID_FS_TYPE} defaults 0 0")
@@ -973,7 +973,10 @@ class HarddiskManager:
 							if devMajor == 179 and MODEL in ("dm900", "dm920") and partition != "mmcblk0p3":
 								continue
 							description = self.getUserfriendlyDeviceName(partition, physicalDevice)
-							print(f"[Harddisk][enumerateBlockDevices]### Found partition '{partition}', description='{description}', device='{physicalDevice}' mountpoint='{self.getMountpoint(partition)}.")
+							print(f"[Harddisk][enumerateBlockDevices]### Found partition '{partition}', description='{description}', device='{physicalDevice}' mountpoint={self.getMountpoint(partition)}.")
+							if self.getMountpoint(partition) == "/media/hdd/" and partition.startswith("sd") or partition.startswith("mmcblk0"):
+								SystemInfo["MTDBLACK"] = partition
+								print(f"[Harddisk][enumerateBlockDevices]### MTDBLACK:{SystemInfo['MTDBLACK']}")
 							if MODEL in ("dm900", "dm920") and partition == "mmcblk0p3" and self.getMountpoint(partition) is None:
 								mountpoint = "/media/data/"
 								newFstab = fileReadLines("/etc/fstab")
@@ -1152,9 +1155,11 @@ class HarddiskManager:
 	def HDDCount(self):
 		return len(self.hdd)
 
-	def HDDList(self):
+	def HDDList(self, device=None):
 		list = []
 		for hd in self.hdd:
+			if device == hd.device:
+				continue
 			print(f"[Harddsk][HDDList] {hd.model()} {hd.bus()} /dev/{hd.device}.")
 			hdd = f"{hd.bus()}  {hd.model()}  /dev/{hd.device}"
 			cap = hd.capacity()

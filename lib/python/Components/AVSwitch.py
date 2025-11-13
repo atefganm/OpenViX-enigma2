@@ -481,7 +481,7 @@ class AVSwitchBase:
 
 
 def InitAVSwitch():
-	delay_choices = [(i, ngettext("%d milisecond", "%d miliseconds", i) % i) for i in list(range(0, 3000, 100))]  # noqa: F821
+	delay_choices = [(i, ngettext("%d millisecond", "%d milliseconds", i) % i) for i in list(range(0, 3000, 100))]  # noqa: F821
 	config.av.passthrough_fix_long = ConfigSelection(choices=delay_choices, default=1200)
 	config.av.passthrough_fix_short = ConfigSelection(choices=delay_choices, default=100)
 	config.av.yuvenabled = ConfigBoolean(default=True)

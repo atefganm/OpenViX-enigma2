@@ -1,11 +1,11 @@
 from xml.etree.cElementTree import Element, ElementTree, fromstring
 
-from enigma import addFont, eLabel, ePixmap, ePoint, eRect, eSize, eWidget, eWindow, eWindowStyleManager, eWindowStyleSkinned, getDesktop, gFont, getFontFaces, gMainDC, gRGB, BT_ALPHATEST, BT_ALPHABLEND, BT_HALIGN_CENTER, BT_HALIGN_LEFT, BT_HALIGN_RIGHT, BT_KEEP_ASPECT_RATIO, BT_SCALE, BT_VALIGN_BOTTOM, BT_VALIGN_CENTER, BT_VALIGN_TOP
+from enigma import addFont, eLabel, ePixmap, ePoint, eRect, eSize, eWidget, eStack, eRectangle, eWindow, eWindowStyleManager, eWindowStyleSkinned, getDesktop, gFont, getFontFaces, gMainDC, gRGB, BT_ALPHATEST, BT_ALPHABLEND, BT_HALIGN_CENTER, BT_HALIGN_LEFT, BT_HALIGN_RIGHT, BT_KEEP_ASPECT_RATIO, BT_SCALE, BT_VALIGN_BOTTOM, BT_VALIGN_CENTER, BT_VALIGN_TOP
 from os.path import basename, dirname, isfile
 
 from Components.config import ConfigSubsection, ConfigText, config
 from Components.Sources.Source import ObsoleteSource
-from Components.SystemInfo import SystemInfo
+from Components.SystemInfo import SystemInfo, BoxInfo  # import for usage in include conditional
 from Tools.Directories import SCOPE_CONFIG, SCOPE_CURRENT_LCDSKIN, SCOPE_CURRENT_SKIN, SCOPE_FONTS, SCOPE_SKIN, SCOPE_SKIN_IMAGE, resolveFilename, fileReadXML, clearResolveLists  # noqa: F401
 from Tools.Import import my_import
 from Tools.LoadPixmap import LoadPixmap
@@ -33,6 +33,7 @@ setups = {}  # Dictionary of images associated with setup menus.
 switchPixmap = {}  # Dictionary of switch images.
 scrollbarStyle = None  # When set, a dictionary of scrollbar styles
 windowStyles = {}  # Dictionary of window styles for each screen ID.
+subtitleFonts = {}  # Dictionary of predefined external text subtitle folnts.
 xres = 720
 yres = 576
 
@@ -395,7 +396,7 @@ def parseGradient(value):
 			"vertical": eWidget.GRADIENT_VERTICAL,
 		}
 		direction = parseOptions(options, "gradient", data[index], eWidget.GRADIENT_VERTICAL)
-		alphaBlend = 1 if argCount > 1 and parseBoolean("alphablend", data[index + 1]) else 0
+		alphaBlend = int(argCount > 1 and parseBoolean("alphablend", data[index + 1]))
 	else:
 		direction = eWidget.GRADIENT_VERTICAL
 		alphaBlend = 0
@@ -547,6 +548,9 @@ class AttributeParser:
 	def applyVerticalScale(self, value):
 		return int(value) if self.scaleTuple[0][0] == self.scaleTuple[0][1] else int(int(value) * self.scaleTuple[1][0] / self.scaleTuple[1][1])
 
+	def alphaBlend(self, value):
+		self.guiObject.setWidgetAlphaBlend(parseBoolean("alphablend", value))
+
 	def conditional(self, value):
 		pass
 
@@ -661,8 +665,7 @@ class AttributeParser:
 			print("[Skin] Error: Invalid alphatest '%s'!  Must be one of 'on', 'off' or 'blend'." % value)
 
 	def scale(self, value):
-		value = 1 if value.lower() in ("1", "enabled", "on", "scale", "true", "yes") else 0
-		self.guiObject.setScale(value)
+		self.guiObject.setScale(int(parseBoolean("scale", value)))
 
 	def scaleFlags(self, value):
 		base = BT_SCALE | BT_KEEP_ASPECT_RATIO
@@ -693,18 +696,22 @@ class AttributeParser:
 		except KeyError:
 			print("[Skin] Error: Invalid scale '%s'!  Must be one of 'none', 'scale', 'scaleKeepAspect', 'scaleLeftTop', 'scaleLeftCenter', 'scaleLeftBotton', 'scaleCenterTop', 'scaleCenter', 'scaleCenterBotton', 'scaleRightTop', 'scaleRightCenter', 'scaleRightBottom', 'moveLeftTop', 'moveLeftCenter', 'moveLeftBotton', 'moveCenterTop', 'moveCenter', 'moveCenterBottom', 'moveRightTop', 'moveRightCenter', 'moveRightBottom' ('Center'/'Centre'/'Middle' are equivalent)." % value)
 
+	def listOrientation(self, value):  # For compatibility with skins written for OpenATV that use this attribute
+		self.orientation({"vertical": "orVertical", "horizontal": "orHorizontal", "grid": "orGrid"}.get(value, value))
+
 	def orientation(self, value):  # Used by eSlider and eListBox.
 		try:
-			self.guiObject.setOrientation(*{
+			self.guiObject.setOrientation(*({
 				"orVertical": (self.guiObject.orVertical, False),
 				"orTopToBottom": (self.guiObject.orVertical, False),
 				"orBottomToTop": (self.guiObject.orVertical, True),
 				"orHorizontal": (self.guiObject.orHorizontal, False),
 				"orLeftToRight": (self.guiObject.orHorizontal, False),
-				"orRightToLeft": (self.guiObject.orHorizontal, True)
-			}[value])
+				"orRightToLeft": (self.guiObject.orHorizontal, True)} | (
+				{"orGrid": (self.guiObject.orGrid, False)} if hasattr(self.guiObject, "orGrid") else {}  # eListbox only
+			))[value])
 		except KeyError:
-			print("[Skin] Error: Invalid orientation '%s'!  Must be one of 'orVertical', 'orTopToBottom', 'orBottomToTop', 'orHorizontal', 'orLeftToRight' or 'orRightToLeft'." % value)
+			print("[Skin] Error: Invalid orientation '%s'!  Must be one of 'orVertical', 'orTopToBottom', 'orBottomToTop', 'orHorizontal', 'orLeftToRight', 'orRightToLeft' or 'orGrid (eListbox only)'." % value)
 
 	def valign(self, value):
 		try:
@@ -789,10 +796,10 @@ class AttributeParser:
 		self.guiObject.setShadowColor(parseColor(value))
 
 	def selectionDisabled(self, value):
-		self.guiObject.setSelectionEnable(0)
+		self.guiObject.setSelectionEnable(int(not parseBoolean("selectiondisabled", value)))
 
 	def transparent(self, value):
-		self.guiObject.setTransparent(int(value))
+		self.guiObject.setTransparent(int(parseBoolean("transparent", value)))
 
 	def borderColor(self, value):
 		self.guiObject.setBorderColor(parseColor(value))
@@ -820,8 +827,7 @@ class AttributeParser:
 		self.guiObject.setScrollbarMode(parseScrollbarMode(value))
 
 	def enableWrapAround(self, value):
-		value = True if value.lower() in ("1", "enabled", "enablewraparound", "on", "true", "yes") else False
-		self.guiObject.setWrapAround(value)
+		self.guiObject.setWrapAround(parseBoolean("enablewraparound", value))
 
 	def pointer(self, value):
 		(name, pos) = value.split(":")
@@ -839,8 +845,7 @@ class AttributeParser:
 		self.guiObject.setShadowOffset(parsePosition(value, self.scaleTuple))
 
 	def noWrap(self, value):
-		value = 1 if value.lower() in ("1", "enabled", "nowrap", "on", "true", "yes") else 0
-		self.guiObject.setNoWrap(value)
+		self.guiObject.setNoWrap(int(parseBoolean("nowrap", value)))
 
 	def split(self, value):
 		pass
@@ -907,7 +912,7 @@ def reloadWindowStyles():
 def loadSingleSkinData(desktop, screenID, domSkin, pathSkin, scope=SCOPE_CURRENT_SKIN):
 	"""Loads skin data like colors, windowstyle etc."""
 	assert domSkin.tag == "skin", "root element in skin must be 'skin'!"
-	global colors, fonts, menus, menuicons, parameters, screens, setups, switchPixmap, scrollbarStyle, xres, yres
+	global colors, fonts, menus, menuicons, parameters, screens, setups, switchPixmap, scrollbarStyle, xres, yres, subtitleFonts
 	for tag in domSkin.findall("output"):
 		scrnID = int(tag.attrib.get("id", GUI_SKIN_ID))
 		if scrnID == GUI_SKIN_ID:
@@ -977,7 +982,8 @@ def loadSingleSkinData(desktop, screenID, domSkin, pathSkin, scope=SCOPE_CURRENT
 
 	for tag in domSkin.findall("include"):
 		filename = tag.attrib.get("filename")
-		if filename:
+		conditional = not (c := tag.attrib.get("conditional")) or eval(c)
+		if filename and conditional:
 			resolved = resolveFilename(scope, filename, path_prefix=pathSkin)
 			if isfile(resolved):
 				loadSkin(resolved, scope=scope, desktop=desktop, screenID=screenID)
@@ -1120,6 +1126,19 @@ def loadSingleSkinData(desktop, screenID, domSkin, pathSkin, scope=SCOPE_CURRENT
 				borderWidth = 3  # Default: Use a subtitle border.
 			else:
 				borderWidth = int(borderwidth)
+			font_data = {}
+			font_str = substyle.attrib.get("font")
+			font_split = font_str.split(";")
+			font_face = font_split[0].strip()
+			font_size = 0
+			if len(font_split) > 1:
+				font_size = int(font_split[1])
+			font_data["font_face"] = font_face
+			font_data["font_size"] = font_size
+			font_data["foregroundColor"] = foregroundColor
+			font_data["borderColor"] = borderColor
+			font_data["borderWidth"] = borderWidth
+			subtitleFonts[substyle.attrib.get("name")] = font_data
 			face = eSubtitleWidget.__dict__[substyle.attrib.get("name")]
 			eSubtitleWidget.setFontStyle(face, font, haveColor, foregroundColor, borderColor, borderWidth)
 	for tag in domSkin.findall("windowstyle"):
@@ -1275,6 +1294,102 @@ class SkinContextStack(SkinContext):
 		return (SizeTuple(pos), SizeTuple(size))
 
 
+class SkinContextVertical(SkinContext):
+	def __init__(self, parent=None, pos=None, size=None, font=None):
+		super().__init__(parent, pos, size, font)
+		self.by = self.h + self.y
+		self.bh = self.h
+		self.bottomCount = 0
+
+	def parse(self, pos, size, font):
+		if pos == "fill":
+			pos = (self.x, self.y)
+			size = (self.w, self.h)
+			self.w = 0
+			self.h = 0
+		else:
+			(width, height) = size.split(",")
+			width = parseCoordinate(width, self.w, 0, font, self.scale[0])
+			height = parseCoordinate(height, self.h, 0, font, self.scale[1])
+			left = self.x
+			positions = pos.split(",")
+			if len(positions) == 2 and positions[1] in ("top", "bottom") and positions[0].isdigit():
+				left += int(int(positions[0]) * self.scale[0][0] / self.scale[0][1])
+				pos = positions[1]
+			if pos == "bottom":
+				if self.bottomCount:
+					self.by -= self.spacing
+				self.bottomCount += 1
+				self.by = self.by - height
+				pos = (left, self.by)
+				size = (width, height)
+				self.h -= (height + self.spacing)
+			elif pos == "top":
+				pos = (left, self.y)
+				size = (width, height)
+				self.h -= (height + self.spacing)
+				self.y += (height + self.spacing)
+			elif pos == "center":
+				pos = (left, (self.h - height) / 2)
+				size = (width, height)
+			else:
+				size = (width, height)
+				pos = pos.split(",")
+				pos = (self.x + parseCoordinate(pos[0], self.w, size[0], font, self.scale[0]), self.y + parseCoordinate(pos[1], self.h, size[1], font, self.scale[1]))
+				self.h -= (height + self.spacing)
+				self.y += (height + self.spacing)
+		# print(f"[Skin] SkinContextVertical DEBUG: Scale={self.scale}, Pos={SizeTuple(pos)}, Size={SizeTuple(size)}.")
+		return (SizeTuple(pos), SizeTuple(size))
+
+
+class SkinContextHorizontal(SkinContext):
+	def __init__(self, parent=None, pos=None, size=None, font=None):
+		super().__init__(parent, pos, size, font)
+		self.rx = self.w + self.x
+		self.rw = self.w
+		self.rightCount = 0
+
+	def parse(self, pos, size, font):
+		if pos == "fill":
+			pos = (self.x, self.y)
+			size = (self.w, self.h)
+			self.w = 0
+			self.h = 0
+		else:
+			(width, height) = size.split(",")
+			width = parseCoordinate(width, self.w, 0, font, self.scale[0])
+			height = parseCoordinate(height, self.h, 0, font, self.scale[1])
+			top = self.y
+			positions = pos.split(",")
+			if len(positions) == 2 and positions[0] in ("left", "right") and positions[1].isdigit():
+				top += int(int(positions[1]) * self.scale[0][0] / self.scale[0][1])
+				pos = positions[0]
+			if pos == "left":
+				pos = (self.x, top)
+				size = (width, height)
+				self.x += (width + self.spacing)
+				self.w -= (width + self.spacing)
+			elif pos == "right":
+				if self.rightCount:
+					self.rx -= self.spacing
+				self.rightCount += 1
+				self.rx -= width
+				pos = (self.rx, top)
+				size = (width, height)
+				self.w -= (width + self.spacing)
+			elif pos == "center":
+				pos = ((self.w - width) / 2, top)
+				size = (width, height)
+			else:
+				size = (width, height)
+				pos = pos.split(",")
+				pos = (self.x + parseCoordinate(pos[0], self.w, size[0], font, self.scale[0]), self.y + parseCoordinate(pos[1], self.h, size[1], font, self.scale[1]))
+				self.w -= (width + self.spacing)
+				self.x += (width + self.spacing)
+		# print(f"[Skin] SkinContextHorizontal DEBUG: Scale={self.scale}, Pos={SizeTuple(pos)}, Size={SizeTuple(size)}.")
+		return (SizeTuple(pos), SizeTuple(size))
+
+
 def readSkin(screen, skin, names, desktop):
 	if not isinstance(names, list):
 		names = [names]
@@ -1336,10 +1451,33 @@ def readSkin(screen, skin, names, desktop):
 	context = SkinContext(context, myScreen.attrib.get("position"), myScreen.attrib.get("size"))
 	screen.additionalWidgets = []
 	screen.renderer = []
+	screen.stacks = []
 	usedComponents = set()
 
 	def processNone(widget, context):
 		pass
+
+	def proccesStackAddition(widget, stack, target):
+		if stack:
+			target.stackIndex = stack.index
+			pos = widget.attrib.get("position")
+			align = eWidget.eStackAlignNone
+			if stack.layout == 0:  # horizontal
+				if "left" in pos:
+					align = eWidget.eStackAlignLeft
+				elif "right" in pos:
+					align = eWidget.eStackAlignRight
+				elif "center" in pos:
+					align = eWidget.eStackAlignCenter
+			else:
+				if "top" in pos:
+					align = eWidget.eStackAlignTop
+				elif "bottom" in pos:
+					align = eWidget.eStackAlignBottom
+				elif "center" in pos:
+					align = eWidget.eStackAlignCenter
+			target.skinAttributes.append(("align", align))
+		return target
 
 	def processWidget(widget, context):
 		# Okay, we either have 1:1-mapped widgets ("old style"), or 1:n-mapped
@@ -1399,7 +1537,7 @@ def readSkin(screen, skin, names, desktop):
 					raise SkinError("For connection '%s' a renderer must be defined with a 'render=' attribute" % wconnection)
 			for converter in widget.findall("convert"):
 				ctype = converter.get("type")
-				nostrip = converter.get("nostrip") and converter.get("nostrip").lower() in ("1", "enabled", "nostrip", "on", "true", "yes")
+				nostrip = converter.get("nostrip") and parseBoolean("nostrip", converter.get("nostrip"))
 				assert ctype, "[Skin] The 'convert' tag needs a 'type' attribute!"
 				# print("[Skin] DEBUG: Converter='%s'." % ctype)
 				try:
@@ -1479,6 +1617,16 @@ def readSkin(screen, skin, names, desktop):
 		collectAttributes(w.skinAttributes, widget, context, skinPath, ignore=("name",))
 		screen.additionalWidgets.append(w)
 
+	def processRectangle(widget, context, stack=None):
+		item = additionalWidget()
+		item.widget = eRectangle
+		item.skinAttributes = []
+		collectAttributes(item.skinAttributes, widget, context, skinPath, ignore=("name",))
+		item = proccesStackAddition(widget, stack, item)
+		screen.additionalWidgets.append(item)
+		if stack:
+			stack.children.append(item)
+
 	def processScreen(widget, context):
 		for w in list(widget):
 			conditional = w.attrib.get("conditional")
@@ -1515,12 +1663,43 @@ def readSkin(screen, skin, names, desktop):
 			raise SkinError("Failed to create skin context (position='%s', size='%s', font='%s') in context '%s': %s" % (widget.attrib.get("position"), widget.attrib.get("size"), widget.attrib.get("font"), context, err))
 		processScreen(widget, c)
 
+	def processStack(widget, context, stack=None):
+		item = additionalWidget()
+		item.widget = eStack
+		layout = widget.attrib.get("layout")
+		item.layout = 0 if layout == "horizontal" else 1
+		classes = {
+			"vertical": SkinContextVertical,
+			"horizontal": SkinContextHorizontal,
+		}
+		contextClass = classes.get(layout, SkinContext)
+		try:
+			item.skinAttributes = []
+			item.children = []
+			contextScreen = contextClass(context, widget.attrib.get("position"), widget.attrib.get("size"), widget.attrib.get("font"))
+			spacing = widget.attrib.get("spacing")
+			if spacing:
+				contextScreen.spacing = int(spacing)
+			item.index = len(screen.stacks)
+			item.skinAttributes.append(("size", (contextScreen.w, contextScreen.h)))
+			item.skinAttributes.append(("position", (contextScreen.x, contextScreen.y)))
+			item.skinAttributes.append(("spacing", contextScreen.spacing))
+			item = proccesStackAddition(widget, stack, item)
+			screen.stacks.append(item)
+		except Exception as err:
+			raise SkinError(f"Failed to create skin context (position='{widget.attrib.get('position')}', size='{widget.attrib.get('size')}', font='{widget.attrib.get('font')}') in context '{context}': {err}")
+		processScreen(widget, contextScreen, item)
+		if stack:
+			stack.children.append(item)
+
 	processors = {
 		None: processNone,
 		"widget": processWidget,
 		"applet": processApplet,
 		"eLabel": processLabel,
 		"ePixmap": processPixmap,
+		"eRectangle": processRectangle,
+		"eStack": processStack,
 		"panel": processPanel
 	}
 
@@ -1622,7 +1801,7 @@ def applySkinFactor(*d):
 	"""
 	if len(d) == 1:
 		return int(d[0] * getSkinFactor())
-	return tuple([int(value * getSkinFactor()) if isinstance(value, (int, float)) else value for value in d])
+	return tuple(int(value * getSkinFactor()) if isinstance(value, (int, float)) else value for value in d)
 
 
 def findSkinScreen(names):

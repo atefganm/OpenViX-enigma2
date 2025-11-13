@@ -1305,7 +1305,7 @@ class MovieSelection(Screen, HelpableScreen, SelectionEventInfo, InfoBarBase, Pr
 			self.startPreview()
 
 	def seekRelative(self, direction, amount):
-		if self.list.playInBackground or self.list.playInBackground:
+		if self.list.playInBackground:
 			seekable = self.getSeek()
 			if seekable is None:
 				return
@@ -1487,7 +1487,7 @@ class MovieSelection(Screen, HelpableScreen, SelectionEventInfo, InfoBarBase, Pr
 		try:
 			path = ospath.join(config.movielist.last_videodir.value, ".e2settings.pkl")
 			file = open(path, "wb")
-			pickle.dump(self.settings, file)
+			pickle.dump(self.settings, file, protocol=5)
 			file.close()
 		except Exception as e:
 			print("[MovieSelection] Failed to save settings to %s: %s" % (path, e))
