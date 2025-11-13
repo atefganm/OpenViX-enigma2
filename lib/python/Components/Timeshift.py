@@ -1013,7 +1013,6 @@ class InfoBarTimeshift:
 						metafile.write("%s\n%s\n%s\n%i\n" % (servicerefname, eventname.replace("\n", ""), eventtitle.replace("\n", ""), int(eventtime)))
 						metafile.close()
 
-
 	def ptsCreateAPSCFiles(self, filename):
 		if fileExists(filename, "r"):
 			if fileExists(filename + ".meta", "r"):
