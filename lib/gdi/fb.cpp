@@ -203,12 +203,13 @@ int fbClass::SetMode(int nxRes, int nyRes, int nbpp)
 #endif
 
 	screeninfo.xres_virtual=screeninfo.xres=nxRes;
-#ifdef DREAMNEXTGEN
-	screeninfo.yres_virtual=(screeninfo.yres=nyRes)*3;
-	screeninfo.activate = FB_ACTIVATE_ALL;
+#if defined(CONFIG_ION)
+	screeninfo.yres = nyRes;
+	screeninfo.yres_virtual = nyRes * 3;
 #else
 	screeninfo.yres_virtual=(screeninfo.yres=nyRes)*2;
 #endif
+	screeninfo.activate = FB_ACTIVATE_ALL;
 	screeninfo.height=0;
 	screeninfo.width=0;
 	screeninfo.xoffset=screeninfo.yoffset=0;
@@ -239,6 +240,34 @@ int fbClass::SetMode(int nxRes, int nyRes, int nbpp)
 		break;
 	}
 
+#if defined(CONFIG_ION)
+	if (ioctl(fbFd, FBIOPUT_VSCREENINFO, &screeninfo)<0)
+	{
+		screeninfo.yres_virtual = nyRes * 2;
+
+		if (ioctl(fbFd, FBIOPUT_VSCREENINFO, &screeninfo)<0)
+		{
+			// try single buffering
+			screeninfo.yres_virtual = nyRes;
+
+			if (ioctl(fbFd, FBIOPUT_VSCREENINFO, &screeninfo)<0)
+			{
+				eDebug("[fb] FBIOPUT_VSCREENINFO %m");
+				return -1;
+			}
+			eDebug("[fb] double buffering not available.");
+		}
+	}
+
+	m_number_of_pages = screeninfo.yres_virtual / nyRes;
+	if (m_number_of_pages >= 3)
+		eDebug("[fb] triple buffering available!");
+	else if (m_number_of_pages == 2)
+		eDebug("[fb] double buffering available!");
+	else
+		eDebug("[fb] using single buffer");
+	eDebug("[fb] %d page(s) available!", m_number_of_pages);
+#else
 	if (ioctl(fbFd, FBIOPUT_VSCREENINFO, &screeninfo)<0)
 	{
 		// try single buffering
@@ -250,14 +279,12 @@ int fbClass::SetMode(int nxRes, int nyRes, int nbpp)
 			return -1;
 		}
 		eDebug("[fb] double buffering not available.");
-	} else
-#ifdef DREAMNEXTGEN
-		eDebug("[fb] triple buffering available!");
-#else
+	} 
+	else
 		eDebug("[fb] double buffering available!");
-#endif
 
 	m_number_of_pages = screeninfo.yres_virtual / nyRes;
+#endif
 
 	ioctl(fbFd, FBIOGET_VSCREENINFO, &screeninfo);
 
@@ -300,6 +327,13 @@ void fbClass::getMode(int &xres, int &yres, int &bpp)
 int fbClass::setOffset(int off)
 {
 	if (fbFd < 0) return -1;
+#ifdef CONFIG_ION
+    // When locked (e.g. Kodi running), do not pan the framebuffer.
+    // With double/triple buffering, FBIOPAN_DISPLAY would otherwise make
+    // Enigma2's OSD page visible again sporadically.
+    if (locked)
+        return 0;
+#endif
 	screeninfo.xoffset = 0;
 	screeninfo.yoffset = off;
 	return ioctl(fbFd, FBIOPAN_DISPLAY, &screeninfo);

@@ -995,7 +995,7 @@ class InfoBarTimeshift:
 							ptsgetnextfile = True
 
 					if eventtag == "pts_merge" and not ptsgetnextfile:
-						# print(f"[Timeshift][Timeshift] pts_merge:{filename}")
+						# print(f"[Timeshift][Timeshift] pts_merge:{filename}")					
 						ptsgetnextfile = True
 						ptsmergeDEST = filename[0:-5]
 						ptsmergeeventname = eventname
@@ -1012,6 +1012,7 @@ class InfoBarTimeshift:
 						metafile = open("%s%s.meta" % (config.usage.default_path.value, ptsmergeDEST), "w")
 						metafile.write("%s\n%s\n%s\n%i\n" % (servicerefname, eventname.replace("\n", ""), eventtitle.replace("\n", ""), int(eventtime)))
 						metafile.close()
+
 
 	def ptsCreateAPSCFiles(self, filename):
 		if fileExists(filename, "r"):

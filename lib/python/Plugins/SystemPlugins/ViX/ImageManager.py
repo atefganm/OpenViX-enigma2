@@ -397,24 +397,31 @@ class VIXImageManager(Screen):
 			self.keyBackup()
 
 	def keyBackup(self):
-		if MACHINEBUILD[0:7] == "osmio4k":
-			message = (_("Do you want to create a full image backup?\nThis can take upto 20 minutes to complete\n your ") + f"{MACHINEBUILD}" + _(" will create a recovery backup only for slot 1 else image backup"))
-		else:
-			message = _("Do you want to create a full image backup?\nThis can take upto 15 minutes to complete.")
-		ybox = self.session.openWithCallback(self.doBackup, MessageBox, message, MessageBox.TYPE_YESNO)
+		message = _("Do you want to create a %s image backup? This can take several minutes to complete." % MACHINEBUILD)
+		ybox = self.session.openWithCallback(self.keyBackup1, MessageBox, message, MessageBox.TYPE_YESNO)
 		ybox.setTitle(_("Backup confirmation"))
 
-	def doBackup(self, answer):
+	def keyBackup1(self, answer):
 		if answer is True:
-			self.ImageBackup = ImageBackup(self.session)
-			Components.Task.job_manager.AddJob(self.ImageBackup.createBackupJob())
-			self.BackupRunning = True
-			self["key_green"].setText(_("View progress"))
-			self["key_green"].show()
-			for job in Components.Task.job_manager.getPendingJobs():
-				if job.name.startswith(_("Image manager")):
-					break
-			self.showJobView(job)
+			(self.EMMCIMG, self.MTDBOOT) = SystemInfo["canBackupEMC"] if SystemInfo["canBackupEMC"] else (None, None)
+			if self.EMMCIMG:
+				message = _("Do you want to backup image slot (Yes) or create a recovery backup (No)") + "\n" + _("This can take up to 20 minutes for recovery backup , 6 minutes for image backup.")
+				ybox = self.session.openWithCallback(self.doBackup, MessageBox, message, MessageBox.TYPE_YESNO)
+				ybox.setTitle(_("Backup confirmation"))
+			else:
+				self.doBackup(True)
+
+	def doBackup(self, answer):
+		print(f"[ImageManager][doBackup] answer:{answer}")
+		self.ImageBackup = ImageBackup(self.session, slotBackup=answer)
+		Components.Task.job_manager.AddJob(self.ImageBackup.createBackupJob())
+		self.BackupRunning = True
+		self["key_green"].setText(_("View progress"))
+		self["key_green"].show()
+		for job in Components.Task.job_manager.getPendingJobs():
+			if job.name.startswith(_("Image manager")):
+				break
+		self.showJobView(job)
 
 	def getImagesDownloaded(self):
 		def getImages(files):
@@ -508,9 +515,9 @@ class VIXImageManager(Screen):
 		if not recordings:
 			next_rec_time = self.session.nav.RecordTimer.getNextRecordingTime()
 		if recordings or (next_rec_time > 0 and (next_rec_time - time()) < 360):
-			message = _("Recording(s) are in progress or coming up in few seconds!\nDo you still want to flash image\n%s?") % self.sel[0]
+			message = _("Recording(s) are in progress or coming up in few seconds!") + "\n" + _("Do you still want to flash image\n%s?") % self.sel[0]
 		else:
-			message = _("Do you want to flash image\n%s") % self.sel[0]
+			message = _("Do you want to flash image\n%s?") % self.sel[0]
 		if SystemInfo["canMultiBoot"] is False:
 			if config.imagemanager.autosettingsbackup.value:
 				self.doSettingsBackup()
@@ -889,10 +896,12 @@ class ImageBackup(Screen):
 		26,
 			]  # noqa: E124
 
-	def __init__(self, session, updatebackup=False):
+	def __init__(self, session, updatebackup=False, slotBackup=True):
 		Screen.__init__(self, session)
 		self.Console = Console()
 		self.ConsoleB = Console(binary=True)
+		self.fullBackup = not slotBackup
+		print(f"[ImageManager] self.fullBackup:{self.fullBackup}")
 		self.BackupDevice = config.imagemanager.backuplocation.value
 		self.BackupDirectory = f"{config.imagemanager.backuplocation.value}imagebackups/"
 		self.BackupDate = strftime("%Y%m%d_%H%M%S", localtime())
@@ -997,13 +1006,14 @@ class ImageBackup(Screen):
 		task.check = lambda: self.Stage2Completed
 		task.weighting = 15
 
-		if SystemInfo["canBackupEMC"]:
+		print(f"[ImageManager][createBackupJob] self.fullBackup:{self.fullBackup}")
+		if SystemInfo["canBackupEMC"] and self.fullBackup:
 			if MACHINEBUILD[0:7] != "osmio4k" or (MACHINEBUILD[0:7] == "osmio4k" and SystemInfo["MultiBootSlot"] == 1):
 				task = Components.Task.PythonTask(job, _("Backing up eMMC partitions for recovery image ..."))
 				task.work = self.doBackup3
 				task.weighting = 5
 
-				task = Components.Task.ConditionTask(job, _("Backing up eMMC partitions for recovery image.."), timeoutCount=4000)
+				task = Components.Task.ConditionTask(job, _("Backing up eMMC partitions for recovery image ..."), timeoutCount=4000)
 				task.check = lambda: self.Stage3Completed
 				task.weighting = 15
 
@@ -1053,7 +1063,7 @@ class ImageBackup(Screen):
 		if int(free) < 200:
 			AddPopupWithCallback(
 				self.BackupComplete,
-				_("The backup location does not have enough free space." + "\n" + self.BackupDevice + "only has " + str(free) + "MB free."),
+				_("The backup location does not have enough free space.") + "\n" + (_("%s only has %s MB free.") % (self.BackupDevice, str(free))),
 				MessageBox.TYPE_INFO,
 				10,
 				"RamCheckFailedNotification"
@@ -1406,10 +1416,10 @@ class ImageBackup(Screen):
 
 	def doBackup5(self):
 		print("[ImageManager] Stage5: Moving from work to backup folders")
-		if self.EMMCIMG and path.exists(f"{self.WORKDIR}/{self.EMMCIMG}"):
+		if self.EMMCIMG and self.fullBackup and path.exists(f"{self.WORKDIR}/{self.EMMCIMG}"):
 			move(f"{self.WORKDIR}/{self.EMMCIMG}", f"{self.MAINDEST}/{self.EMMCIMG}")
 
-		if self.EMMCIMG == "usb_update.bin":
+		if self.EMMCIMG == "usb_update.bin" and self.fullBackup:
 			system(f"cp -f /usr/share/fastboot.bin {self.MAINDEST2}/fastboot.bin")
 			system(f"cp -f /usr/share/bootargs.bin {self.MAINDEST2}/bootargs.bin")
 			if fileExists("/usr/share/apploader.bin"):
@@ -1465,11 +1475,6 @@ class ImageBackup(Screen):
 				with open(self.MAINDEST + "/noforce", "w") as fileout:
 					line = _("rename this file to 'force' to force an update without confirmation")
 					fileout.write(line)
-			if SystemInfo["HasHiSi"] and self.KERN == "mmc":
-				with open(self.MAINDEST + "/SDAbackup", "w") as fileout:
-					line = _("SF8008 indicate type of backup %s" % self.KERN)
-					fileout.write(line)
-				self.session.open(MessageBox, _("Multiboot only able to restore this backup to mmc slot1"), MessageBox.TYPE_INFO, timeout=20)
 		elif SystemInfo["HasRootSubdir"]:
 			self.usbType = "-mmc"
 			with open(self.MAINDEST + "/force_%s_READ.ME" % MODEL, "w") as fileout:

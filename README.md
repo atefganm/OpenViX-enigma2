@@ -15,7 +15,7 @@
 
 > [https://github.com/oe-alliance/oe-alliance-core/tree/5.6](https://github.com/oe-alliance/oe-alliance-core/tree/5.6 "OE-Alliance")
 >
-> [https://github.com/OpenViX/enigma2/tree/Release](https://github.com/OpenViX/enigma2/tree/Release "openViX E2")
+> [https://github.com/OpenViX/enigma2/tree/Release](https://github.com/atefganm/enigma2-OpenViX./tree/Developer "openViX E2")
 
 
 ----------
@@ -24,7 +24,7 @@
 
 1 - Install packages on your buildserver
 
-    sudo apt-get install -y autoconf automake bison bzip2 chrpath cmake coreutils cpio curl cvs debianutils default-jre default-jre-headless diffstat flex g++ gawk gcc gcc-12 gcc-multilib g++-multilib gettext git gzip help2man info iputils-ping java-common libc6-dev libglib2.0-dev libncurses-dev libperl4-corelibs-perl libproc-processtable-perl libsdl1.2-dev libserf-dev libtool libxml2-utils make ncurses-bin patch perl pkg-config psmisc python3 python3-git python3-jinja2 python3-pexpect python3-pip python3-setuptools quilt socat sshpass subversion tar texi2html texinfo unzip wget xsltproc xterm xz-utils zip zlib1g-dev zstd fakeroot lz4 git-lfs
+    sudo apt-get install -y autoconf automake bison bzip2 chrpath cmake coreutils cpio curl cvs debianutils default-jre default-jre-headless diffstat flex g++ gawk gcc gcc-12 gcc-multilib g++-multilib gettext git gzip help2man info iputils-ping java-common libc6-dev libglib2.0-dev libncurses-dev libperl4-corelibs-perl libproc-processtable-perl libsdl1.2-dev libserf-dev libtool libxml2-utils make ncurses-bin patch perl pkg-config psmisc python3 python3-git python3-html5lib python3-jinja2 python3-pexpect python3-pip python3-setuptools quilt socat sshpass subversion tar texi2html texinfo unzip wget xsltproc xterm xz-utils zip zlib1g-dev zstd fakeroot lz4 git-lfs
 
 ----------
 2 - Set python3 as preferred provider for python
@@ -105,7 +105,7 @@
 ----------
 15 - Initialise the first machine so site.conf gets created
 
-    MACHINE=zgemmah9combo DISTRO=openvix DISTRO_TYPE=release make init
+    MACHINE=dm900 DISTRO=openvix DISTRO_TYPE=release make init
 
 ----------
 16 - Update site.conf
@@ -118,14 +118,14 @@
 ----------
 17 - Building image with feeds  e.g.:-
 
-    MACHINE=vuultimo4k DISTRO=openvix DISTRO_TYPE=release make image
+    MACHINE=dm920 DISTRO=openvix DISTRO_TYPE=release make image
 
 ----------
 18 - Building an image without feeds (Build time 1-2h)
 
-    MACHINE=zgemmah9combo DISTRO=openvix DISTRO_TYPE=release make enigma2-image
+    MACHINE=dm820 DISTRO=openvix DISTRO_TYPE=release make enigma2-image
 
 ----------
 19 - Building feeds only
 
-    MACHINE=zgemmah9combo DISTRO=openvix DISTRO_TYPE=release make feeds
+    MACHINE=dm820 DISTRO=openvix DISTRO_TYPE=release make feeds
