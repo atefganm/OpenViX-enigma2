@@ -4,7 +4,7 @@ from hashlib import md5
 from os.path import exists as fileAccess, isdir, isfile, join as pathjoin
 from re import split
 from boxbranding import getBoxType, getBrandOEM, getDisplayType, getHaveAVJACK, getHaveHDMIinFHD, getHaveHDMIinHD, getHaveRCA, getHaveSCART, getHaveSCARTYUV, getHaveYUV, getImageType, getMachineBrand, getMachineBuild, getMachineMtdRoot, getMachineName, getHaveDVI, getHaveHDMI
-from enigma import Misc_Options, eDVBCIInterfaces, eDVBResourceManager, eGetEnigmaDebugLvl
+from enigma import Misc_Options, eDVBCIInterfaces, eDVBResourceManager, eDVBCSAEngine, eGetEnigmaDebugLvl
 
 from Components.About import getChipSetString
 from Components.RcModel import rc_model
@@ -237,6 +237,7 @@ SystemInfo["HasUsbhdd"] = {}
 SystemInfo["ArchIsARM"] = ARCHITECTURE.startswith(("arm", "cortex"))
 SystemInfo["ArchIsARM64"] = "64" in ARCHITECTURE
 SystemInfo["HasInitCam"] = hasInitCam()
+SystemInfo["HasSoftCSA"] = eDVBCSAEngine.isAvailable()
 SystemInfo["MachineBrand"] = DISPLAYBRAND
 SystemInfo["MachineName"] = SystemInfo["machinename"]
 SystemInfo["DeveloperImage"] = IMAGETYPE.lower() != "release"
