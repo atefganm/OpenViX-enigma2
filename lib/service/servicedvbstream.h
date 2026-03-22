@@ -17,6 +17,7 @@ class eDVBServiceStream: public eDVBServiceBase, public sigc::trackable
 	DECLARE_REF(eDVBServiceStream);
 public:
 	eDVBServiceStream();
+	~eDVBServiceStream();
 	int start(const char *serviceref, int fd);
 	int stop();
 
