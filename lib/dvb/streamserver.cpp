@@ -295,7 +295,6 @@ void eStreamClient::notifier(int what)
 
 void eStreamClient::stopStream()
 {
-	ePtr<eStreamClient> ref = this;
 	rsn->stop();
 	// Free encoder BEFORE connectionLost removes us from the list
 	// This ensures the encoder is released even if the destructor is delayed
