@@ -1060,6 +1060,7 @@ eDVBServicePlay::eDVBServicePlay(const eServiceReference &ref, eDVBService *serv
 	m_noaudio(false),
 	m_is_stream(ref.path.find("://") != std::string::npos),
 	m_is_pvr(!ref.path.empty() && !m_is_stream),
+	m_pause_position(-1),
 	m_is_paused(0),
 	m_timeshift_enabled(0),
 	m_timeshift_active(0),
@@ -1771,12 +1772,14 @@ RESULT eDVBServicePlay::pause()
 	// During timeshift playback, we use the normal decoder for the timeshift file
 	if (m_soft_decoder && m_csa_session && m_csa_session->isActive() && !m_timeshift_active)
 	{
+		m_pause_position = -1;
 		m_slowmotion = 0;
 		m_is_paused = 1;
 		return m_soft_decoder->pause();
 	}
 	if (m_decoder)
 	{
+		m_pause_position = -1;
 		m_slowmotion = 0;
 		m_is_paused = 1;
 		return m_decoder->pause();
@@ -2360,9 +2363,7 @@ int eDVBServicePlay::getCurrentTrack()
 		return 0;
 
 	int max = program.audioStreams.size();
-	int i;
-
-	for (i = 0; i < max; ++i)
+	for (int i = 0; i < max; ++i)
 		if (program.audioStreams[i].pid == m_current_audio_pid)
 			return i;
 
@@ -3478,9 +3479,7 @@ void eDVBServicePlay::updateDecoder(bool sendSeekableStateChanged)
 			m_decoder->setTextPID(tpid);
 		}
 
-		if (vpid > 0 && vpid < 0x2000)
-			;
-		else
+		if (vpid <= 0 || vpid >= 0x2000)
 		{
 			std::string value;
 			bool showRadioBackground = eConfigManager::getConfigBoolValue("config.misc.showradiopic", true);
