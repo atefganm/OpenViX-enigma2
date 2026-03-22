@@ -33,7 +33,7 @@ public:
 	void setStreamMode(int);
 	void setScatterGather(iFilePushScatterGather *);
 
-	enum { evtEOF, evtReadError, evtWriteError, evtUser, evtStopped, evtStreamCorrupt };
+	enum { evtEOF, evtReadError, evtWriteError, evtUser, evtStopped };
 	sigc::signal<void(int)> m_event;
 
 		/* you can send private events if you want */
@@ -72,7 +72,7 @@ public:
 	void stop();
 	void start(int sourcefd);
 
-	enum { evtEOF, evtReadError, evtWriteError, evtUser, evtStopped };
+	enum { evtEOF, evtReadError, evtWriteError, evtUser, evtStopped, evtStreamCorrupt };
 	sigc::signal<void(int)> m_event;
 
 	void sendEvent(int evt);
