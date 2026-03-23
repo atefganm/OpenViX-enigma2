@@ -447,7 +447,7 @@ class UBISlotManager(Setup):
 		uuidRootFS = fileReadLine(f"/dev/uuid/{device}{PART_SUFFIX}2", default=None)
 		diskSize = self.partitionSizeGB(f"/dev/{device}")
 
-		rootfsName = "rootfs"
+		rootfsName = "dreambox-rootfs" if BOXTYPE in ("dm520") else "rootfs"
 		startupContent = f"kernel=/dev/{MTDKERNEL} ubi.mtd=rootfs root=ubi0:{rootfsName} flash=1 rootfstype=ubifs\n"
 
 		with open(f"{MOUNTPOINT}/STARTUP", "w") as fd:
