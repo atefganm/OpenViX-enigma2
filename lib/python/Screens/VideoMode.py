@@ -253,9 +253,7 @@ class VideoSetup(Screen, ConfigListScreen):
 		if level >= 1:
 			if BoxInfo.getItem("CanDownmixAC3"):
 				self.list.append(getConfigListEntry(_("AC3 downmix"), config.av.downmix_ac3, _("Choose whether multi channel ac3 sound tracks should be downmixed to stereo.")))
-			if SystemInfo["Vu_EAC3_fix"] and config.av.downmix_ac3.value == "passthrough":
-				self.list.append(getConfigListEntry(_("Passthrough audio handling delay AC3"), config.av.passthrough_fix_short, _("Used to specify delay when switching between services and AC3 passthrough is enabled.")))
-				self.list.append(getConfigListEntry(_("Passthrough audio handling delay AC3+"), config.av.passthrough_fix_long, _("Used to specify delay when switching between services and AC3+/Atmos passthrough is enabled.")))
+				self.list.append(getConfigListEntry(_("Passthrough audio fix"), config.av.passthrough_fix, _("Enabled/Disable audio passthrough fix for SoftCSA, DVB and Gstreamer.")))
 			if BoxInfo.getItem("CanDownmixDTS"):
 				self.list.append(getConfigListEntry(_("DTS downmix"), config.av.downmix_dts, _("Choose whether multi channel dts sound tracks should be downmixed to stereo.")))
 			if BoxInfo.getItem("CanDownmixAACPlus"):
