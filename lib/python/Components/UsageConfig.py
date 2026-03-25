@@ -13,7 +13,7 @@ from Tools.Directories import resolveFilename, SCOPE_HDD, SCOPE_TIMESHIFT, defau
 from Components.NimManager import nimmanager
 from Components.Renderer.FrontpanelLed import ledPatterns, PATTERN_ON, PATTERN_OFF, PATTERN_BLINK
 from Components.ServiceList import refreshServiceList
-from Components.SystemInfo import SystemInfo, BoxInfo
+from Components.SystemInfo import SystemInfo, BoxInfo, MODEL
 from Tools.HardwareInfo import HardwareInfo
 from Components.AVSwitch import iAVSwitch
 from os import makedirs
@@ -1464,12 +1464,13 @@ def InitUsageConfig():
 	config.misc.softcamrestarts = ConfigSelection(default="", choices=[
 		("", _("Don't restart")),
 		("s", _("Restart softcam"))])
+	defaultValue = 1 if MODEL in ("gb7252", ) else 0
 	config.misc.softcsa = ConfigSubsection()
 	config.misc.softcsa.decoderRelease = ConfigSelection(default=0, choices=[
 			(0, _("Quick")),
 			(1, _("Normal"))
 	])
-	config.misc.softcsa.syncMode = ConfigSelection(default=0, choices=[
+	config.misc.softcsa.syncMode = ConfigSelection(default=defaultValue, choices=[
 			(0, _("Automatic")),
 			(1, _("Synchronous"))
 	])
