@@ -2,7 +2,7 @@ from os.path import exists
 from os import W_OK, access, system
 from time import sleep
 from enigma import eAVControl, eDVBVolumecontrol, getDesktop, iServiceInformation
-from Components.config import ConfigBoolean, ConfigEnableDisable, ConfigInteger, ConfigNothing, ConfigOnOff, ConfigSelection, ConfigSelectionNumber, ConfigSlider, ConfigSubDict, ConfigSubsection, ConfigYesNo, NoSave, config
+from Components.config import ConfigEnableDisable, ConfigInteger, ConfigNothing, ConfigOnOff, ConfigSelection, ConfigSelectionNumber, ConfigSlider, ConfigSubDict, ConfigSubsection, ConfigYesNo, NoSave, config
 from Components.About import about
 from Components.SystemInfo import SystemInfo, BoxInfo
 from Tools.CList import CList
@@ -481,8 +481,8 @@ class AVSwitchBase:
 
 
 def InitAVSwitch():
-	config.av.passthrough_fix = ConfigBoolean(default=True)
-	config.av.yuvenabled = ConfigBoolean(default=True)
+	config.av.passthrough_fix = ConfigYesNo(default=True)
+	config.av.yuvenabled = ConfigYesNo(default=True)
 	colorformat_choices = {
 		"cvbs": _("CVBS"),
 		"rgb": _("RGB"),
