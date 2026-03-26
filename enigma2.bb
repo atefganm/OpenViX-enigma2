@@ -41,6 +41,8 @@ EXTRA_OECONF = " \
 	--with-machinebuild="${MACHINEBUILD}" \
 	--with-libsdl=no \
 	${@bb.utils.contains("GST_VERSION", "1.0", "--with-gstversion=1.0", "", d)} \
+	--with-e2rev=${GITPKGV} \
+	--with-oarev=${@bb.process.run('git -C %s rev-parse --short HEAD' % d.getVar('OEA-META-OE-BASE'))[0].strip()} \	
 	${@bb.utils.contains("MACHINE_FEATURES", "textlcd", "--with-textlcd" , "", d)} \
 	${@bb.utils.contains("MACHINE_FEATURES", "colorlcd", "--with-colorlcd" , "", d)} \
 	${@bb.utils.contains("MACHINE_FEATURES", "colorlcd128", "--with-colorlcd128" , "", d)} \

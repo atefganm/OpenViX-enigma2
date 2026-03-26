@@ -4,7 +4,7 @@ from hashlib import md5
 from os.path import exists as fileAccess, isdir, isfile, join as pathjoin
 from re import split
 from boxbranding import getBoxType, getBrandOEM, getDisplayType, getHaveAVJACK, getHaveHDMIinFHD, getHaveHDMIinHD, getHaveRCA, getHaveSCART, getHaveSCARTYUV, getHaveYUV, getImageType, getMachineBrand, getMachineBuild, getMachineMtdRoot, getMachineName, getHaveDVI, getHaveHDMI
-from enigma import Misc_Options, eDVBCIInterfaces, eDVBResourceManager, eDVBCSAEngine, eGetEnigmaDebugLvl
+from enigma import Misc_Options, eDVBCIInterfaces, eDVBResourceManager, eDVBCSAEngine, eGetEnigmaDebugLvl, getE2Rev, getOARev
 
 from Components.About import getChipSetString
 from Components.RcModel import rc_model
@@ -114,7 +114,19 @@ DISPLAYBRAND = BoxInfo.getItem("displaybrand")
 MACHINEBUILD = BoxInfo.getItem("machinebuild")
 CHKROOTMB = BoxInfo.getItem("chkrootmb")
 UBIMB = BoxInfo.getItem("hasUBIMB")
-OEA = split(r'(\d.*)', BoxInfo.getItem("oe"))[1]
+
+try:
+	BRANCH = getE2Rev()
+	if "+" in BRANCH:
+		BRANCH = BRANCH.split("+")[1]
+	BRANCH = f"{BRANCH}"
+except IndexError:
+	BRANCH = ""
+try:
+	OEA = getOARev()
+	OEA = f"{OEA}" if OEA else split(r'(\d.*)', BoxInfo.getItem("oe"))[1]
+except Exception:
+	OEA = split(r'(\d.*)', BoxInfo.getItem("oe"))[1]
 
 
 def getBoxType():  # this function mimics the function of the same name in branding module
