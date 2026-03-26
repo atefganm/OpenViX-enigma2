@@ -508,7 +508,7 @@ fi
 AM_CONDITIONAL(HAVE_FULLGRAPHICLCD, test x"$withfullgraphiclcd" != xno)
 
 AC_ARG_WITH(gigabluelcd,
-	AC_HELP_STRING([--with-gigabluelcd], [use fix color map in color display, yes or no]),
+	AS_HELP_STRING([--with-gigabluelcd], [use fix colour map in color display, yes or no]),
 	[[withgigabluelcd=$withval]],
 	[[withgigabluelcd=no]]
 )
