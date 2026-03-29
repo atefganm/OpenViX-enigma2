@@ -131,10 +131,8 @@ class GithubCommitLogs:
 			self.page += 1
 			self.readGithubCommitLogsTimer.start(10, True)
 
-
 	def getScreenTitle(self):
 		return self.APIs[self.index][1]
-
 
 	def updateIndex(self, n):
 		self.index = (self.index + n) % len(self.APIs)
