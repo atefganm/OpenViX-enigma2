@@ -389,7 +389,7 @@ class AudioSelection(Screen, ConfigListScreen):
 
 	def subtitlesEnabled(self):
 		try:
-			return self.infobar.subtitle_window.shown
+			return self.infobar.subtitle_window.shown or self.infobar.subtitle_window.externalSubtitleStarted
 		except:
 			return False
 
