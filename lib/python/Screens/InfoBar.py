@@ -664,7 +664,7 @@ class MoviePlayer(InfoBarBase, InfoBarShowHide, InfoBarLongKeyDetection, InfoBar
 			path.unlink()   # remove the file
 			return True
 		return False
-	
+
 	def loadSavedSubtitle(self, service):
 		path = service.getPath()
 		if not path:
