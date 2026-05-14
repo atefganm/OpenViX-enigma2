@@ -1,4 +1,5 @@
 from Components.ActionMap import ActionMap
+from Components.config import config, ConfigSelectionNumber
 from Components.Label import Label
 from Components.ScrollLabel import ScrollLabel
 from Components.Sources.StaticText import StaticText
