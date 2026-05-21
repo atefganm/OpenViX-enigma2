@@ -149,7 +149,7 @@ class CIHelper:
 					if not timer.justplay and timer.state == TimerEntry.StateRunning and not (timer.record_ecm and not timer.descramble):
 						timerservice = timer.service_ref.ref
 						if timerservice != service:
-								if slot == self.getAssignedSlot(timerservice):
+							if slot == self.getAssignedSlot(timerservice):
 								if self.canMultiDescramble(service):
 									for x in (4, 2, 3):
 										if timerservice.getUnsignedData(x) != service.getUnsignedData(x):
