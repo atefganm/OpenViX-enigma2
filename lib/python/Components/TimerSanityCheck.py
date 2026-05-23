@@ -195,19 +195,15 @@ class TimerSanityCheck:
 		is_ci_timer_conflict = 0
 
 		ci_timer = False
-		ci_timer_slot = -1
-		if config.misc.use_ci_assignment.value and self.newtimer.descramble:
-			ci_timer_slot = cihelper.getAssignedSlot(self.newtimer.service_ref.ref)
-			if ci_timer_slot != -1:
-				print("[TimerSanityCheck] DEBUG - CI timer detected. ref: " + str(self.newtimer.service_ref.ref) + " slot: " + str(ci_timer_slot))
-				ci_timer = self.newtimer
-				ci_timer_begin = ci_timer.begin
-				ci_timer_end = ci_timer.end
-				ci_timer_dur = ci_timer_end - ci_timer_begin
-				ci_timer_events = []
-				for ev in self.nrep_eventlist:
-					if ev[2] == -1:
-						ci_timer_events.append((ev[0], ev[0] + ci_timer_dur))
+		if config.misc.use_ci_assignment.value and cihelper.ServiceIsAssigned(self.newtimer.service_ref.ref) and not (self.newtimer.record_ecm and not self.newtimer.descramble):
+			ci_timer = self.newtimer
+			ci_timer_begin = ci_timer.begin
+			ci_timer_end = ci_timer.end
+			ci_timer_dur = ci_timer_end - ci_timer_begin
+			ci_timer_events = []
+			for ev in self.nrep_eventlist:
+				if ev[2] == -1:
+					ci_timer_events.append((ev[0], ev[0] + ci_timer_dur))
 
 		for event in self.nrep_eventlist:
 			cnt += event[1]
@@ -273,7 +269,7 @@ class TimerSanityCheck:
 			else:
 				print("[TimerSanityCheck] bug: unknown flag!")
 
-			if ci_timer and ci_timer_slot == cihelper.getAssignedSlot(timer.service_ref.ref):
+			if ci_timer and timer != ci_timer and cihelper.ServiceIsAssigned(timer.service_ref.ref) and not (timer.record_ecm and not timer.descramble):
 				if event[1] == self.bflag:
 					timer_begin = event[0]
 					timer_end = event[0] + (timer.end - timer.begin)

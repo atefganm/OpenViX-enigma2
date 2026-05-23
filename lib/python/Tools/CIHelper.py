@@ -11,14 +11,14 @@ from Tools.Directories import fileReadXML
 class CIHelper:
 
 	CI_ASSIGNMENT_LIST = None
-	CI_ASSIGNMENT_SERVICES_LIST = []
+	CI_ASSIGNMENT_SERVICES_LIST = None
 	CI_MULTIDESCRAMBLE = None
 	CI_MULTIDESCRAMBLE_MODULES = ("AlphaCrypt", )
 
 	def parse_ci_assignment(self):
 		NUM_CI = SystemInfo["CommonInterface"]
 		if NUM_CI and NUM_CI > 0:
-			self.CI_ASSIGNMENT_SERVICES_LIST = []
+			self.CI_ASSIGNMENT_LIST = []
 
 			def getValue(definitions, default):
 				Len = len(definitions)
@@ -52,9 +52,9 @@ class CIHelper:
 							read_providers.append((read_provider_name, int(read_provider_dvbname, 16)))
 						if read_slot is not False and (read_services or read_providers or usingcaid):
 							self.CI_ASSIGNMENT_LIST.append((int(read_slot), (read_services, read_providers, usingcaid)))
+			services = []
+			providers = []
 			for item in self.CI_ASSIGNMENT_LIST:
-				services = []
-				providers = []
 				print("[CI_Activate] activate CI%d with following settings:" % item[0])
 				try:
 					eDVBCIInterfaces.getInstance().setDescrambleRules(item[0], item[1])
@@ -64,14 +64,14 @@ class CIHelper:
 					services.append(x)
 				for x in item[1][1]:
 					providers.append(x[0])
-				service_refs = []
-				if services:
-					for x in services:
-						service_refs.append(eServiceReference(x))
-				provider_services_refs = []
-				if providers:
-					provider_services_refs = self.getProivderServices(providers)
-				self.CI_ASSIGNMENT_SERVICES_LIST.append(service_refs + provider_services_refs)
+			service_refs = []
+			if len(services):
+				for x in services:
+					service_refs.append(eServiceReference(x))
+			provider_services_refs = []
+			if len(providers):
+				provider_services_refs = self.getProivderServices(providers)
+			self.CI_ASSIGNMENT_SERVICES_LIST = [service_refs, provider_services_refs]
 
 	def load_ci_assignment(self, force=False):
 		if self.CI_ASSIGNMENT_LIST is None or force:
@@ -93,20 +93,13 @@ class CIHelper:
 						provider_services_refs.append(service)
 		return provider_services_refs
 
-	def getAssignedSlot(self, ref):
-		self.load_ci_assignment()
-
-		for slot, service_refs in enumerate(self.CI_ASSIGNMENT_SERVICES_LIST):
-			if service_refs and ref in service_refs:
-				return slot
-		return -1
-
 	def ServiceIsAssigned(self, ref):
 		self.load_ci_assignment()
 
-		for service_refs in self.CI_ASSIGNMENT_SERVICES_LIST:
-			if service_refs and ref in service_refs:
-				return True
+		if self.CI_ASSIGNMENT_SERVICES_LIST:
+			for x in self.CI_ASSIGNMENT_SERVICES_LIST:
+				if len(x) and ref in x:
+					return True
 		return False
 
 	def canMultiDescramble(self, ref):
@@ -143,13 +136,12 @@ class CIHelper:
 	def isPlayable(self, service):
 		service = eServiceReference(service)
 		if NavigationInstance.instance.getRecordings():
-			slot = self.getAssignedSlot(service)
-			if slot != -1:
+			if self.ServiceIsAssigned(service):
 				for timer in NavigationInstance.instance.RecordTimer.timer_list:
 					if not timer.justplay and timer.state == TimerEntry.StateRunning and not (timer.record_ecm and not timer.descramble):
 						timerservice = timer.service_ref.ref
 						if timerservice != service:
-							if slot == self.getAssignedSlot(timerservice):
+							if self.ServiceIsAssigned(timerservice):
 								if self.canMultiDescramble(service):
 									for x in (4, 2, 3):
 										if timerservice.getUnsignedData(x) != service.getUnsignedData(x):
