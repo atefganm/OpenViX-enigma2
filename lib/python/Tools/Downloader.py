@@ -191,7 +191,7 @@ class DownloadWithProgress:
 	def _startGet(self):
 		try:
 			headers = _buildHeaders(headers=self._rawHeaders)  # userAgent is already passed by headers
-			
+
 			self._request = self._agent.request(
 				b"GET",
 				self.url.encode("utf-8"),
