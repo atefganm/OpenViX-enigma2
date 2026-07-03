@@ -33,6 +33,7 @@ def get_content_length(url, headers=None):
 	except Exception:
 		return 0
 
+
 # ------------------------------------------------------------
 # SHARED HELPERS
 # ------------------------------------------------------------
@@ -43,9 +44,11 @@ HTTP_DEFAULT_HEADERS = {
 	"Connection": "keep-alive",
 }
 
+
 def _makeAgent():
 	base = Agent(reactor, contextFactory=BrowserLikePolicyForHTTPS())
 	return RedirectAgent(base)
+
 
 def _normaliseHeaders(headers):
 	""" normalise to str """
@@ -54,6 +57,7 @@ def _normaliseHeaders(headers):
 		v.decode("utf-8") if isinstance(v, bytes) else str(v)
 		for k, v in (headers or {}).items()
 	}
+
 
 def _buildHeaders(headers=None):
 	return Headers({
@@ -64,6 +68,8 @@ def _buildHeaders(headers=None):
 # ------------------------------------------------------------
 # STREAM PROTOCOL (no UI logic)
 # ------------------------------------------------------------
+
+
 class _DownloadProtocol(Protocol):
 	def __init__(self, downloader, fd):
 		self.downloader = downloader
