@@ -889,6 +889,8 @@ nprint:				isprintable=0;
 		}
 		if (isprintable)
 		{
+			nextflags = 0;
+
 			if (activate_colorreset)
 				flags |= GS_COLORRESET;
 
