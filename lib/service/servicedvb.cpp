@@ -1132,6 +1132,7 @@ eDVBServicePlay::~eDVBServicePlay()
 
 	cleanupSoftwareDescrambling();
 
+	if (m_subtitle_widget) m_subtitle_widget->destroy();
 }
 
 void eDVBServicePlay::gotNewEvent(int error)
@@ -1264,7 +1265,6 @@ void eDVBServicePlay::serviceEvent(int event)
 		eDebug("[eDVBServicePlay] eventNewProgramInfo timeshift_enabled=%d timeshift_active=%d", m_timeshift_enabled, m_timeshift_active);
 		if (m_timeshift_enabled)
 			updateTimeshiftPids();
-		if (!m_timeshift_active)
 		if (m_csa_session && !m_csa_session->isEcmAnalyzed())
 		{
 			eDVBServicePMTHandler::program program;
@@ -3486,7 +3486,6 @@ void eDVBServicePlay::updateDecoder(bool sendSeekableStateChanged)
 		{
 			m_decoder->setTextPID(tpid);
 		}
-
 		if (vpid <= 0 || vpid >= 0x2000)
 		{
 			std::string value;

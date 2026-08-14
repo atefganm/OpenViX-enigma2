@@ -165,10 +165,9 @@ static const std::string getConfigCurrentSpinner(const char* key)
 		std::ifstream png(png_location.c_str());
 		if (png.good()) {
 			png.close();
-			return value; 
+			return value;
 		}
 	}
-
 	return "spinner"; // fallback on default system spinner
 }
 
@@ -306,7 +305,6 @@ int main(int argc, char **argv)
 	{
 		spinnerPostionX = spinnerPostionY = 25;
 	}
-
 	eDebug("[MAIN] Loading spinners...");
 	{
 #define MAX_SPINNER 64
@@ -382,7 +380,6 @@ int main(int argc, char **argv)
 		p.clear();
 		p.flush();
 	}
-
 	return exit_code;
 }
 
@@ -412,6 +409,11 @@ const char *getEnigmaLastCommitDate()
 	return enigma2_date;
 }
 
+const char *getEnigmaLastCommitHash()
+{
+	return enigma2_hash;
+}
+
 const char *getE2Rev()
 {
 	return E2REV;
@@ -420,11 +422,6 @@ const char *getE2Rev()
 const char *getOARev()
 {
 	return OAREV;
-}
-
-const char *getEnigmaLastCommitHash()
-{
-	return enigma2_hash;
 }
 
 const char *getGStreamerVersionString()
@@ -439,7 +436,7 @@ const char *getBoxType()
 
 int getE2Flags()
 {
-	return 1;
+	return 3; // start/stop Audio = 1 | WebP = 2
 }
 
 bool checkLogin(const char *user, const char *password)
