@@ -1132,6 +1132,7 @@ eDVBServicePlay::~eDVBServicePlay()
 
 	cleanupSoftwareDescrambling();
 
+	if (m_subtitle_widget) m_subtitle_widget->destroy();
 }
 
 void eDVBServicePlay::gotNewEvent(int error)
@@ -1264,7 +1265,6 @@ void eDVBServicePlay::serviceEvent(int event)
 		eDebug("[eDVBServicePlay] eventNewProgramInfo timeshift_enabled=%d timeshift_active=%d", m_timeshift_enabled, m_timeshift_active);
 		if (m_timeshift_enabled)
 			updateTimeshiftPids();
-		if (!m_timeshift_active)
 		if (m_csa_session && !m_csa_session->isEcmAnalyzed())
 		{
 			eDVBServicePMTHandler::program program;
@@ -3457,15 +3457,16 @@ void eDVBServicePlay::updateDecoder(bool sendSeekableStateChanged)
 		m_current_video_pid_type = vpidtype;
 		m_have_video_pid = (vpid > 0 && vpid < 0x2000);
 
-		if ((!m_is_pvr || m_is_stream) && m_have_video_pid && vpidtype == eDVBVideo::H265_HEVC)
+		if (m_have_video_pid && vpidtype == eDVBVideo::H265_HEVC)
 		{
 #ifdef HAS_SOFTWARE_HDR_DETECTION
-			/* Start detection immediately so FTA/stream channels accumulate data
-			 * right away.  For encrypted channels eventSizeChanged will restart
-			 * with a fresh recorder once clear data is flowing. */
+			/* Start detection immediately so channels accumulate data right away.
+			 * For encrypted live channels eventSizeChanged will restart with a
+			 * fresh recorder once clear data is flowing (m_hdr_firstframe_restarted).
+			 * For PVR the content is already clear so skip the first-frame restart. */
 			if (m_hdr_detect_vpid != vpid)
 			{
-				m_hdr_firstframe_restarted = false;
+				m_hdr_firstframe_restarted = m_is_pvr;
 				startHDRDetection(vpid);
 			}
 #endif
@@ -3485,7 +3486,6 @@ void eDVBServicePlay::updateDecoder(bool sendSeekableStateChanged)
 		{
 			m_decoder->setTextPID(tpid);
 		}
-
 		if (vpid <= 0 || vpid >= 0x2000)
 		{
 			std::string value;
@@ -4587,10 +4587,8 @@ void eDVBServicePlay::hdrResult(int result)
 	m_hdr_type = result;
 	/* Fire all three events so every skin pattern is covered:
 	 * - evVideoGammaChanged: skins that track gamma/HDR changes
-	 * - evVideoSizeChanged:  skins that refresh video info on size events
 	 * - evUpdatedInfo:       general service-info listeners (ServiceInfo converter) */
 	m_event((iPlayableService*)this, evVideoGammaChanged);
-	m_event((iPlayableService*)this, evVideoSizeChanged);
 	m_event((iPlayableService*)this, evUpdatedInfo);
 }
 #endif /* HAS_SOFTWARE_HDR_DETECTION */

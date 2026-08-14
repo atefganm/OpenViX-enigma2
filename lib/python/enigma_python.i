@@ -526,12 +526,12 @@ extern const char *getBoxType();
 extern void dump_malloc_stats(void);
 extern void pauseInit(void);
 extern void resumeInit(void);
-extern int getE2Flags();
 #ifndef HAVE_OSDANIMATION
 extern void setAnimation_current(int a);
 extern void setAnimation_speed(int speed);
 extern void setAnimation_current_listbox(int a);
 #endif
+extern int getE2Flags();
 extern bool checkLogin(const char *user, const char *pwd);
 %}
 
@@ -550,12 +550,12 @@ extern const char *getBoxType();
 extern void dump_malloc_stats(void);
 extern void pauseInit(void);
 extern void resumeInit(void);
-extern int getE2Flags();
 #ifndef HAVE_OSDANIMATION
 extern void setAnimation_current(int a);
 extern void setAnimation_speed(int speed);
 extern void setAnimation_current_listbox(int a);
 #endif
+extern int getE2Flags();
 extern bool checkLogin(const char *user, const char *pwd);
 
 %include <lib/python/python_console.i>

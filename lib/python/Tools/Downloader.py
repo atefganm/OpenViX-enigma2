@@ -4,7 +4,7 @@ from time import time
 
 from twisted.internet import reactor
 from twisted.internet.threads import deferToThread
-from twisted.web.client import Agent, RedirectAgent, BrowserLikePolicyForHTTPS, ResponseDone
+from twisted.web.client import Agent, RedirectAgent, BrowserLikePolicyForHTTPS, ResponseDone, PotentialDataLoss
 from twisted.web.http_headers import Headers
 from twisted.internet.protocol import Protocol
 
@@ -12,12 +12,22 @@ from urllib.request import Request, urlopen
 
 
 # ------------------------------------------------------------
+# USER_AGENTS
+# ------------------------------------------------------------
+class USER_AGENTS:
+	FIREFOX = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:138.0) Gecko/20100101 Firefox/138.0"
+	CHROME = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+	HBBTV = "HbbTV/1.1.1 (+PVR+RTSP+DL; Sonic; TV44; 1.32.455; 2.002) Bee/3.5"
+
+# ------------------------------------------------------------
 # NON-BLOCKING HEAD SUPPORT, run in deferToThread()
 # ------------------------------------------------------------
-def get_content_length(url, headers=None):
+
+
+def get_content_length(url, headers=None, timeout=5):
 	try:
 		req = Request(url, headers=headers or {}, method="HEAD")
-		with urlopen(req, timeout=5) as r:
+		with urlopen(req, timeout=timeout) as r:
 			val = r.headers.get("Content-Length")
 			return int(val) if val else 0
 	except Exception:
@@ -25,32 +35,55 @@ def get_content_length(url, headers=None):
 
 
 # ------------------------------------------------------------
+# SHARED HELPERS
+# ------------------------------------------------------------
+HTTP_DEFAULT_HEADERS = {
+	"User-Agent": USER_AGENTS.CHROME,
+	"Accept": "*/*",
+	"Accept-Encoding": "identity",
+	"Connection": "keep-alive",
+}
+
+
+def _makeAgent():
+	base = Agent(reactor, contextFactory=BrowserLikePolicyForHTTPS())
+	return RedirectAgent(base)
+
+
+def _normaliseHeaders(headers):
+	""" normalise to str """
+	return {
+		k.decode("utf-8") if isinstance(k, bytes) else str(k):
+		v.decode("utf-8") if isinstance(v, bytes) else str(v)
+		for k, v in (headers or {}).items()
+	}
+
+
+def _buildHeaders(headers=None):
+	return Headers({
+		k.encode("utf-8"): [v.encode("utf-8")]
+		for k, v in {**HTTP_DEFAULT_HEADERS, **(headers or {})}.items()
+	})
+
+# ------------------------------------------------------------
 # STREAM PROTOCOL (no UI logic)
 # ------------------------------------------------------------
+
+
 class _DownloadProtocol(Protocol):
-	def __init__(self, downloader, fd):
+	def __init__(self, downloader):
 		self.downloader = downloader
-		self.fd = fd
 		self.recv = 0
 
 	def dataReceived(self, data):
-		if self.downloader.stopFlag:
-			try:
-				self.transport.abortConnection()
-			except Exception:
-				pass
+		if self.downloader._done:
 			return
 
 		self.recv += len(data)
 		try:
-			self.fd.write(data)
+			self.downloader.fd.write(data)
 		except OSError as err:
-			if callable(self.downloader.errorCallback):
-				self.downloader.errorCallback(err)
-			try:
-				self.transport.abortConnection()
-			except Exception:
-				pass
+			self.downloader._finalise(error=err)
 			return
 
 		self.downloader.progress = self.recv
@@ -65,24 +98,30 @@ class _DownloadProtocol(Protocol):
 			reactor.callLater(0.2, self.downloader._flushUi)
 
 	def connectionLost(self, reason):
-		try:
-			self.fd.close()
-		except Exception:
-			pass
-
-		if reason.check(ResponseDone) and not self.downloader.stopFlag:
-			if callable(self.downloader.endCallback):
-				self.downloader.endCallback(self.downloader.outputFile)
+		if self.downloader._done:
 			return
 
-		try:
-			unlink(self.downloader.outputFile)
-		except OSError:
-			pass
+		if reason.check(ResponseDone, PotentialDataLoss):
+			# PotentialDataLoss: connection closed to signal end of body for a
+			# response with no reliable length (e.g. no Content-Length, HTTP/1.0).
+			# Twisted can't tell that apart from a truncated transfer, but since
+			# it's the only way to end such a response, treat it as complete.
+			self.downloader._finalise(success=True)
+		else:
+			self.downloader._finalise(error=reason)
 
-		if not self.downloader.stopFlag:
-			if callable(self.downloader.errorCallback):
-				self.downloader.errorCallback(reason)
+
+# ------------------------------------------------------------
+# DISCARD PROTOCOL (drains a response body we don't want, e.g. on
+# a non-2xx status, so the underlying connection can be released
+# cleanly instead of left dangling)
+# ------------------------------------------------------------
+class _DiscardProtocol(Protocol):
+	def dataReceived(self, data):
+		pass
+
+	def connectionLost(self, reason):
+		pass
 
 
 # ------------------------------------------------------------
@@ -91,10 +130,9 @@ class _DownloadProtocol(Protocol):
 class DownloadWithProgress:
 
 	def __init__(self, url, outputFile, *args, **kwargs):
+		""" url and outputFile should be str type """
 		self.url = url
 		self.outputFile = outputFile
-
-		userAgent = kwargs.get("userAgent", "Enigma2 Downloader")
 
 		self.progress = 0
 		self.totalSize = -1  # means size not set
@@ -103,7 +141,9 @@ class DownloadWithProgress:
 		self.endCallback = None
 		self.errorCallback = None
 
-		self.stopFlag = False
+		self.protocol = None
+		self.fd = None
+		self._done = False
 
 		self._pendingProgress = None
 		self._uiScheduled = False
@@ -112,23 +152,17 @@ class DownloadWithProgress:
 		# for speed/eta functions
 		self._startTime = None
 
-		# headers (Twisted-safe: bytes in, bytes out)
-		self.requestHeader = {
-			b"User-Agent": userAgent.encode("utf-8"),
-			b"Accept": b"*/*",
-			b"Accept-Encoding": b"identity",
-			b"Connection": b"keep-alive",
-		}
+		# headers (stored as strings internally)
+		self._rawHeaders = _normaliseHeaders(kwargs.get("headers", {}))
+		userAgent = kwargs.get("userAgent")
+		if userAgent:
+			self._rawHeaders.setdefault("User-Agent", _normaliseHeaders({"User-Agent": userAgent})["User-Agent"])
 
-		userHeader = kwargs.get("headers", None)
-		if userHeader:
-			for k, v in userHeader.items():
-				k = k.encode("utf-8") if isinstance(k, str) else k
-				v = v.encode("utf-8") if isinstance(v, str) else v
-				self.requestHeader[k] = v
+		# connection timeout
+		self._connectTimeout = int(kwargs.get("connectTimeout", 5))
+		self._connectTimer = None
 
-		base = Agent(reactor, contextFactory=BrowserLikePolicyForHTTPS())
-		self.agent = RedirectAgent(base)
+		self._agent = _makeAgent()
 
 	def start(self):
 		self.progress = 0
@@ -142,10 +176,11 @@ class DownloadWithProgress:
 		return self
 
 	def _getHeadSize(self):
-		headers = {k.decode("utf-8"): v.decode("utf-8") for k, v in self.requestHeader.items()}  # for urllib compatibility
-		return get_content_length(self.url, headers)
+		return get_content_length(self.url, self._rawHeaders, self._connectTimeout)
 
 	def _gotHeadSize(self, size):
+		if self._done:
+			return
 		# never override a known good value from GET
 		if self.totalSize > 0:
 			return
@@ -159,12 +194,9 @@ class DownloadWithProgress:
 	# --------------------------------------------------------
 	def _startGet(self):
 		try:
-			headers = Headers({
-				k: [v]
-				for k, v in self.requestHeader.items()
-			})
+			headers = _buildHeaders(headers=self._rawHeaders)  # userAgent is already passed by headers
 
-			self._request = self.agent.request(
+			self._request = self._agent.request(
 				b"GET",
 				self.url.encode("utf-8"),
 				headers,
@@ -173,50 +205,68 @@ class DownloadWithProgress:
 
 			self._request.addCallbacks(self._responseReceived, self._requestFailed)
 
+			# CONNECT TIMEOUT WATCHDOG
+			if self._connectTimeout:
+				self._connectTimer = reactor.callLater(self._connectTimeout, self._onConnectTimeout)
+
 		except Exception as err:
-			if callable(self.errorCallback):
-				self.errorCallback(err)
+			self._finalise(error=err)
 
 	# --------------------------------------------------------
 	# RESPONSE
 	# --------------------------------------------------------
 	def _responseReceived(self, response):
+		self._cancelConnectionTimeout()
+
+		if self._done:
+			return
 
 		# STRICT HTTP GATE
 		if not (200 <= response.code < 300):  # if not 2XX code means request failed
-			try:
-				response.transport.abortConnection()
-			except Exception:
-				pass
-
-			if callable(self.errorCallback):
-				self.errorCallback(Exception("HTTP %d" % response.code))
+			response.deliverBody(_DiscardProtocol())  # drain so the connection can be reused/closed cleanly
+			self._finalise(error=Exception(f"HTTP {response.code}"))
 			return
 
 		# content-length hint from server
-		try:
-			length = response.headers.getRawHeaders("content-length")
-			if length:
-				val = int(length[0])
-				if val > 0:
-					self.totalSize = val
-		except Exception:
-			pass
+		# NOTE: response.headers never carries Content-Length; Twisted's HTTP/1.1
+		# client consumes it internally for framing and exposes it as response.length.
+		if isinstance(response.length, int) and response.length > 0:
+			self.totalSize = response.length
 
 		try:  # catch any exception while trying to create the local file
-			fd = open(self.outputFile, "wb")
+			self.fd = open(self.outputFile, "wb")
 		except Exception as err:
-			if callable(self.errorCallback):
-				self.errorCallback(err)
+			self._finalise(error=err)
 			return
 
-		response.deliverBody(_DownloadProtocol(self, fd))
+		self.protocol = _DownloadProtocol(self)
+
+		response.deliverBody(self.protocol)
+
+	# --------------------------------------------------------
+	# CONNECTION TIMEOUT HANDLING
+	# --------------------------------------------------------
+	def _cancelConnectionTimeout(self):
+		if self._connectTimer and self._connectTimer.active():
+			self._connectTimer.cancel()
+			self._connectTimer = None
+
+	def _onConnectTimeout(self):
+		if self._done:
+			return
+
+		self._connectTimer = None
+
+		self._finalise(error=Exception("Connect timeout"))
 
 	# --------------------------------------------------------
 	# UI FLUSH
 	# --------------------------------------------------------
 	def _flushUi(self):
 		self._uiScheduled = False
+
+		if self._done:
+			return
 
 		if self._pendingProgress and callable(self.progressCallback):
 			progress, total = self._pendingProgress
@@ -230,20 +280,81 @@ class DownloadWithProgress:
 	# ERROR HANDLING
 	# --------------------------------------------------------
 	def _requestFailed(self, failure):
-		if callable(self.errorCallback):
-			self.errorCallback(failure)
+		self._cancelConnectionTimeout()
+
+		if self._done:
+			return
+
+		self._finalise(error=failure)
 
 	# --------------------------------------------------------
 	# CONTROL
 	# --------------------------------------------------------
 	def stop(self):
-		self.stopFlag = True
+		self._finalise()
 
+	# --------------------------------------------------------
+	# SINGLE EXIT POINT
+	# --------------------------------------------------------
+	def _finalise(self, success=False, error=None):
+
+		# Finalise download lifecycle exactly once.
+		# Cleans up network/file resources and dispatches final callbacks.
+		# if success=False and error=None means cancelled by stop()
+
+		self._cancelConnectionTimeout()
+
+		if self._done:
+			return
+
+		self._done = True
+
+		# 1. stop network
 		if self._request:
 			try:
+				# cancel request before response body starts
 				self._request.cancel()
 			except Exception:
 				pass
+
+		if self.protocol and (transport := getattr(self.protocol, "transport", None)):
+			try:
+				# abort active response body stream
+				transport.stopProducing()
+			except Exception:
+				pass
+
+		# 2. close file descriptor
+		if self.fd:
+			try:
+				self.fd.close()
+			except Exception:
+				pass
+			self.fd = None
+
+		# 3. remove partial file
+		if not success:
+			try:
+				unlink(self.outputFile)
+			except OSError:
+				pass
+
+		# 4. flush a last pending progress update so fast/small downloads (which can
+		# finish before the throttled 0.2s flushUi() timer ever fires) still report
+		# their final progress instead of jumping straight from 0% to done.
+		if success and self._pendingProgress and callable(self.progressCallback):
+			progress, total = self._pendingProgress
+			if total <= 0:
+				total = -1
+			self.progressCallback(progress, total)
+
+		# 5. callbacks ( no callback on cancelled (i.e. forced stop()) )
+		if success:
+			if callable(self.endCallback):
+				self.endCallback(self.outputFile)
+
+		elif error and callable(self.errorCallback):
+			self.errorCallback(error.getErrorMessage() if hasattr(error, "getErrorMessage") else str(error))
 
 	# --------------------------------------------------------
 	# CALLBACKS
@@ -261,7 +372,7 @@ class DownloadWithProgress:
 		return self
 
 	def setAgent(self, userAgent):
-		self.requestHeader[b"User-Agent"] = userAgent.encode("utf-8")
+		self._rawHeaders["User-Agent"] = _normaliseHeaders({"User-Agent": userAgent})["User-Agent"]
 
 	def addErrback(self, errorCallback):  # Temporary support for deprecated callbacks.
 		print("[Downloader] Warning: DownloadWithProgress 'addErrback' is deprecated use 'addError' instead!")
