@@ -363,9 +363,9 @@ int Cexif::Get16u(void * Short)
 long Cexif::Get32s(void * Long)
 {
 	if (MotorolaOrder)
-        	return  ((( char *)Long)[0] << 24) | (((unsigned char *)Long)[1] << 16) | (((unsigned char *)Long)[2] << 8 ) | (((unsigned char *)Long)[3] << 0 );
+			return  ((( char *)Long)[0] << 24) | (((unsigned char *)Long)[1] << 16) | (((unsigned char *)Long)[2] << 8 ) | (((unsigned char *)Long)[3] << 0 );
 	else
-        	return  ((( char *)Long)[3] << 24) | (((unsigned char *)Long)[2] << 16) | (((unsigned char *)Long)[1] << 8 ) | (((unsigned char *)Long)[0] << 0 );
+			return  ((( char *)Long)[3] << 24) | (((unsigned char *)Long)[2] << 16) | (((unsigned char *)Long)[1] << 8 ) | (((unsigned char *)Long)[0] << 0 );
 }
 
 unsigned long Cexif::Get32u(void * Long)
@@ -407,23 +407,23 @@ bool Cexif::ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
 
 		BytesCount = Components * BytesPerFormat[Format];
 
-        	if (BytesCount > 4)
+			if (BytesCount > 4)
 		{
 			unsigned OffsetVal;
 			OffsetVal = Get32u(DirEntry+8);
-        		if (OffsetVal+BytesCount > ExifLength)
+				if (OffsetVal+BytesCount > ExifLength)
 			{
 				strcpy(m_szLastError, "Illegal pointer offset value in EXIF");
 				return false;
-        		}
-        		ValuePtr = OffsetBase+OffsetVal;
-        	}
+				}
+				ValuePtr = OffsetBase+OffsetVal;
+			}
 		else ValuePtr = DirEntry+8;
 
-	        if (*LastExifRefdP < ValuePtr+BytesCount)
+			if (*LastExifRefdP < ValuePtr+BytesCount)
 			*LastExifRefdP = ValuePtr+BytesCount;
 
-        	switch(Tag)
+			switch(Tag)
 		{
 		case TAG_MAKE:
 			strncpy(m_exifinfo->CameraMake, (char*)ValuePtr, 31);
@@ -630,7 +630,7 @@ bool Cexif::ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
 			return false;
 		}
 		ProcessExifDir(SubdirStart, OffsetBase, ExifLength, LastExifRefdP);
-        }
+		}
 
 	if (ThumbnailSize && ThumbnailOffset && m_exifinfo->Thumnailstate)
 	{
