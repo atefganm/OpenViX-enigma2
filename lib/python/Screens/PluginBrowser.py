@@ -5,7 +5,7 @@ from enigma import eConsoleAppContainer, eDVBDB, eTimer
 import skin
 from Components.ActionMap import HelpableActionMap, HelpableNumberActionMap
 from Components.Button import Button
-from Components.config import config, ConfigSubsection, ConfigYesNo, ConfigText
+from Components.config import config, ConfigSubsection, ConfigText
 from Components.Harddisk import harddiskmanager
 from Components import Ipkg
 from Components.Label import Label
@@ -27,7 +27,6 @@ from Tools.Directories import resolveFilename, SCOPE_PLUGINS, SCOPE_CURRENT_SKIN
 from Tools.LoadPixmap import LoadPixmap
 
 config.misc.pluginbrowser = ConfigSubsection()
-config.misc.pluginbrowser.po = ConfigYesNo(default=True)
 config.misc.pluginbrowser.plugin_order = ConfigText(default="")
 
 
@@ -84,7 +83,10 @@ class PluginBrowser(Screen, ProtectedScreen, HelpableScreen):
 			self["list"].list.sort()
 
 		self["okActions"] = HelpableActionMap(self, ["OkCancelActions"], {"ok": (self.keySelect, _("Select the current item")), }, description=_("Selection Actions"))
-		self["cancelActions"] = HelpableActionMap(self, ["OkCancelActions"], {"cancel": (self.close, _("Exit PluginBrowser")), }, prio=0, description=_("Cancel Actions"))
+		self["cancelActions"] = HelpableActionMap(self, ["OkCancelActions"], {
+			"cancel": (self.close, _("Exit PluginBrowser")),
+			"close": (lambda: self.close(True), _("Exit PluginBrowser and close all menus")),
+		}, prio=0, description=_("Cancel Actions"))
 		self["PluginDownloadActions"] = HelpableActionMap(self, ["ColorActions"],
 		{
 			"red": (self.delete, _("Open 'Remove Plugins' screen")),
@@ -225,13 +227,11 @@ class PluginBrowser(Screen, ProtectedScreen, HelpableScreen):
 		self["list"].setList(self.list)
 
 	def delete(self):
-		config.misc.pluginbrowser.po.value = False
 		self.session.openWithCallback(self.PluginDownloadBrowserClosed, PluginDownloadBrowser, PluginDownloadBrowser.REMOVE, True)
 
 	def download(self):
-		config.misc.pluginbrowser.po.value = True
 		if not (feedsstatuscheck.adapterAvailable() and feedsstatuscheck.NetworkUp()):
-			self.session.openWithCallback(self.close, MessageBox, _("Your %s %s has no %s access, please check your network settings and make sure you have network cable connected and try again.") % (SystemInfo["MachineBrand"], SystemInfo["MachineName"], feedsstatuscheck.adapterAvailable() and 'internet' or 'network'), type=MessageBox.TYPE_INFO, timeout=30, close_on_any_key=True)
+			self.session.openWithCallback(self.close, MessageBox, _("Your %s %s has no %s access, please check your network settings and make sure you have network cable connected and try again.") % (DISPLAYBRAND, MACHINENAME, feedsstatuscheck.adapterAvailable() and 'internet' or 'network'), type=MessageBox.TYPE_INFO, timeout=30, close_on_any_key=True)
 			return
 		if kernelMismatch():
 			self.session.openWithCallback(self.close, MessageBox, _("The Linux kernel has changed, plugins are not compatible. \nInstall latest image using USB stick or Image Manager."), type=MessageBox.TYPE_INFO, timeout=30, close_on_any_key=True)
@@ -240,13 +240,15 @@ class PluginBrowser(Screen, ProtectedScreen, HelpableScreen):
 		self.firsttime = False
 
 	def PluginDownloadBrowserClosed(self, returnValue):
-		if returnValue is None:
+		if returnValue == PluginDownloadBrowser.DOWNLOAD:
+			self.download()
+		elif returnValue == PluginDownloadBrowser.REMOVE:
+			self.delete()
+		elif returnValue == "closeRecursive":
+			self.close(True)
+		else:
 			self.updateList()
 			self.checkWarnings()
-		elif returnValue == 0:
-			self.download()
-		else:
-			self.delete()
 
 	def userInstalledPlugins(self):
 		from Screens.About import AboutUserInstalledPlugins
@@ -287,7 +289,7 @@ class PluginDownloadBrowser(Screen, HelpableScreen):
 	PLUGIN_PREFIX = 'enigma2-plugin-'
 	lastDownloadDate = None
 
-	def __init__(self, session, type=0, needupdate=True, skin_name=None):
+	def __init__(self, session, type=DOWNLOAD, needupdate=True, skin_name=None, prefix_whitelist=None):
 		Screen.__init__(self, session)
 		HelpableScreen.__init__(self)
 		self.type = type
@@ -297,13 +299,13 @@ class PluginDownloadBrowser(Screen, HelpableScreen):
 			self.skinName.insert(0, skin_name)
 
 		if self.type == self.DOWNLOAD:
-			config.misc.pluginbrowser.po.value = True
 			self.setTitle(_("Install Plugins"))
 		elif self.type == self.REMOVE:
-			config.misc.pluginbrowser.po.value = False
 			self.setTitle(_("Remove Plugins"))
 
-		self.plugin_prefix_whitelist = ('settings', 'security', 'systemplugins', 'skin', 'drivers', 'display', 'bootlogos', 'picons', 'softcams', 'extensions', 'enigma2-locale-', 'kodi-addon-')
+		enigma_plugin_categories = ["bootlogos", "display", "drivers", "extensions", "picons", "security", "settings", "skins", "softcams", "systemplugins"]
+		other_categories = ["kodi-addon-"]
+		self.plugin_prefix_whitelist = tuple(prefix_whitelist) if prefix_whitelist else tuple([self.PLUGIN_PREFIX + x + "-" for x in enigma_plugin_categories] + other_categories)
 		self.plugin_suffix_blacklist = ('-dev', '-staticdev', '-dbg', '-doc', '-common', '-meta', '-src', '-po')
 		self.expandableIcon = LoadPixmap(resolveFilename(SCOPE_CURRENT_SKIN, "icons/expandable-plugins.png"))
 		self.expandedIcon = LoadPixmap(resolveFilename(SCOPE_CURRENT_SKIN, "icons/expanded-plugins.png"))
@@ -339,11 +341,12 @@ class PluginDownloadBrowser(Screen, HelpableScreen):
 		self["key_blue"] = StaticText(_("Remove plugins") if self.type == self.DOWNLOAD else _("Download plugins"))
 		self.run = 0
 		self.remainingdata = ""
-		self["actions"] = HelpableActionMap(self, ["SetupActions", "ColorActions"],
+		self["actions"] = HelpableActionMap(self, ["CancelSaveActions", "ColorActions", "OkCancelActions"],
 		{
 			"ok": (self.go, _("Select current item")),
 			"save": (self.go, _("Select current item")),
 			"cancel": (self.requestClose, _("Close '%s' screen") % self.title),
+			"close": (self.requestCloseRecusive, _("Close '%s' screen and exit all menus") % self.title),
 			"blue": (self.delete if self.type == self.DOWNLOAD else self.download, _("Open 'Remove Plugins' screen") if self.type == self.DOWNLOAD else _("Open 'Install Plugins' screen")),
 		}, description=_("Plugin Browser Actions"))
 		if path.isfile('/usr/bin/opkg'):
@@ -398,10 +401,13 @@ class PluginDownloadBrowser(Screen, HelpableScreen):
 				mbox.setTitle(_("Remove plugins"))
 
 	def delete(self):
-		self.requestClose(1)
+		self.requestClose(self.REMOVE)
 
 	def download(self):
-		self.requestClose(0)
+		self.requestClose(self.DOWNLOAD)
+
+	def requestCloseRecusive(self):
+		self.requestClose("closeRecursive")
 
 	def requestClose(self, returnValue=None):
 		if self.plugins_changed:
@@ -605,7 +611,7 @@ class PluginDownloadBrowser(Screen, HelpableScreen):
 
 		for x in lines:
 			plugin = x.split(" - ", 2)
-			if plugin[0] and plugin[0] not in self.installedplugins and plugin[0].replace(self.PLUGIN_PREFIX, '').startswith(self.plugin_prefix_whitelist) and not plugin[0].endswith(self.plugin_suffix_blacklist):
+			if plugin[0] and plugin[0] not in self.installedplugins and plugin[0].startswith(self.plugin_prefix_whitelist) and not plugin[0].endswith(self.plugin_suffix_blacklist):
 				if self.run == 1 and self.type == self.DOWNLOAD:
 					self.installedplugins.append(plugin[0])
 				else:
