@@ -1216,7 +1216,6 @@ RESULT eServiceMP3::stop()
 	 * see stopWatchdog()'s comment for why that's a thread and not a timer. */
 	gst_object_ref(m_gst_playbin);
 	StopWatchdog *watchdog = new StopWatchdog{0, 2};
-	GThread *worker = g_thread_new("mp3stop", stopWorker, new StopWorkerArgs{m_gst_playbin, watchdog});
 	GThread *worker = g_thread_new("mp3stop", stopWorker, new StopWorkerArgs{m_gst_playbin, watchdog, videoSink != NULL});
 	g_thread_unref(worker);
 	GThread *watchdogThread = g_thread_new("mp3stopwd", stopWatchdog, watchdog);
