@@ -84,6 +84,7 @@ def checkFstabReservesMediaHDD(lines):
 			return True
 	return False
 
+
 def readFile(filename):
 	try:
 		with open(filename, "r") as fd:
