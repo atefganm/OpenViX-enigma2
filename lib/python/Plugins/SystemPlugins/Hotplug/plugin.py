@@ -200,6 +200,8 @@ class HotPlugManager:
 							newFstab.append(f"UUID={ID_FS_UUID} {mountPoint} {ID_FS_TYPE} defaults 0 0")
 							fileWriteLines("/etc/fstab", newFstab)
 							self.callMount = True
+
+
 < elif answer == 4:  # Permanently mount as /media/hdd
 							knownDevice = mountPointHdd
 							newFstab = [x for x in fstab if f"UUID={ID_FS_UUID}" not in x]
